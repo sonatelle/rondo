@@ -50,6 +50,15 @@ organization conventions; where the two differ, this file wins here.
 - Use Conventional Commits subjects (e.g. `feat(core): add cycle math`).
 - Commit in small, single-intent increments; each commit should build and
   pass checks on its own.
+- Land each unit as soon as it stands alone and passes checks, before
+  starting the next one. Do not write a whole feature across many files
+  and split it into commits afterwards: retroactively split commits were
+  never built or tested individually, so one of them can silently fail to
+  compile and history stops being bisectable.
+- To keep a not-yet-landed module out of a commit, leave it undeclared in
+  `lib.rs` (an undeclared file is not compiled); declare it in the same
+  commit that adds the file, and run the full checks at each commit's own
+  tree state.
 - Show proposed commit messages to the user and wait for approval before
   committing.
 - Merge with GitHub `Rebase and merge` by default; delete branches after

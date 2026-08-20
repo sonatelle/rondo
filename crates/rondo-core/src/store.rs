@@ -10,7 +10,7 @@ use std::sync::LazyLock;
 use std::time::Duration;
 
 use jiff::Timestamp;
-use rusqlite::{Connection, Row, params};
+use rusqlite::{Connection, OptionalExtension, Row, params};
 use rusqlite_migration::{M, Migrations};
 use uuid::Uuid;
 
@@ -39,6 +39,19 @@ impl Store {
         configure(&conn)?;
         MIGRATIONS.to_latest(&mut conn)?;
         Ok(Self { conn })
+    }
+
+    /// Reports whether a row with `id` exists in `table`.
+    ///
+    /// `table` is a literal chosen by this module, never user input.
+    fn exists(&self, table: &str, id: &str) -> Result<bool> {
+        let sql = format!("SELECT 1 FROM {table} WHERE id = ?1");
+        let found = self
+            .conn
+            .query_row(&sql, [id], |_| Ok(()))
+            .optional()?
+            .is_some();
+        Ok(found)
     }
 
     // -- subscriptions --
@@ -107,6 +120,46 @@ impl Store {
             )));
         }
         Ok(stored)
+    }
+
+    /// Writes a subscription as given, inserting or overwriting by id.
+    ///
+    /// Unlike [`Self::update_subscription`] this preserves `updated_at`
+    /// exactly, which is what restoring a backup must do. Returns whether
+    /// the row was newly inserted.
+    ///
+    /// Uses an explicit upsert rather than `INSERT OR REPLACE`, which would
+    /// delete the old row first and fire referential delete actions.
+    pub fn upsert_subscription(&self, sub: &Subscription) -> Result<bool> {
+        let inserted = !self.exists("subscription", &sub.id.to_string())?;
+        self.conn.execute(
+            "INSERT INTO subscription (id, name, notes, template_id, amount, currency,
+                 cycle_count, cycle_unit, first_billing_date, reminder_lead_days,
+                 category_id, status, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
+             ON CONFLICT(id) DO UPDATE SET
+                 name = ?2, notes = ?3, template_id = ?4, amount = ?5, currency = ?6,
+                 cycle_count = ?7, cycle_unit = ?8, first_billing_date = ?9,
+                 reminder_lead_days = ?10, category_id = ?11, status = ?12,
+                 created_at = ?13, updated_at = ?14",
+            params![
+                sub.id.to_string(),
+                sub.name,
+                sub.notes,
+                sub.template_id,
+                sub.price.amount().to_string(),
+                sub.price.currency(),
+                sub.cycle.count(),
+                unit_str(sub.cycle.unit()),
+                sub.first_billing_date.to_string(),
+                sub.reminder_lead_days,
+                sub.category_id.map(|id| id.to_string()),
+                status_str(sub.status),
+                sub.created_at.to_string(),
+                sub.updated_at.to_string(),
+            ],
+        )?;
+        Ok(inserted)
     }
 
     /// Deletes a subscription; returns whether a row existed.
@@ -178,6 +231,22 @@ impl Store {
             )));
         }
         Ok(())
+    }
+
+    /// Writes a category as given, inserting or overwriting by id.
+    ///
+    /// Returns whether the row was newly inserted. See
+    /// [`Self::upsert_subscription`] for why this is not `INSERT OR REPLACE`:
+    /// here it matters most, since replacing a category row would fire
+    /// `ON DELETE SET NULL` and detach every subscription using it.
+    pub fn upsert_category(&self, category: &Category) -> Result<bool> {
+        let inserted = !self.exists("category", &category.id.to_string())?;
+        self.conn.execute(
+            "INSERT INTO category (id, name, sort_order) VALUES (?1, ?2, ?3)
+             ON CONFLICT(id) DO UPDATE SET name = ?2, sort_order = ?3",
+            params![category.id.to_string(), category.name, category.sort_order],
+        )?;
+        Ok(inserted)
     }
 
     /// Deletes a category; subscriptions keep existing with no category
@@ -375,6 +444,38 @@ mod tests {
         assert_eq!(store.subscription(sub.id).unwrap().unwrap(), stored);
         // Updating a missing row is corruption, not silence.
         assert!(store.update_subscription(&sample()).is_err());
+    }
+
+    #[test]
+    fn upsert_reports_insertion_and_keeps_timestamps_verbatim() {
+        let store = Store::open_in_memory().unwrap();
+        let mut sub = sample();
+        assert!(store.upsert_subscription(&sub).unwrap());
+
+        sub.name = "Renamed".into();
+        assert!(!store.upsert_subscription(&sub).unwrap());
+        let stored = store.subscription(sub.id).unwrap().unwrap();
+        assert_eq!(stored, sub);
+        // A restore must not rewrite history the way update_subscription does.
+        assert_eq!(stored.updated_at, sub.updated_at);
+    }
+
+    #[test]
+    fn upserting_a_category_keeps_its_subscriptions_attached() {
+        let store = Store::open_in_memory().unwrap();
+        let mut category = Category::new("Streaming", 0).unwrap();
+        store.insert_category(&category).unwrap();
+        let mut sub = sample();
+        sub.category_id = Some(category.id);
+        store.insert_subscription(&sub).unwrap();
+
+        category.name = "Video".into();
+        assert!(!store.upsert_category(&category).unwrap());
+        // INSERT OR REPLACE would have deleted the row first and fired
+        // ON DELETE SET NULL, silently detaching this subscription.
+        let reloaded = store.subscription(sub.id).unwrap().unwrap();
+        assert_eq!(reloaded.category_id, Some(category.id));
+        assert_eq!(store.categories().unwrap(), vec![category]);
     }
 
     #[test]

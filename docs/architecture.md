@@ -53,6 +53,33 @@ These invariants hold everywhere in the codebase:
   constructors, so a database edited outside Rondo fails loudly rather
   than loading invalid state.
 
+## Dependency choices
+
+The core is small, but it sits behind an FFI boundary and defines a
+persistence format. That makes a dependency's API stability worth more
+than its benchmark numbers: a breaking change in any of these types
+propagates into the SQLite schema, the backup format, and the Swift side
+at once. The alternatives below were compared in August 2026; each was
+rejected for a concrete reason, not by default.
+
+| Job | Chosen | Considered and why not |
+| --- | --- | --- |
+| Storage | `rusqlite` | `redb` is a key-value store with no queries, foreign keys, or migrations. `native_db` has not released since July 2025. `turso` is beta and async-first. `sqlx` keeps the C dependency *and* forces an async runtime. |
+| JSON | `serde_json` | `sonic-rs` needs `-C target-cpu=native`, which cannot produce a universal or cross-compiled binary. `simd-json` parses destructively, so a read-only backup must be copied first. |
+| Decimal | `rust_decimal` | `fastnum` is pre-1.0 and states its API may break. `bigdecimal` is arbitrary-precision and heap-allocating, which money is not. |
+| Ids | `uuid` (v7) | `ulid` shipped two breaking majors in one week of July 2026, and Swift's Foundation has `UUID` but no ULID. |
+| Dates | `jiff` | `chrono` and `time` lack the calendar arithmetic that makes month-end billing correct. |
+
+Two consequences worth stating plainly. First, the SIMD JSON parsers would
+save well under a millisecond on a backup file of this size - far less than
+one frame of UI - in exchange for cross-compilation risk on iOS. Second,
+SQLite's C dependency is not a portability problem: compiling the bundled
+amalgamation for iOS and Android is a long-established path, and Rondo
+already needs those toolchains for UniFFI.
+
+Revisit the storage choice if `turso` reaches 1.0 with a synchronous API,
+or if a target platform appears that has no C toolchain.
+
 ## Crate layout
 
 - `crates/rondo-core` - domain model (`model`), occurrence math (`cycle`),

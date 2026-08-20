@@ -1,0 +1,10 @@
+[package]
+name = "rondo-ffi"
+version.workspace = true
+edition.workspace = true
+description = "UniFFI bindings over rondo-core for platform frontends."
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+rondo-core = { path = "../rondo-core" }

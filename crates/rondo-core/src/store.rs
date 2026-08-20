@@ -41,6 +41,15 @@ impl Store {
         Ok(Self { conn })
     }
 
+    /// Starts a transaction on the shared connection.
+    ///
+    /// Callers must not nest these: the store holds one connection and
+    /// SQLite has no nested transactions. Dropping without `commit` rolls
+    /// back, which is how a failed multi-step write leaves no trace.
+    pub(crate) fn transaction(&self) -> Result<rusqlite::Transaction<'_>> {
+        Ok(self.conn.unchecked_transaction()?)
+    }
+
     /// Reports whether a row with `id` exists in `table`.
     ///
     /// `table` is a literal chosen by this module, never user input.

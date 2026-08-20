@@ -1,0 +1,32 @@
+name: "Check rondo"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    strategy:
+      matrix:
+        # macOS is the delivery target; Linux keeps the core portable for
+        # future frontends.
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - uses: Swatinem/rust-cache@v2
+
+      # Run everything inside the flake dev shell so CI uses the same
+      # toolchain as local development.
+      - name: Format
+        run: nix develop -c cargo fmt --check
+      - name: Clippy
+        run: nix develop -c cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        run: nix develop -c cargo test --workspace

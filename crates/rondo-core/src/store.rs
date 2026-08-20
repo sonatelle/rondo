@@ -7,6 +7,7 @@
 
 use std::path::Path;
 use std::sync::LazyLock;
+use std::time::Duration;
 
 use jiff::Timestamp;
 use rusqlite::{Connection, Row, params};
@@ -35,8 +36,7 @@ impl Store {
     }
 
     fn from_connection(mut conn: Connection) -> Result<Self> {
-        // Foreign keys are per-connection in SQLite and off by default.
-        conn.pragma_update(None, "foreign_keys", "ON")?;
+        configure(&conn)?;
         MIGRATIONS.to_latest(&mut conn)?;
         Ok(Self { conn })
     }
@@ -205,6 +205,33 @@ impl Store {
         }
         Ok(categories)
     }
+}
+
+/// How long a write waits for a competing lock before giving up.
+///
+/// Rondo writes from one connection, so contention only arises when another
+/// process (a SQLite browser, a stray second instance) holds the lock. A few
+/// seconds outlasts that; longer would just freeze the UI.
+const BUSY_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Applies the per-connection settings every Rondo database expects.
+fn configure(conn: &Connection) -> Result<()> {
+    // Foreign keys are per-connection in SQLite and off by default, so the
+    // category reference would not be enforced without this.
+    conn.pragma_update(None, "foreign_keys", "ON")?;
+    conn.busy_timeout(BUSY_TIMEOUT)?;
+
+    // WAL lets a reader work while a write is in flight, which keeps the UI
+    // responsive; it is stored in the file, so this is a no-op after the
+    // first open. In-memory databases do not support it and stay on their
+    // own journal, hence the query form rather than a checked update.
+    conn.query_row("PRAGMA journal_mode = WAL", [], |_| Ok(()))?;
+
+    // NORMAL fsyncs at checkpoints rather than every commit. Under WAL that
+    // risks losing the most recent commits to a power cut, never a corrupt
+    // file - the right trade for subscription records the user can retype.
+    conn.pragma_update(None, "synchronous", "NORMAL")?;
+    Ok(())
 }
 
 /// The ordered schema migrations, applied on every open.
@@ -414,6 +441,23 @@ mod tests {
             .map(|c| c.name)
             .collect();
         assert_eq!(names, vec!["z-first", "b-renamed", "a-third"]);
+    }
+
+    #[test]
+    fn file_databases_use_wal_and_enforce_foreign_keys() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = Store::open(&dir.path().join("rondo.sqlite3")).unwrap();
+
+        let mode: String = store
+            .conn
+            .query_row("PRAGMA journal_mode", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(mode, "wal");
+        let foreign_keys: i64 = store
+            .conn
+            .query_row("PRAGMA foreign_keys", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(foreign_keys, 1);
     }
 
     #[test]

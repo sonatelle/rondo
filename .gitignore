@@ -1,0 +1,17 @@
+# Rust
+/target/
+
+# Nix / direnv
+/.direnv/
+result
+
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+DerivedData/
+build/
+
+# Generated FFI artifacts (built by scripts/build-xcframework.sh)
+/apple/RondoCore/

@@ -161,6 +161,11 @@ pub enum SubscriptionStatus {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Subscription {
     /// Stable identity; also the sync identity if devices ever sync.
+    ///
+    /// A UUIDv7, so the id carries its creation millisecond and sorts in
+    /// creation order. That keeps inserts local in the primary-key index,
+    /// and a later sync can page through changes by id instead of joining
+    /// on timestamps.
     pub id: Uuid,
     /// Display name; never empty.
     pub name: String,
@@ -206,7 +211,7 @@ impl Subscription {
         }
         let now = Timestamp::now();
         Ok(Self {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             name: name.to_owned(),
             notes: None,
             template_id: None,
@@ -225,7 +230,7 @@ impl Subscription {
 /// A user-defined grouping for subscriptions.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Category {
-    /// Stable identity.
+    /// Stable identity; a UUIDv7, like [`Subscription::id`].
     pub id: Uuid,
     /// Display name.
     pub name: String,
@@ -246,7 +251,7 @@ impl Category {
             ));
         }
         Ok(Self {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             name: name.to_owned(),
             sort_order,
         })
@@ -283,6 +288,19 @@ mod tests {
         let sub = Subscription::new(" Netflix ", price, cycle, date).unwrap();
         assert_eq!(sub.name, "Netflix");
         assert_eq!(sub.status, SubscriptionStatus::Active);
+    }
+
+    #[test]
+    fn new_entities_get_time_ordered_uuid_v7_ids() {
+        let price = Money::new(Decimal::ONE, "USD").unwrap();
+        let cycle = BillingCycle::new(1, CycleUnit::Month).unwrap();
+        let sub = Subscription::new("a", price, cycle, Date::constant(2026, 1, 1)).unwrap();
+        let category = Category::new("c", 0).unwrap();
+        for id in [sub.id, category.id] {
+            assert_eq!(id.get_version(), Some(uuid::Version::SortRand));
+            // The embedded millisecond is what makes ids sort by creation.
+            assert!(id.get_timestamp().is_some());
+        }
     }
 
     #[test]

@@ -31,6 +31,12 @@ apple/               SwiftUI application for macOS (iOS later)
 scripts/             Build helpers (XCFramework, packaging)
 ```
 
+## Documentation
+
+- [Architecture](docs/architecture.md) - the shared-core shape and the domain rules.
+- [Development](docs/development.md) - environment, checks, and workflow.
+- [Roadmap](docs/roadmap.md) - milestones and non-goals.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

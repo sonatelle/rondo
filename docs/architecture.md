@@ -15,7 +15,7 @@ state and forwards user intent.
 +---------------------------↓-----------------------------+
 |  crates/rondo-core  all business logic                  |
 |    domain model - cycle math - summaries - templates    |
-|    SQLite storage - JSON import/export (planned)        |
+|    SQLite storage - JSON backup (planned)               |
 +---------------------------------------------------------+
 ```
 
@@ -44,13 +44,23 @@ These invariants hold everywhere in the codebase:
   month is exactly 1/12 of a year. Month- and year-based cycles divide
   exactly; day- and week-based cycles are approximations by nature.
 - **Local-only data.** The core performs no network requests. Entities
-  carry UUIDs and UTC created/updated timestamps so a future sync feature
-  remains possible, but nothing syncs today.
+  carry UUIDv7 ids and UTC created/updated timestamps so a future sync
+  feature remains possible, but nothing syncs today. A v7 id embeds its
+  creation millisecond, so ids sort in creation order - inserts stay local
+  in the index, and a sync can page through changes by id.
+- **Stored values re-enter through the constructors.** Rows are text in
+  canonical form and every read rebuilds the entity with the validating
+  constructors, so a database edited outside Rondo fails loudly rather
+  than loading invalid state.
 
 ## Crate layout
 
 - `crates/rondo-core` - domain model (`model`), occurrence math (`cycle`),
   spending summaries (`summary`), bundled service templates (`templates`),
-  structured errors (`error`). Storage and import/export land next.
+  SQLite persistence (`store`), structured errors (`error`). JSON backup
+  lands next.
+- `crates/rondo-core/migrations/` - schema migrations, applied on open and
+  tracked in `PRAGMA user_version`. A released migration is never edited;
+  a mistake is corrected by adding another one.
 - `crates/rondo-ffi` - UniFFI layer, kept free of logic.
 - `templates/services.json` - service catalogue compiled into the core.

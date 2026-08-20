@@ -10,8 +10,8 @@ its own before the next begins.
 - [x] Anchored billing-cycle math with month-end clamping
 - [x] Per-currency spending summaries (monthly / yearly)
 - [x] Bundled service templates
-- [ ] SQLite storage with migrations
-- [ ] JSON import / export
+- [x] SQLite storage with migrations
+- [ ] JSON backup export and import
 
 ## M2 - FFI bridge
 

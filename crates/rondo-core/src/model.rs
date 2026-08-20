@@ -261,6 +261,7 @@ impl Category {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     #[test]
     fn billing_cycle_rejects_zero_and_oversized_counts() {
@@ -311,6 +312,17 @@ mod tests {
         let good: BillingCycle = serde_json::from_str(r#"{"count":3,"unit":"month"}"#).unwrap();
         assert_eq!(good.count(), 3);
         assert_eq!(good.unit(), CycleUnit::Month);
+    }
+
+    #[test]
+    fn money_serializes_the_amount_as_a_string() {
+        // A JSON number would round-trip through a float in most readers and
+        // lose exactness; backups must stay byte-for-byte faithful.
+        let money = Money::new(Decimal::from_str("15.90").unwrap(), "USD").unwrap();
+        assert_eq!(
+            serde_json::to_string(&money).unwrap(),
+            r#"{"amount":"15.90","currency":"USD"}"#
+        );
     }
 
     #[test]

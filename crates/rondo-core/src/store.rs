@@ -6,9 +6,11 @@
 //! edited by other tools cannot smuggle invalid state into the model.
 
 use std::path::Path;
+use std::sync::LazyLock;
 
 use jiff::Timestamp;
 use rusqlite::{Connection, Row, params};
+use rusqlite_migration::{M, Migrations};
 use uuid::Uuid;
 
 use crate::error::{Error, Result};
@@ -32,10 +34,10 @@ impl Store {
         Self::from_connection(Connection::open_in_memory()?)
     }
 
-    fn from_connection(conn: Connection) -> Result<Self> {
+    fn from_connection(mut conn: Connection) -> Result<Self> {
         // Foreign keys are per-connection in SQLite and off by default.
         conn.pragma_update(None, "foreign_keys", "ON")?;
-        migrate(&conn)?;
+        MIGRATIONS.to_latest(&mut conn)?;
         Ok(Self { conn })
     }
 
@@ -205,41 +207,13 @@ impl Store {
     }
 }
 
-/// Applies pending schema migrations, tracked via `PRAGMA user_version`.
-fn migrate(conn: &Connection) -> Result<()> {
-    let version: i64 = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
-    if version < 1 {
-        // STRICT keeps SQLite from silently coercing column types.
-        conn.execute_batch(
-            "BEGIN;
-             CREATE TABLE category (
-                 id         TEXT PRIMARY KEY,
-                 name       TEXT NOT NULL,
-                 sort_order INTEGER NOT NULL
-             ) STRICT;
-             CREATE TABLE subscription (
-                 id                 TEXT PRIMARY KEY,
-                 name               TEXT NOT NULL,
-                 notes              TEXT,
-                 template_id        TEXT,
-                 amount             TEXT NOT NULL,
-                 currency           TEXT NOT NULL,
-                 cycle_count        INTEGER NOT NULL,
-                 cycle_unit         TEXT NOT NULL,
-                 first_billing_date TEXT NOT NULL,
-                 reminder_lead_days INTEGER NOT NULL,
-                 category_id        TEXT REFERENCES category(id) ON DELETE SET NULL,
-                 status             TEXT NOT NULL,
-                 created_at         TEXT NOT NULL,
-                 updated_at         TEXT NOT NULL
-             ) STRICT;
-             CREATE INDEX subscription_by_status ON subscription(status);
-             PRAGMA user_version = 1;
-             COMMIT;",
-        )?;
-    }
-    Ok(())
-}
+/// The ordered schema migrations, applied on every open.
+///
+/// Each entry is immutable once released: a mistake is corrected by a new
+/// migration, never by editing an old one, since databases that already ran
+/// it would never see the edit.
+static MIGRATIONS: LazyLock<Migrations<'static>> =
+    LazyLock::new(|| Migrations::new(vec![M::up(include_str!("../migrations/001-initial.sql"))]));
 
 /// Rebuilds a [`Subscription`] from a row, re-validating every invariant.
 fn subscription_from_row(row: &Row<'_>) -> Result<Subscription> {
@@ -326,7 +300,9 @@ where
 mod tests {
     use super::*;
     use jiff::civil::Date;
+    use rusqlite_migration::SchemaVersion;
     use rust_decimal::Decimal;
+    use std::num::NonZeroUsize;
     use std::str::FromStr;
 
     fn sample() -> Subscription {
@@ -337,6 +313,18 @@ mod tests {
             Date::constant(2026, 1, 31),
         )
         .unwrap()
+    }
+
+    #[test]
+    fn migrations_are_valid_and_reach_the_latest_version() {
+        // Catches a malformed or out-of-order migration at test time rather
+        // than on a user's database.
+        MIGRATIONS.validate().unwrap();
+        let store = Store::open_in_memory().unwrap();
+        assert_eq!(
+            MIGRATIONS.current_version(&store.conn).unwrap(),
+            SchemaVersion::Inside(NonZeroUsize::new(1).unwrap())
+        );
     }
 
     #[test]

@@ -25,6 +25,10 @@ pub enum Error {
     #[error("storage error: {0}")]
     Storage(#[from] rusqlite::Error),
 
+    /// The database schema could not be brought up to date.
+    #[error("schema migration failed: {0}")]
+    Migration(#[from] rusqlite_migration::Error),
+
     /// A stored row no longer satisfies a domain invariant.
     ///
     /// This means the database was edited outside Rondo or written by an

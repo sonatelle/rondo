@@ -37,6 +37,11 @@ organization conventions; where the two differ, this file wins here.
   never see the edit.
 - Restoring data must preserve stored timestamps: use the `upsert_*` store
   methods, not `update_*`, which deliberately refresh `updated_at`.
+- The backup format is versioned. Any change an older build could not read
+  correctly needs `backup::FORMAT_VERSION` raised and a migration path for
+  the old shape; import must keep refusing versions from the future.
+- Importing a backup merges and never deletes, so restoring the wrong file
+  cannot destroy data. Keep it that way.
 - Data is local-only. `rondo-core` must not perform network requests.
 
 ## Development Environment

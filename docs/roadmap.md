@@ -3,7 +3,7 @@
 Status as of August 2026. Milestones land in order; each one is usable on
 its own before the next begins.
 
-## M1 - Core foundation (in progress)
+## M1 - Core foundation (done)
 
 - [x] Cargo workspace, CI on Ubuntu and macOS
 - [x] Domain model: subscriptions, categories, money, billing cycles
@@ -11,9 +11,9 @@ its own before the next begins.
 - [x] Per-currency spending summaries (monthly / yearly)
 - [x] Bundled service templates
 - [x] SQLite storage with migrations
-- [ ] JSON backup export and import
+- [x] JSON backup export and import
 
-## M2 - FFI bridge
+## M2 - FFI bridge (next)
 
 - [ ] UniFFI bindings in `rondo-ffi`
 - [ ] `RondoCore.xcframework` build script

@@ -15,7 +15,7 @@ state and forwards user intent.
 +---------------------------↓-----------------------------+
 |  crates/rondo-core  all business logic                  |
 |    domain model - cycle math - summaries - templates    |
-|    SQLite storage - JSON backup (planned)               |
+|    SQLite storage - versioned JSON backup               |
 +---------------------------------------------------------+
 ```
 
@@ -84,8 +84,8 @@ or if a target platform appears that has no C toolchain.
 
 - `crates/rondo-core` - domain model (`model`), occurrence math (`cycle`),
   spending summaries (`summary`), bundled service templates (`templates`),
-  SQLite persistence (`store`), structured errors (`error`). JSON backup
-  lands next.
+  SQLite persistence (`store`), JSON backup (`backup`), structured errors
+  (`error`).
 - `crates/rondo-core/migrations/` - schema migrations, applied on open and
   tracked in `PRAGMA user_version`. A released migration is never edited;
   a mistake is corrected by adding another one.

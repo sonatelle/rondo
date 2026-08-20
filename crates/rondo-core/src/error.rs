@@ -20,6 +20,17 @@ pub enum Error {
     /// A billing-date computation left the supported calendar range.
     #[error("billing date out of range: {0}")]
     DateOutOfRange(String),
+
+    /// The underlying SQLite database failed.
+    #[error("storage error: {0}")]
+    Storage(#[from] rusqlite::Error),
+
+    /// A stored row no longer satisfies a domain invariant.
+    ///
+    /// This means the database was edited outside Rondo or written by an
+    /// incompatible version; refusing to load it beats silently repairing.
+    #[error("corrupt data: {0}")]
+    Corrupt(String),
 }
 
 /// Convenience result alias for rondo-core operations.

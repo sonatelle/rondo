@@ -28,9 +28,15 @@ organization conventions; where the two differ, this file wins here.
   is `first + k * cycle`, with month-end clamping (Jan 31 + 1 month =
   Feb 28/29). Never derive the next date from the previous computed date,
   or short months make the schedule drift.
-- Entity ids are UUIDv4; rows carry `created_at` / `updated_at` UTC
-  timestamps. These exist to make future device sync possible - keep them
-  correct even though nothing syncs yet.
+- Entity ids are UUIDv7 (`Uuid::now_v7`), so they sort in creation order;
+  rows carry `created_at` / `updated_at` UTC timestamps. These exist to
+  make future device sync possible - keep them correct even though nothing
+  syncs yet.
+- Schema changes are new migrations under `crates/rondo-core/migrations/`.
+  An already-released migration is immutable: databases that ran it would
+  never see the edit.
+- Restoring data must preserve stored timestamps: use the `upsert_*` store
+  methods, not `update_*`, which deliberately refresh `updated_at`.
 - Data is local-only. `rondo-core` must not perform network requests.
 
 ## Development Environment

@@ -346,7 +346,7 @@ mod tests {
         sub.notes = Some("family plan".into());
         store.insert_subscription(&sub).unwrap();
         assert_eq!(store.subscription(sub.id).unwrap().unwrap(), sub);
-        assert!(store.subscription(Uuid::new_v4()).unwrap().is_none());
+        assert!(store.subscription(Uuid::now_v7()).unwrap().is_none());
     }
 
     #[test]

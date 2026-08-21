@@ -11,7 +11,7 @@ state and forwards user intent.
 |    (future)      Windows / Linux / Android              |
 +---------------------------↓-----------------------------+
 |  crates/rondo-ffi   UniFFI bindings                     |
-|    adapts the core API to the UniFFI type subset        |
+|    records - errors - the Rondo object frontends hold   |
 +---------------------------↓-----------------------------+
 |  crates/rondo-core  all business logic                  |
 |    domain model - cycle math - summaries - templates    |
@@ -53,6 +53,38 @@ These invariants hold everywhere in the codebase:
   constructors, so a database edited outside Rondo fails loudly rather
   than loading invalid state.
 
+## The language boundary
+
+`rondo-ffi` translates and nothing more. It holds no rules of its own, so
+that everything worth testing stays in `rondo-core` where a test needs no
+foreign runtime.
+
+Values cross as their canonical string form - the same text the database
+and the backup file already hold, so one representation serves every layer:
+
+| Core type | Crosses as | Named on the far side |
+| --- | --- | --- |
+| `Decimal` | exact decimal text | `DecimalString` |
+| `civil::Date` | `YYYY-MM-DD` | `CivilDate` |
+| `Timestamp` | RFC 3339 | `Timestamp` |
+| `Uuid` | hyphenated form | `Uuid` |
+
+Money must never cross as a double. 15.99 has no exact binary fraction, so
+the amount would arrive quietly wrong and no test on either side would
+notice. `Decimal` and `Date` are renamed because Swift declares one type
+per Rust type name, and bare `Date` would then be ambiguous against
+`Foundation.Date` at every use site.
+
+`Money` and `BillingCycle` are flattened into their parts on the way out,
+since a record's fields must be public and those types keep theirs private.
+Rebuilding one goes back through the validating constructors, so a frontend
+cannot assemble a subscription the core would have refused.
+
+The seven core failure kinds collapse into three - `InvalidInput`,
+`Storage`, `UnusableData` - because a user interface only has three
+responses: point at the field, report the database, or say the data is
+unusable and offer a backup. The detail rides along in `message`.
+
 ## Dependency choices
 
 The core is small, but it sits behind an FFI boundary and defines a
@@ -89,5 +121,12 @@ or if a target platform appears that has no C toolchain.
 - `crates/rondo-core/migrations/` - schema migrations, applied on open and
   tracked in `PRAGMA user_version`. A released migration is never edited;
   a mistake is corrected by adding another one.
-- `crates/rondo-ffi` - UniFFI layer, kept free of logic.
+- `crates/rondo-ffi` - UniFFI layer, kept free of logic: the records that
+  cross (`records`), the boundary value types (`types`), the failures
+  (`error`), and `Rondo`, the object a frontend opens and calls.
+- `scripts/` - `build-xcframework.sh` packages the core for Xcode;
+  `swift-smoke-test.sh` proves the packaged result actually runs.
+- `apple/smoke/` - the Swift program that smoke test compiles and runs.
+- `apple/RondoCore/` - the packaged XCFramework and generated Swift. Build
+  output, not source; it is not in version control.
 - `templates/services.json` - service catalogue compiled into the core.

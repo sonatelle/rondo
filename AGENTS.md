@@ -19,9 +19,8 @@ organization conventions; where the two differ, this file wins here.
 - A frontend rebuilds core entities through the validating constructors,
   so it can never assemble something the core would have refused.
 - After changing `rondo-ffi`, run `scripts/build-xcframework.sh` and then
-  `scripts/swift-smoke-test.sh`. The Rust tests cannot see a package that
-  builds but cannot be used - a module name that does not match what the
-  generated Swift imports, for instance, silently drops every type.
+  `scripts/swift-smoke-test.sh`. The Rust tests never link the packaged
+  artifact, so they cannot see a package that builds but cannot be used.
 - `apple/` holds the SwiftUI application. macOS is the delivery target;
   keep views reusable for iOS (no AppKit-only APIs without need).
 - UI layers stay thin. If a rule about subscriptions, money, or dates is

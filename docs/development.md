@@ -35,9 +35,19 @@ scripts/swift-smoke-test.sh           # compiles and runs apple/smoke
 ```
 
 Run both after changing anything in `rondo-ffi`. The smoke test is what
-catches a package that builds but cannot be used - a mismatched module
-name, for instance, silently drops every low-level type, and only linking
-real Swift against it shows that.
+catches a package that builds but cannot be used: the Rust tests never
+link the packaged artifact, so only compiling real Swift against it shows
+whether Xcode could.
+
+To look at the generated bindings without packaging them, the generator
+runs on its own. It lives behind a feature so its dependencies stay out of
+the library the app ships:
+
+```sh
+cargo build -p rondo-ffi
+cargo run --features bindgen -p rondo-ffi --bin uniffi-bindgen -- generate \
+    --library target/debug/librondo_ffi.dylib --language swift --out-dir /tmp/bindings
+```
 
 `build-xcframework.sh` builds for this machine by default. Another target
 (Intel macOS, iOS) needs its standard library added to the Rust toolchain

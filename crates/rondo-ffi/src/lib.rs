@@ -5,7 +5,11 @@
 //! rules belong in `rondo-core`, where they can be tested without a
 //! foreign runtime.
 
-mod types;
+pub mod error;
+pub mod types;
+
+pub use error::{Result, RondoError};
+pub use types::{CivilDate, DecimalString};
 
 uniffi::setup_scaffolding!();
 

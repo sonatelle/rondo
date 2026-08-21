@@ -25,5 +25,9 @@ bindgen = ["uniffi/cli"]
 jiff = "0.2.35"
 rondo-core = { path = "../rondo-core" }
 rust_decimal = "1.42.1"
+thiserror = "2.0.20"
 uniffi = "0.32.0"
 uuid = "1.24.1"
+
+[dev-dependencies]
+rusqlite = "0.40.2"

@@ -18,6 +18,8 @@ set -euo pipefail
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly LIB_NAME="librondo_ffi.a"
 readonly FRAMEWORK_NAME="RondoCore"
+# The C module the generated Swift imports; see the module map step below.
+readonly MODULE_NAME="rondo_ffiFFI"
 readonly OUT_DIR="${REPO_ROOT}/apple/RondoCore"
 
 profile="debug"
@@ -96,11 +98,19 @@ echo "==> Generating Swift sources"
 bindgen_swift "${SWIFT_DIR}" --swift-sources
 
 # `module.modulemap` is the name Clang looks for beside a set of headers.
+#
+# The module name must match what the generated Swift tries to import: it
+# guards the import with `#if canImport(rondo_ffiFFI)`, so a differently
+# named module is silently skipped and every low-level type goes missing.
+#
 # The module is declared plain rather than as a `framework` module, because
 # this XCFramework carries a static library and a headers directory, not a
 # .framework bundle - hence no --xcframework flag here.
 echo "==> Generating headers and module map"
-bindgen_swift "${HEADERS_DIR}" --headers --modulemap --modulemap-filename module.modulemap
+bindgen_swift "${HEADERS_DIR}" \
+  --headers --modulemap \
+  --modulemap-filename module.modulemap \
+  --module-name "${MODULE_NAME}"
 
 echo "==> Assembling ${FRAMEWORK_NAME}.xcframework"
 rm -rf "${OUT_DIR}"

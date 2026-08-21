@@ -18,8 +18,6 @@ set -euo pipefail
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly LIB_NAME="librondo_ffi.a"
 readonly FRAMEWORK_NAME="RondoCore"
-# The C module the generated Swift imports; see the module map step below.
-readonly MODULE_NAME="rondo_ffiFFI"
 readonly OUT_DIR="${REPO_ROOT}/apple/RondoCore"
 
 profile="debug"
@@ -82,35 +80,23 @@ else
 fi
 
 # Bindings are generated from the built library rather than from source, so
-# what Swift sees always matches what was compiled. The Swift-specific
-# generator writes sources, headers, and the module map separately, which
-# is exactly how an XCFramework wants them laid out.
+# what Swift sees always matches what was compiled. A stale library yields
+# stale bindings with nothing to warn you, which is why this always builds
+# first rather than reusing whatever is lying in target/.
+echo "==> Generating Swift bindings"
 readonly SWIFT_DIR="${staging}/swift"
 readonly HEADERS_DIR="${staging}/headers"
 mkdir -p "${SWIFT_DIR}" "${HEADERS_DIR}"
+cargo run --quiet --features bindgen -p rondo-ffi --bin uniffi-bindgen -- \
+  generate --library "${LIB_PATH}" --language swift --out-dir "${SWIFT_DIR}"
 
-bindgen_swift() {
-  cargo run --quiet --features bindgen -p rondo-ffi --bin uniffi-bindgen-swift -- \
-    "${LIB_PATH}" "$@"
-}
-
-echo "==> Generating Swift sources"
-bindgen_swift "${SWIFT_DIR}" --swift-sources
-
-# `module.modulemap` is the name Clang looks for beside a set of headers.
-#
-# The module name must match what the generated Swift tries to import: it
-# guards the import with `#if canImport(rondo_ffiFFI)`, so a differently
-# named module is silently skipped and every low-level type goes missing.
-#
-# The module is declared plain rather than as a `framework` module, because
-# this XCFramework carries a static library and a headers directory, not a
-# .framework bundle - hence no --xcframework flag here.
-echo "==> Generating headers and module map"
-bindgen_swift "${HEADERS_DIR}" \
-  --headers --modulemap \
-  --modulemap-filename module.modulemap \
-  --module-name "${MODULE_NAME}"
+# The generator writes all three artifacts together; an XCFramework wants
+# the headers apart from the Swift, with the module map under the fixed
+# name Clang looks for. The module name inside it already matches the
+# `#if canImport(...)` guard in the generated Swift, and must keep doing
+# so: a mismatch skips the import and every low-level type disappears.
+mv "${SWIFT_DIR}"/*.h "${HEADERS_DIR}/"
+mv "${SWIFT_DIR}"/*.modulemap "${HEADERS_DIR}/module.modulemap"
 
 echo "==> Assembling ${FRAMEWORK_NAME}.xcframework"
 rm -rf "${OUT_DIR}"

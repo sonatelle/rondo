@@ -7,6 +7,7 @@
 
 pub mod error;
 pub mod records;
+pub mod rondo;
 pub mod types;
 
 pub use error::{Result, RondoError};

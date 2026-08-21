@@ -42,6 +42,14 @@ pub struct NewSubscription {
     pub reminder_lead_days: Option<u16>,
 }
 
+/// A subscription paired with the next date it will be charged.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct Renewal {
+    pub subscription: Subscription,
+    /// The first charge falling on or after the day that was asked about.
+    pub date: CivilDate,
+}
+
 #[uniffi::export]
 impl Rondo {
     /// Opens the database at `path`, creating and migrating it if needed.
@@ -109,6 +117,35 @@ impl Rondo {
     /// Deletes a subscription; reports whether one was there to delete.
     pub fn delete_subscription(&self, id: Uuid) -> Result<bool> {
         Ok(self.store()?.delete_subscription(id)?)
+    }
+
+    /// Lists subscriptions with their next charge, soonest first.
+    ///
+    /// `from` is the day to reckon against - the frontend's own calendar
+    /// day, since a billing date is a date on a calendar and only the
+    /// frontend knows which one the person is looking at. Subscriptions
+    /// renewing on the same day are ordered by name so the list does not
+    /// shuffle between refreshes.
+    pub fn renewals(&self, from: CivilDate, include_archived: bool) -> Result<Vec<Renewal>> {
+        let mut renewals = Vec::new();
+        for sub in self.subscriptions(include_archived)? {
+            let date = rondo_core::cycle::next_billing_date(
+                sub.first_billing_date.0,
+                BillingCycle::new(sub.cycle_count, sub.cycle_unit)?,
+                from.0,
+            )?;
+            renewals.push(Renewal {
+                subscription: sub,
+                date: CivilDate(date),
+            });
+        }
+        renewals.sort_by(|a, b| {
+            a.date
+                .0
+                .cmp(&b.date.0)
+                .then_with(|| a.subscription.name.cmp(&b.subscription.name))
+        });
+        Ok(renewals)
     }
 
     /// Moves a subscription into or out of the archive.
@@ -225,6 +262,65 @@ mod tests {
 
         rondo.set_archived(sub.id, false).unwrap();
         assert_eq!(rondo.subscriptions(false).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn renewals_come_back_soonest_first() {
+        let rondo = open();
+        let mut monthly = draft("Monthly");
+        monthly.first_billing_date = CivilDate(Date::constant(2026, 8, 5));
+        let mut yearly = draft("Yearly");
+        yearly.cycle_unit = CycleUnit::Year;
+        yearly.first_billing_date = CivilDate(Date::constant(2026, 3, 15));
+        rondo.add_subscription(yearly).unwrap();
+        rondo.add_subscription(monthly).unwrap();
+
+        let from = CivilDate(Date::constant(2026, 8, 21));
+        let renewals = rondo.renewals(from, false).unwrap();
+        assert_eq!(
+            renewals
+                .iter()
+                .map(|r| (r.subscription.name.as_str(), r.date.0.to_string()))
+                .collect::<Vec<_>>(),
+            vec![
+                ("Monthly", "2026-09-05".into()),
+                ("Yearly", "2027-03-15".into())
+            ]
+        );
+    }
+
+    #[test]
+    fn a_renewal_date_stays_anchored_across_a_short_month() {
+        let rondo = open();
+        // First charged on the 31st, so February clamps but March does not.
+        let sub = rondo.add_subscription(draft("Netflix")).unwrap();
+        assert_eq!(sub.first_billing_date.0.to_string(), "2026-01-31");
+
+        let february = rondo
+            .renewals(CivilDate(Date::constant(2026, 2, 1)), false)
+            .unwrap();
+        assert_eq!(february[0].date.0.to_string(), "2026-02-28");
+
+        let march = rondo
+            .renewals(CivilDate(Date::constant(2026, 3, 1)), false)
+            .unwrap();
+        assert_eq!(march[0].date.0.to_string(), "2026-03-31");
+    }
+
+    #[test]
+    fn renewals_on_the_same_day_keep_a_stable_order() {
+        let rondo = open();
+        for name in ["Zulu", "Alpha"] {
+            rondo.add_subscription(draft(name)).unwrap();
+        }
+        let renewals = rondo
+            .renewals(CivilDate(Date::constant(2026, 1, 1)), false)
+            .unwrap();
+        let names: Vec<&str> = renewals
+            .iter()
+            .map(|r| r.subscription.name.as_str())
+            .collect();
+        assert_eq!(names, vec!["Alpha", "Zulu"]);
     }
 
     #[test]

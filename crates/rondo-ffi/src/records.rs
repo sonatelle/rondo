@@ -142,6 +142,19 @@ impl From<&rondo_core::ServiceTemplate> for ServiceTemplate {
     }
 }
 
+/// The bundled service catalogue.
+///
+/// Deliberately not a method on an open database: the picker in a
+/// creation form should not need one, and the catalogue is the same for
+/// everyone. It is compiled in, so this never fails or touches the disk.
+#[uniffi::export]
+pub fn service_templates() -> Vec<ServiceTemplate> {
+    rondo_core::templates::service_templates()
+        .iter()
+        .map(ServiceTemplate::from)
+        .collect()
+}
+
 /// Normalized spending for one currency.
 ///
 /// The totals keep full precision; rounding is the frontend's decision,

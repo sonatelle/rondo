@@ -11,7 +11,7 @@ use rondo_core::model::{
 use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
-use crate::records::{Category, Subscription};
+use crate::records::{Category, SpendingSummary, Subscription};
 use crate::types::{CivilDate, DecimalString};
 
 /// An open Rondo database.
@@ -147,6 +147,19 @@ impl Rondo {
                 .then_with(|| a.subscription.name.cmp(&b.subscription.name))
         });
         Ok(renewals)
+    }
+
+    /// Totals active spending, one entry per currency.
+    ///
+    /// Currencies are never mixed and archived subscriptions are left out.
+    /// The totals carry full precision; rounding is the frontend's call,
+    /// made once when the number is shown.
+    pub fn spending_summary(&self) -> Result<Vec<SpendingSummary>> {
+        let subscriptions = self.store()?.subscriptions(None)?;
+        Ok(rondo_core::summary::summarize(&subscriptions)
+            .into_iter()
+            .map(SpendingSummary::from)
+            .collect())
     }
 
     /// Lists categories in the order the person arranged them.
@@ -394,6 +407,41 @@ mod tests {
             rondo.add_category("   ".into(), 0),
             Err(RondoError::InvalidInput { .. })
         ));
+    }
+
+    #[test]
+    fn spending_totals_stay_separate_per_currency_and_skip_archived() {
+        let rondo = open();
+        // 15.90 monthly and 120 yearly in USD, plus 8 monthly in CNY.
+        rondo.add_subscription(draft("Netflix")).unwrap();
+        let mut yearly = draft("Copilot");
+        yearly.amount = DecimalString(Decimal::from_str("120").unwrap());
+        yearly.cycle_unit = CycleUnit::Year;
+        rondo.add_subscription(yearly).unwrap();
+        let mut cny = draft("Music");
+        cny.amount = DecimalString(Decimal::from_str("8").unwrap());
+        cny.currency = "CNY".into();
+        rondo.add_subscription(cny).unwrap();
+        let archived = rondo.add_subscription(draft("Gone")).unwrap();
+        rondo.set_archived(archived.id, true).unwrap();
+
+        let summary = rondo.spending_summary().unwrap();
+        assert_eq!(summary.len(), 2, "currencies are never mixed");
+        let cny = &summary[0];
+        assert_eq!(cny.currency, "CNY");
+        assert_eq!(cny.monthly.0.to_string(), "8");
+        let usd = &summary[1];
+        assert_eq!(usd.currency, "USD");
+        assert_eq!(usd.subscription_count, 2, "the archived one is left out");
+        // 15.90 a month plus 120 a year is 25.90 a month.
+        assert_eq!(usd.monthly.0.to_string(), "25.90");
+    }
+
+    #[test]
+    fn the_template_catalogue_is_available_without_a_database() {
+        let templates = crate::records::service_templates();
+        assert!(!templates.is_empty());
+        assert!(templates.iter().any(|t| t.name == "Netflix"));
     }
 
     #[test]

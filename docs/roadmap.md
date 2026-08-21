@@ -13,13 +13,13 @@ its own before the next begins.
 - [x] SQLite storage with migrations
 - [x] JSON backup export and import
 
-## M2 - FFI bridge (next)
+## M2 - FFI bridge (done)
 
-- [ ] UniFFI bindings in `rondo-ffi`
-- [ ] `RondoCore.xcframework` build script
-- [ ] Swift smoke test against the bridge
+- [x] UniFFI bindings in `rondo-ffi`
+- [x] `RondoCore.xcframework` build script
+- [x] Swift smoke test against the bridge
 
-## M3 - macOS app (first usable release)
+## M3 - macOS app (next, first usable release)
 
 - [ ] Subscription list sorted by next billing date
 - [ ] Add / edit form with template picker

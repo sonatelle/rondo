@@ -25,6 +25,24 @@ cargo test --workspace
 CI runs the same three commands inside `nix develop` on Ubuntu and macOS
 for every pull request and every push to `main`.
 
+## The Swift bridge
+
+Packaging the core for Xcode, and checking that the package works:
+
+```sh
+scripts/build-xcframework.sh          # apple/RondoCore/
+scripts/swift-smoke-test.sh           # compiles and runs apple/smoke
+```
+
+Run both after changing anything in `rondo-ffi`. The smoke test is what
+catches a package that builds but cannot be used - a mismatched module
+name, for instance, silently drops every low-level type, and only linking
+real Swift against it shows that.
+
+`build-xcframework.sh` builds for this machine by default. Another target
+(Intel macOS, iOS) needs its standard library added to the Rust toolchain
+in `flake.nix` first; the script says so rather than failing obscurely.
+
 ## Workflow
 
 - All work lands through pull requests; `main` stays stable. One

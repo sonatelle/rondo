@@ -51,6 +51,29 @@ pub struct Renewal {
     pub date: CivilDate,
 }
 
+/// What restoring a backup changed.
+///
+/// The counts are `u32` because UniFFI has no `usize`; nobody is going to
+/// keep four billion subscriptions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Record)]
+pub struct ImportSummary {
+    pub categories_added: u32,
+    pub categories_updated: u32,
+    pub subscriptions_added: u32,
+    pub subscriptions_updated: u32,
+}
+
+impl From<rondo_core::backup::ImportReport> for ImportSummary {
+    fn from(report: rondo_core::backup::ImportReport) -> Self {
+        Self {
+            categories_added: report.categories_added as u32,
+            categories_updated: report.categories_updated as u32,
+            subscriptions_added: report.subscriptions_added as u32,
+            subscriptions_updated: report.subscriptions_updated as u32,
+        }
+    }
+}
+
 #[uniffi::export]
 impl Rondo {
     /// Opens the database at `path`, creating and migrating it if needed.
@@ -147,6 +170,26 @@ impl Rondo {
                 .then_with(|| a.subscription.name.cmp(&b.subscription.name))
         });
         Ok(renewals)
+    }
+
+    /// Serializes the whole database as readable JSON.
+    ///
+    /// The frontend decides where it goes; the core only produces the text.
+    pub fn export_backup(&self) -> Result<String> {
+        let store = self.store()?;
+        Ok(rondo_core::backup::export_json(&store)?)
+    }
+
+    /// Restores a backup, merging it into what is already stored.
+    ///
+    /// Entries present in both are overwritten with the backed-up values
+    /// and entries only here are left alone; nothing is deleted. Restoring
+    /// the wrong file therefore cannot destroy data, and restoring the same
+    /// file twice changes nothing the second time. A failure part-way
+    /// leaves the database exactly as it was.
+    pub fn import_backup(&self, json: String) -> Result<ImportSummary> {
+        let store = self.store()?;
+        Ok(rondo_core::backup::import_json(&store, &json)?.into())
     }
 
     /// Totals active spending, one entry per currency.
@@ -442,6 +485,41 @@ mod tests {
         let templates = crate::records::service_templates();
         assert!(!templates.is_empty());
         assert!(templates.iter().any(|t| t.name == "Netflix"));
+    }
+
+    #[test]
+    fn a_backup_carries_a_database_to_another_one() {
+        let source = open();
+        let category = source.add_category("Streaming".into(), 0).unwrap();
+        let mut filed = draft("Netflix");
+        filed.category_id = Some(category.id);
+        let sub = source.add_subscription(filed).unwrap();
+        let json = source.export_backup().unwrap();
+
+        let target = open();
+        let summary = target.import_backup(json.clone()).unwrap();
+        assert_eq!(summary.categories_added, 1);
+        assert_eq!(summary.subscriptions_added, 1);
+        // Every field survives, timestamps included.
+        assert_eq!(target.subscription(sub.id).unwrap().unwrap(), sub);
+
+        // Restoring the same file again changes nothing.
+        let again = target.import_backup(json).unwrap();
+        assert_eq!(again.subscriptions_added, 0);
+        assert_eq!(again.subscriptions_updated, 1);
+        assert_eq!(target.subscriptions(true).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn restoring_a_bad_file_leaves_the_database_untouched() {
+        let rondo = open();
+        let kept = rondo.add_subscription(draft("Netflix")).unwrap();
+
+        assert!(matches!(
+            rondo.import_backup("not json".into()),
+            Err(RondoError::UnusableData { .. })
+        ));
+        assert_eq!(rondo.subscriptions(true).unwrap(), vec![kept]);
     }
 
     #[test]

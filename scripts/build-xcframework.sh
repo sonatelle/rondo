@@ -90,13 +90,10 @@ mkdir -p "${SWIFT_DIR}" "${HEADERS_DIR}"
 cargo run --quiet --features bindgen -p rondo-ffi --bin uniffi-bindgen -- \
   generate --library "${LIB_PATH}" --language swift --out-dir "${SWIFT_DIR}"
 
-# The generator writes all three artifacts together; an XCFramework wants
-# the headers apart from the Swift, with the module map under the fixed
-# name Clang looks for. The module name inside it already matches the
-# `#if canImport(...)` guard in the generated Swift, and must keep doing
-# so: a mismatch skips the import and every low-level type disappears.
-mv "${SWIFT_DIR}"/*.h "${HEADERS_DIR}/"
-mv "${SWIFT_DIR}"/*.modulemap "${HEADERS_DIR}/module.modulemap"
+# The generator writes all three artifacts into one directory; an
+# XCFramework wants the C module apart from the Swift. Their names come
+# from uniffi.toml, which is also where the reason for them is recorded.
+mv "${SWIFT_DIR}"/module.* "${HEADERS_DIR}/"
 
 echo "==> Assembling ${FRAMEWORK_NAME}.xcframework"
 rm -rf "${OUT_DIR}"

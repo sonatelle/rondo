@@ -1,0 +1,34 @@
+# Swift binding settings.
+
+[bindings.swift]
+# The Swift module frontends import. Named for the XCFramework it ships
+# inside rather than for the Rust crate, since `RondoCore` is what the app
+# writes at the top of a file. The C module follows as `RondoCoreFFI`, both
+# in the module map and in the `canImport` guard the generated Swift uses -
+# deriving it from this name is what keeps those two in step.
+module_name = "RondoCore"
+
+# Names the generated header and module map `module.h` / `module.modulemap`.
+# Clang looks for a module map under exactly that name beside the headers
+# it describes; anything else and the guard above finds no module, the
+# import is skipped, and every low-level type silently goes missing.
+ffi_module_filename = "module"
+
+# Records stay mutable (`var`, the default). Editing forms assign to them
+# field by field, and immutable records would force the app to rebuild a
+# whole value for each keystroke.
+generate_immutable_records = false
+
+# Keep Swift's argument labels (the default): `addSubscription(draft:)`
+# reads as Swift, and callers of a boundary API benefit from the reminder
+# of what each value is.
+omit_argument_labels = false
+
+# `Decimal` and `Date` name real Foundation types, and the generated Swift
+# declares one type per Rust type name. Left alone, every bare `Date` in
+# the app would be ambiguous. Renaming here keeps the Rust side speaking in
+# core types instead of wrapping them for Swift's benefit, and leaves other
+# languages - which have no such collision - with the plain names.
+[bindings.swift.rename]
+Decimal = "DecimalString"
+Date = "CivilDate"

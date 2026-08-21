@@ -11,10 +11,8 @@
 //!
 //! `Uuid` and `Timestamp` keep their own names on the far side, since
 //! neither collides with anything in Foundation. `Decimal` and `Date` do
-//! collide, and the generated Swift declares a type per Rust type name, so
-//! for those two the core type is wrapped in a differently named one here.
-//! Without that, every bare `Date` in the app would be ambiguous against
-//! `Foundation.Date`.
+//! collide, so `uniffi.toml` renames them for Swift only - otherwise every
+//! bare `Date` in the app would be ambiguous against `Foundation.Date`.
 
 use jiff::Timestamp;
 use jiff::civil::Date;
@@ -33,30 +31,16 @@ uniffi::custom_type!(Timestamp, String, {
     try_lift: |value| Ok(value.parse()?),
 });
 
-/// An exact decimal amount, carried as text.
-///
-/// Named apart from `Decimal` so the generated Swift does not shadow
-/// `Foundation.Decimal`. Parse it before doing arithmetic; the string is
-/// the exact value, not an approximation of it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct DecimalString(pub Decimal);
-
-uniffi::custom_type!(DecimalString, String, {
-    lower: |value| value.0.to_string(),
-    try_lift: |value| Ok(DecimalString(value.parse()?)),
+uniffi::custom_type!(Decimal, String, {
+    remote,
+    lower: |value| value.to_string(),
+    try_lift: |value| Ok(value.parse()?),
 });
 
-/// A calendar date with no time zone, carried as `YYYY-MM-DD`.
-///
-/// Named apart from `Date` for the same reason as [`DecimalString`], and
-/// because the distinction matters: a billing date is a day on a calendar,
-/// not the instant `Foundation.Date` represents.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct CivilDate(pub Date);
-
-uniffi::custom_type!(CivilDate, String, {
-    lower: |value| value.0.to_string(),
-    try_lift: |value| Ok(CivilDate(value.parse()?)),
+uniffi::custom_type!(Date, String, {
+    remote,
+    lower: |value| value.to_string(),
+    try_lift: |value| Ok(value.parse()?),
 });
 
 #[cfg(test)]
@@ -78,8 +62,7 @@ mod tests {
     fn every_boundary_type_round_trips_through_its_string_form() {
         round_trips::<Uuid>("01a021fd-60be-7ab0-9393-ace2baf29b85");
         round_trips::<Timestamp>("2026-08-21T00:00:00Z");
-        let date = CivilDate(Date::from_str("2026-01-31").unwrap());
-        assert_eq!(date.0.to_string(), "2026-01-31");
+        round_trips::<Date>("2026-01-31");
     }
 
     #[test]
@@ -87,8 +70,7 @@ mod tests {
         // A trailing zero is meaningful for money: 15.90 is a price, 15.9
         // is a number. The string form preserves it; a double would not.
         for text in ["15.90", "0.001", "15.99"] {
-            let amount = DecimalString(Decimal::from_str(text).unwrap());
-            assert_eq!(amount.0.to_string(), text);
+            round_trips::<Decimal>(text);
         }
     }
 

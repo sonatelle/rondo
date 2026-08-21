@@ -6,5 +6,21 @@ description = "UniFFI bindings over rondo-core for platform frontends."
 repository.workspace = true
 license.workspace = true
 
+[lib]
+# staticlib is what the XCFramework embeds; lib keeps the crate usable from
+# Rust tests and cdylib covers frontends that load a shared library.
+crate-type = ["lib", "staticlib", "cdylib"]
+
+# The generator runs at build time only. Keeping it behind a feature keeps
+# the bindgen machinery out of the library shipped inside the app.
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["bindgen"]
+
+[features]
+bindgen = ["uniffi/cli"]
+
 [dependencies]
 rondo-core = { path = "../rondo-core" }
+uniffi = "0.32.0"

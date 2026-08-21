@@ -27,7 +27,7 @@ pub struct ServiceTemplate {
 pub fn service_templates() -> &'static [ServiceTemplate] {
     static TEMPLATES: OnceLock<Vec<ServiceTemplate>> = OnceLock::new();
     TEMPLATES.get_or_init(|| {
-        serde_json::from_str(include_str!("../../../templates/services.json"))
+        serde_json::from_str(include_str!("../templates/services.json"))
             .expect("bundled services.json must be valid")
     })
 }

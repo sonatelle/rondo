@@ -5,6 +5,8 @@
 //! rules belong in `rondo-core`, where they can be tested without a
 //! foreign runtime.
 
+mod types;
+
 uniffi::setup_scaffolding!();
 
 /// Version of the Rondo core linked into this build.

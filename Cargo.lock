@@ -815,8 +815,11 @@ dependencies = [
 name = "rondo-ffi"
 version = "0.1.0"
 dependencies = [
+ "jiff",
  "rondo-core",
+ "rust_decimal",
  "uniffi",
+ "uuid",
 ]
 
 [[package]]

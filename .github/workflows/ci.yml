@@ -32,7 +32,7 @@ jobs:
         run: |
           nix develop -c cargo fmt --check
           nix develop -c shfmt -i 2 -ci --diff scripts
-          nix develop -c swiftformat --lint --indent 2 apple/smoke
+          nix develop -c swiftformat --lint --indent 2 apple/Rondo apple/smoke
       - name: Clippy
         run: nix develop -c cargo clippy --workspace --all-targets -- -D warnings
       - name: Test

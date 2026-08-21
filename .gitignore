@@ -13,5 +13,10 @@ xcuserdata/
 DerivedData/
 build/
 
+# Generated from apple/project.yml by xcodegen; a project file is thousands
+# of lines of UUID references that cannot be merged, so the spec is the
+# source and this is output.
+/apple/Rondo.xcodeproj/
+
 # Generated FFI artifacts (built by scripts/build-xcframework.sh)
 /apple/RondoCore/

@@ -5,12 +5,13 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use rondo_core::Store;
 use rondo_core::model::{
-    BillingCycle, Money, Subscription as CoreSubscription, SubscriptionStatus,
+    BillingCycle, Category as CoreCategory, Money, Subscription as CoreSubscription,
+    SubscriptionStatus,
 };
 use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
-use crate::records::Subscription;
+use crate::records::{Category, Subscription};
 use crate::types::{CivilDate, DecimalString};
 
 /// An open Rondo database.
@@ -146,6 +147,36 @@ impl Rondo {
                 .then_with(|| a.subscription.name.cmp(&b.subscription.name))
         });
         Ok(renewals)
+    }
+
+    /// Lists categories in the order the person arranged them.
+    pub fn categories(&self) -> Result<Vec<Category>> {
+        Ok(self
+            .store()?
+            .categories()?
+            .into_iter()
+            .map(Category::from)
+            .collect())
+    }
+
+    /// Creates a category and returns it with its assigned id.
+    pub fn add_category(&self, name: String, sort_order: i32) -> Result<Category> {
+        let category = CoreCategory::new(&name, sort_order)?;
+        self.store()?.insert_category(&category)?;
+        Ok(category.into())
+    }
+
+    /// Saves a renamed or reordered category.
+    pub fn update_category(&self, category: Category) -> Result<()> {
+        Ok(self.store()?.update_category(&category.into())?)
+    }
+
+    /// Deletes a category; reports whether one was there to delete.
+    ///
+    /// Subscriptions filed under it are kept and simply lose the
+    /// assignment, so deleting a grouping never deletes what it grouped.
+    pub fn delete_category(&self, id: Uuid) -> Result<bool> {
+        Ok(self.store()?.delete_category(id)?)
     }
 
     /// Moves a subscription into or out of the archive.
@@ -321,6 +352,48 @@ mod tests {
             .map(|r| r.subscription.name.as_str())
             .collect();
         assert_eq!(names, vec!["Alpha", "Zulu"]);
+    }
+
+    #[test]
+    fn categories_can_be_created_renamed_and_removed() {
+        let rondo = open();
+        let mut streaming = rondo.add_category("Streaming".into(), 0).unwrap();
+        rondo.add_category("Tools".into(), 1).unwrap();
+
+        streaming.name = "Video".into();
+        rondo.update_category(streaming.clone()).unwrap();
+        let names: Vec<String> = rondo
+            .categories()
+            .unwrap()
+            .into_iter()
+            .map(|c| c.name)
+            .collect();
+        assert_eq!(names, vec!["Video", "Tools"]);
+
+        assert!(rondo.delete_category(streaming.id).unwrap());
+        assert!(!rondo.delete_category(streaming.id).unwrap());
+    }
+
+    #[test]
+    fn deleting_a_category_keeps_what_it_grouped() {
+        let rondo = open();
+        let category = rondo.add_category("Streaming".into(), 0).unwrap();
+        let mut with_category = draft("Netflix");
+        with_category.category_id = Some(category.id);
+        let sub = rondo.add_subscription(with_category).unwrap();
+
+        rondo.delete_category(category.id).unwrap();
+        let reloaded = rondo.subscription(sub.id).unwrap().unwrap();
+        assert_eq!(reloaded.category_id, None);
+    }
+
+    #[test]
+    fn a_category_needs_a_name() {
+        let rondo = open();
+        assert!(matches!(
+            rondo.add_category("   ".into(), 0),
+            Err(RondoError::InvalidInput { .. })
+        ));
     }
 
     #[test]

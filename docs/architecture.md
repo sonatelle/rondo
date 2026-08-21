@@ -1,23 +1,33 @@
 # Architecture
 
-Rondo is built as one shared Rust core with a thin native interface per
-platform. The core owns every business rule; each frontend only renders
-state and forwards user intent.
+Rondo is built as one shared Rust core with a thin interface per frontend.
+The core owns every business rule; each frontend only renders state and
+forwards user intent.
 
 ```text
-+---------------------------------------------------------+
-|  Frontends (thin, per platform)                         |
-|    apple/        SwiftUI - macOS now, iOS later         |
-|    (future)      Windows / Linux / Android              |
-+---------------------------↓-----------------------------+
-|  crates/rondo-ffi   UniFFI bindings                     |
-|    records - errors - the Rondo object frontends hold   |
-+---------------------------↓-----------------------------+
-|  crates/rondo-core  all business logic                  |
-|    domain model - cycle math - summaries - templates    |
-|    SQLite storage - versioned JSON backup               |
-+---------------------------------------------------------+
+   apple/            android/          crates/rondo-desktop/
+   SwiftUI           Compose           a Rust UI, were there one
+   macOS, iOS        Android           macOS, Windows, Linux
+       |                 |                      |
+       +--------+--------+                      |
+                |                               |
+                v                               |
+   crates/rondo-ffi                             |
+   UniFFI bindings: records, errors,            |
+   the Rondo object a frontend holds            |
+                |                               |
+                +---------------+---------------+
+                                |
+                                v
+   crates/rondo-core
+   domain model - cycle math - summaries - templates
+   SQLite storage - versioned JSON backup
 ```
+
+A Rust frontend would reach the core directly; `rondo-ffi` exists only to
+carry it into another language. The layers are not a uniform stack, and
+saying so keeps the FFI from being mistaken for an internal API that
+everything must route through.
 
 ## Why this shape
 
@@ -113,6 +123,44 @@ already needs those toolchains for UniFFI.
 
 Revisit the storage choice if `turso` reaches 1.0 with a synchronous API,
 or if a target platform appears that has no C toolchain.
+
+## Where code lives
+
+One directory per **frontend**, named for the ecosystem that builds it and
+never for the platform it runs on. A frontend may cover several platforms:
+`apple/` ships macOS and iOS from one SwiftUI codebase.
+
+That rule exists for the day two frontends target the same platform. If a
+shared Rust UI is ever added, both it and `apple/` produce a macOS app, and
+a directory called `macos/` would have no owner. Naming by ecosystem leaves
+room for them to coexist.
+
+Where a frontend sits follows from the language it is written in:
+
+- **Rust frontends** are workspace members under `crates/`, so
+  `cargo test --workspace` covers them, and they depend on `rondo-core`
+  directly - no bindings involved.
+- **Frontends in other languages** are top-level directories with their own
+  toolchain and build system, and reach the core through `rondo-ffi`. Each
+  gets one packaging script in `scripts/` that builds the core into
+  whatever that ecosystem consumes: an XCFramework for Xcode, and by the
+  same shape an `.aar` for Gradle or a NuGet package for .NET.
+
+Data compiled into a crate belongs to that crate, not to the repository
+root: the service catalogue lives beside the code that reads it, so the
+core stays self-contained.
+
+### What a frontend may implement itself
+
+Frontends will each want to phrase a renewal as "in 10 days". The line is
+not about duplication but about what a mistake costs:
+
+- **The core** owns anything whose failure is a wrong answer - cycle
+  arithmetic, money normalization, ordering. These are testable once and
+  must not diverge between platforms.
+- **The frontend** owns anything whose failure is only awkward phrasing.
+  Relative dates and currency formatting are localization, and every
+  platform ships better facilities for it than we would write.
 
 ## Crate layout
 

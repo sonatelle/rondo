@@ -25,8 +25,15 @@ organization conventions; where the two differ, this file wins here.
   keep views reusable for iOS (no AppKit-only APIs without need).
 - UI layers stay thin. If a rule about subscriptions, money, or dates is
   worth testing, it belongs in `rondo-core`, not in Swift.
-- New platforms (Windows, Linux, Android) get their own thin UI against
-  the same core; do not fork business logic per platform.
+- New platforms get their own thin UI against the same core; do not fork
+  business logic per platform.
+- Frontend directories are named for the ecosystem that builds them, never
+  for the platform they run on: `apple/` ships both macOS and iOS, and two
+  frontends may one day target the same platform. A Rust frontend belongs
+  in `crates/` and uses `rondo-core` directly; only other languages need
+  `rondo-ffi`.
+- Data a crate compiles in lives inside that crate, not at the repository
+  root.
 
 ## Domain Rules
 

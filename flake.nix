@@ -29,7 +29,7 @@
         "aarch64-darwin"
       ];
 
-      perSystem = {
+      perSystem = {pkgs, ...}: {
         prelude = {
           enable = true;
           name = "rust";
@@ -38,11 +38,19 @@
             enable = true;
             # version = "stable";                      # default
             version = "1.97.1";
+            targets = [
+              "aarch64-apple-darwin"
+            ];
             # version = "file"; toolchainFile = ./rust-toolchain.toml;
             # packages = [ ];                          # extra nixpkgs packages
             # tools.bacon.enable = false;              # per built-in tool switches
             # tools.deny.enable = true;                # cargo-deny (default off)
           };
+
+          packages = [
+            pkgs.shfmt
+            pkgs.swiftformat
+          ];
         };
       };
     };

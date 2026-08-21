@@ -11,7 +11,17 @@ organization conventions; where the two differ, this file wins here.
   math, statistics, SQLite storage, and JSON import/export. It has no UI,
   no network, and no platform-specific code.
 - `crates/rondo-ffi` is a thin UniFFI layer over `rondo-core`. It adapts
-  types to the UniFFI-supported subset and adds nothing else.
+  types to the UniFFI-supported subset and adds nothing else. A rule that
+  belongs in a test belongs in the core, not here.
+- Values cross the boundary as their canonical string form. Money crosses
+  as text and never as a double: 15.99 has no exact binary fraction, so it
+  would arrive quietly wrong with nothing to catch it.
+- A frontend rebuilds core entities through the validating constructors,
+  so it can never assemble something the core would have refused.
+- After changing `rondo-ffi`, run `scripts/build-xcframework.sh` and then
+  `scripts/swift-smoke-test.sh`. The Rust tests cannot see a package that
+  builds but cannot be used - a module name that does not match what the
+  generated Swift imports, for instance, silently drops every type.
 - `apple/` holds the SwiftUI application. macOS is the delivery target;
   keep views reusable for iOS (no AppKit-only APIs without need).
 - UI layers stay thin. If a rule about subscriptions, money, or dates is

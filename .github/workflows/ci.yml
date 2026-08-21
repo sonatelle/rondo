@@ -30,3 +30,12 @@ jobs:
         run: nix develop -c cargo clippy --workspace --all-targets -- -D warnings
       - name: Test
         run: nix develop -c cargo test --workspace
+
+      # The Rust tests never link the packaged artifact, so they cannot see
+      # a package that builds but cannot be used. Only macOS has the Xcode
+      # tooling this needs.
+      - name: Package for Xcode and run the Swift smoke test
+        if: runner.os == 'macOS'
+        run: |
+          nix develop -c scripts/build-xcframework.sh
+          nix develop -c scripts/swift-smoke-test.sh

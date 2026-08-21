@@ -24,8 +24,15 @@ jobs:
 
       # Run everything inside the flake dev shell so CI uses the same
       # toolchain as local development.
+      # Two spaces throughout. The swiftformat flags must stay identical to
+      # the ones editors run on save, or it rejects files that were just
+      # formatted; and it is pointed at hand-written Swift only, never the
+      # generated bindings under apple/RondoCore.
       - name: Format
-        run: nix develop -c cargo fmt --check
+        run: |
+          nix develop -c cargo fmt --check
+          nix develop -c shfmt -i 2 -ci --diff scripts
+          nix develop -c swiftformat --lint --indent 2 apple/smoke
       - name: Clippy
         run: nix develop -c cargo clippy --workspace --all-targets -- -D warnings
       - name: Test

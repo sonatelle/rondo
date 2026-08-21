@@ -7,14 +7,15 @@
 //! constructors, so a frontend cannot assemble a subscription the core
 //! would have refused.
 
+use jiff::civil::Date;
 use rondo_core::model::{
     BillingCycle, Category as CoreCategory, CycleUnit, Money, Subscription as CoreSubscription,
     SubscriptionStatus,
 };
+use rust_decimal::Decimal;
 use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
-use crate::types::{CivilDate, DecimalString};
 
 #[uniffi::remote(Enum)]
 pub enum CycleUnit {
@@ -38,12 +39,12 @@ pub struct Subscription {
     pub notes: Option<String>,
     pub template_id: Option<String>,
     /// Price charged once per cycle, exact.
-    pub amount: DecimalString,
+    pub amount: Decimal,
     /// Three-letter currency code the amount is denominated in.
     pub currency: String,
     pub cycle_count: u32,
     pub cycle_unit: CycleUnit,
-    pub first_billing_date: CivilDate,
+    pub first_billing_date: Date,
     pub reminder_lead_days: u16,
     pub category_id: Option<Uuid>,
     pub status: SubscriptionStatus,
@@ -58,11 +59,11 @@ impl From<CoreSubscription> for Subscription {
             name: sub.name,
             notes: sub.notes,
             template_id: sub.template_id,
-            amount: DecimalString(sub.price.amount()),
+            amount: sub.price.amount(),
             currency: sub.price.currency().to_owned(),
             cycle_count: sub.cycle.count(),
             cycle_unit: sub.cycle.unit(),
-            first_billing_date: CivilDate(sub.first_billing_date),
+            first_billing_date: sub.first_billing_date,
             reminder_lead_days: sub.reminder_lead_days,
             category_id: sub.category_id,
             status: sub.status,
@@ -81,9 +82,9 @@ impl TryFrom<Subscription> for CoreSubscription {
             name: sub.name,
             notes: sub.notes,
             template_id: sub.template_id,
-            price: Money::new(sub.amount.0, &sub.currency)?,
+            price: Money::new(sub.amount, &sub.currency)?,
             cycle: BillingCycle::new(sub.cycle_count, sub.cycle_unit)?,
-            first_billing_date: sub.first_billing_date.0,
+            first_billing_date: sub.first_billing_date,
             reminder_lead_days: sub.reminder_lead_days,
             category_id: sub.category_id,
             status: sub.status,
@@ -163,8 +164,8 @@ pub fn service_templates() -> Vec<ServiceTemplate> {
 pub struct SpendingSummary {
     pub currency: String,
     pub subscription_count: u32,
-    pub monthly: DecimalString,
-    pub yearly: DecimalString,
+    pub monthly: Decimal,
+    pub yearly: Decimal,
 }
 
 impl From<rondo_core::summary::SpendingSummary> for SpendingSummary {
@@ -172,8 +173,8 @@ impl From<rondo_core::summary::SpendingSummary> for SpendingSummary {
         Self {
             currency: summary.currency,
             subscription_count: summary.subscription_count,
-            monthly: DecimalString(summary.monthly),
-            yearly: DecimalString(summary.yearly),
+            monthly: summary.monthly,
+            yearly: summary.yearly,
         }
     }
 }
@@ -181,8 +182,6 @@ impl From<rondo_core::summary::SpendingSummary> for SpendingSummary {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jiff::civil::Date;
-    use rust_decimal::Decimal;
     use std::str::FromStr;
 
     fn core_subscription() -> CoreSubscription {
@@ -209,7 +208,7 @@ mod tests {
     fn the_amount_keeps_its_scale_on_the_way_out() {
         let crossed = Subscription::from(core_subscription());
         // Not 15.9: the trailing zero is part of the price.
-        assert_eq!(crossed.amount.0.to_string(), "15.90");
+        assert_eq!(crossed.amount.to_string(), "15.90");
         assert_eq!(crossed.currency, "USD");
     }
 

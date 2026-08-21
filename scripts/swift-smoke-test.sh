@@ -13,7 +13,7 @@ set -euo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly FRAMEWORK="${REPO_ROOT}/apple/RondoCore/RondoCore.xcframework"
-readonly SWIFT_SOURCES="${REPO_ROOT}/apple/RondoCore/rondo_ffi.swift"
+readonly SWIFT_SOURCES="${REPO_ROOT}/apple/RondoCore/RondoCore.swift"
 readonly SMOKE_SOURCE="${REPO_ROOT}/apple/smoke/main.swift"
 
 if [[ ! -d "${FRAMEWORK}" ]]; then

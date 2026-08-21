@@ -71,9 +71,11 @@ and the backup file already hold, so one representation serves every layer:
 
 Money must never cross as a double. 15.99 has no exact binary fraction, so
 the amount would arrive quietly wrong and no test on either side would
-notice. `Decimal` and `Date` are renamed because Swift declares one type
-per Rust type name, and bare `Date` would then be ambiguous against
-`Foundation.Date` at every use site.
+notice. `Decimal` and `Date` are renamed in `crates/rondo-ffi/uniffi.toml`
+because Swift declares one type per Rust type name, and bare `Date` would
+then be ambiguous against `Foundation.Date` at every use site. Renaming
+there rather than wrapping them in Rust keeps the core types intact on
+this side of the boundary.
 
 `Money` and `BillingCycle` are flattened into their parts on the way out,
 since a record's fields must be public and those types keep theirs private.

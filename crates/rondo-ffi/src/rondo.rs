@@ -3,16 +3,17 @@
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, MutexGuard};
 
+use jiff::civil::Date;
 use rondo_core::Store;
 use rondo_core::model::{
     BillingCycle, Category as CoreCategory, Money, Subscription as CoreSubscription,
     SubscriptionStatus,
 };
+use rust_decimal::Decimal;
 use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
 use crate::records::{Category, SpendingSummary, Subscription};
-use crate::types::{CivilDate, DecimalString};
 
 /// An open Rondo database.
 ///
@@ -31,11 +32,11 @@ pub struct Rondo {
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct NewSubscription {
     pub name: String,
-    pub amount: DecimalString,
+    pub amount: Decimal,
     pub currency: String,
     pub cycle_count: u32,
     pub cycle_unit: rondo_core::model::CycleUnit,
-    pub first_billing_date: CivilDate,
+    pub first_billing_date: Date,
     pub notes: Option<String>,
     pub template_id: Option<String>,
     pub category_id: Option<Uuid>,
@@ -48,7 +49,7 @@ pub struct NewSubscription {
 pub struct Renewal {
     pub subscription: Subscription,
     /// The first charge falling on or after the day that was asked about.
-    pub date: CivilDate,
+    pub date: Date,
 }
 
 /// What restoring a backup changed.
@@ -117,9 +118,9 @@ impl Rondo {
     pub fn add_subscription(&self, draft: NewSubscription) -> Result<Subscription> {
         let mut sub = CoreSubscription::new(
             &draft.name,
-            Money::new(draft.amount.0, &draft.currency)?,
+            Money::new(draft.amount, &draft.currency)?,
             BillingCycle::new(draft.cycle_count, draft.cycle_unit)?,
-            draft.first_billing_date.0,
+            draft.first_billing_date,
         )?;
         sub.notes = draft.notes;
         sub.template_id = draft.template_id;
@@ -150,23 +151,22 @@ impl Rondo {
     /// frontend knows which one the person is looking at. Subscriptions
     /// renewing on the same day are ordered by name so the list does not
     /// shuffle between refreshes.
-    pub fn renewals(&self, from: CivilDate, include_archived: bool) -> Result<Vec<Renewal>> {
+    pub fn renewals(&self, from: Date, include_archived: bool) -> Result<Vec<Renewal>> {
         let mut renewals = Vec::new();
         for sub in self.subscriptions(include_archived)? {
             let date = rondo_core::cycle::next_billing_date(
-                sub.first_billing_date.0,
+                sub.first_billing_date,
                 BillingCycle::new(sub.cycle_count, sub.cycle_unit)?,
-                from.0,
+                from,
             )?;
             renewals.push(Renewal {
                 subscription: sub,
-                date: CivilDate(date),
+                date,
             });
         }
         renewals.sort_by(|a, b| {
             a.date
-                .0
-                .cmp(&b.date.0)
+                .cmp(&b.date)
                 .then_with(|| a.subscription.name.cmp(&b.subscription.name))
         });
         Ok(renewals)
@@ -271,19 +271,17 @@ impl Rondo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jiff::civil::Date;
     use rondo_core::model::CycleUnit;
-    use rust_decimal::Decimal;
     use std::str::FromStr;
 
     fn draft(name: &str) -> NewSubscription {
         NewSubscription {
             name: name.to_owned(),
-            amount: DecimalString(Decimal::from_str("15.90").unwrap()),
+            amount: Decimal::from_str("15.90").unwrap(),
             currency: "USD".into(),
             cycle_count: 1,
             cycle_unit: CycleUnit::Month,
-            first_billing_date: CivilDate(Date::constant(2026, 1, 31)),
+            first_billing_date: Date::constant(2026, 1, 31),
             notes: None,
             template_id: None,
             category_id: None,
@@ -300,7 +298,7 @@ mod tests {
         let rondo = open();
         let added = rondo.add_subscription(draft("Netflix")).unwrap();
         assert_eq!(added.name, "Netflix");
-        assert_eq!(added.amount.0.to_string(), "15.90");
+        assert_eq!(added.amount.to_string(), "15.90");
 
         let loaded = rondo.subscription(added.id).unwrap().unwrap();
         assert_eq!(loaded, added);
@@ -355,19 +353,19 @@ mod tests {
     fn renewals_come_back_soonest_first() {
         let rondo = open();
         let mut monthly = draft("Monthly");
-        monthly.first_billing_date = CivilDate(Date::constant(2026, 8, 5));
+        monthly.first_billing_date = Date::constant(2026, 8, 5);
         let mut yearly = draft("Yearly");
         yearly.cycle_unit = CycleUnit::Year;
-        yearly.first_billing_date = CivilDate(Date::constant(2026, 3, 15));
+        yearly.first_billing_date = Date::constant(2026, 3, 15);
         rondo.add_subscription(yearly).unwrap();
         rondo.add_subscription(monthly).unwrap();
 
-        let from = CivilDate(Date::constant(2026, 8, 21));
+        let from = Date::constant(2026, 8, 21);
         let renewals = rondo.renewals(from, false).unwrap();
         assert_eq!(
             renewals
                 .iter()
-                .map(|r| (r.subscription.name.as_str(), r.date.0.to_string()))
+                .map(|r| (r.subscription.name.as_str(), r.date.to_string()))
                 .collect::<Vec<_>>(),
             vec![
                 ("Monthly", "2026-09-05".into()),
@@ -381,17 +379,13 @@ mod tests {
         let rondo = open();
         // First charged on the 31st, so February clamps but March does not.
         let sub = rondo.add_subscription(draft("Netflix")).unwrap();
-        assert_eq!(sub.first_billing_date.0.to_string(), "2026-01-31");
+        assert_eq!(sub.first_billing_date.to_string(), "2026-01-31");
 
-        let february = rondo
-            .renewals(CivilDate(Date::constant(2026, 2, 1)), false)
-            .unwrap();
-        assert_eq!(february[0].date.0.to_string(), "2026-02-28");
+        let february = rondo.renewals(Date::constant(2026, 2, 1), false).unwrap();
+        assert_eq!(february[0].date.to_string(), "2026-02-28");
 
-        let march = rondo
-            .renewals(CivilDate(Date::constant(2026, 3, 1)), false)
-            .unwrap();
-        assert_eq!(march[0].date.0.to_string(), "2026-03-31");
+        let march = rondo.renewals(Date::constant(2026, 3, 1), false).unwrap();
+        assert_eq!(march[0].date.to_string(), "2026-03-31");
     }
 
     #[test]
@@ -400,9 +394,7 @@ mod tests {
         for name in ["Zulu", "Alpha"] {
             rondo.add_subscription(draft(name)).unwrap();
         }
-        let renewals = rondo
-            .renewals(CivilDate(Date::constant(2026, 1, 1)), false)
-            .unwrap();
+        let renewals = rondo.renewals(Date::constant(2026, 1, 1), false).unwrap();
         let names: Vec<&str> = renewals
             .iter()
             .map(|r| r.subscription.name.as_str())
@@ -458,11 +450,11 @@ mod tests {
         // 15.90 monthly and 120 yearly in USD, plus 8 monthly in CNY.
         rondo.add_subscription(draft("Netflix")).unwrap();
         let mut yearly = draft("Copilot");
-        yearly.amount = DecimalString(Decimal::from_str("120").unwrap());
+        yearly.amount = Decimal::from_str("120").unwrap();
         yearly.cycle_unit = CycleUnit::Year;
         rondo.add_subscription(yearly).unwrap();
         let mut cny = draft("Music");
-        cny.amount = DecimalString(Decimal::from_str("8").unwrap());
+        cny.amount = Decimal::from_str("8").unwrap();
         cny.currency = "CNY".into();
         rondo.add_subscription(cny).unwrap();
         let archived = rondo.add_subscription(draft("Gone")).unwrap();
@@ -472,12 +464,12 @@ mod tests {
         assert_eq!(summary.len(), 2, "currencies are never mixed");
         let cny = &summary[0];
         assert_eq!(cny.currency, "CNY");
-        assert_eq!(cny.monthly.0.to_string(), "8");
+        assert_eq!(cny.monthly.to_string(), "8");
         let usd = &summary[1];
         assert_eq!(usd.currency, "USD");
         assert_eq!(usd.subscription_count, 2, "the archived one is left out");
         // 15.90 a month plus 120 a year is 25.90 a month.
-        assert_eq!(usd.monthly.0.to_string(), "25.90");
+        assert_eq!(usd.monthly.to_string(), "25.90");
     }
 
     #[test]

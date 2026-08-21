@@ -11,7 +11,6 @@ pub mod rondo;
 pub mod types;
 
 pub use error::{Result, RondoError};
-pub use types::{CivilDate, DecimalString};
 
 uniffi::setup_scaffolding!();
 

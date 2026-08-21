@@ -6,6 +6,7 @@
 //! foreign runtime.
 
 pub mod error;
+pub mod records;
 pub mod types;
 
 pub use error::{Result, RondoError};

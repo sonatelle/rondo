@@ -131,4 +131,5 @@ or if a target platform appears that has no C toolchain.
 - `apple/smoke/` - the Swift program that smoke test compiles and runs.
 - `apple/RondoCore/` - the packaged XCFramework and generated Swift. Build
   output, not source; it is not in version control.
-- `templates/services.json` - service catalogue compiled into the core.
+- `crates/rondo-core/templates/services.json` - service catalogue compiled
+  into the core.

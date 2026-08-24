@@ -78,6 +78,22 @@ final class SubscriptionsModel {
     }
   }
 
+  /// Saves an edited subscription.
+  ///
+  /// Returns whether the core accepted it, so a rejected change leaves the
+  /// form open with the offending value rather than closing over an edit
+  /// that was never stored.
+  func update(_ subscription: Subscription) -> Bool {
+    do {
+      _ = try rondo.updateSubscription(subscription: subscription)
+      reload()
+      return true
+    } catch {
+      report(error)
+      return false
+    }
+  }
+
   /// Stops counting a subscription, or starts again.
   ///
   /// Archiving is the answer for a service the person has left: the row

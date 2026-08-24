@@ -49,6 +49,34 @@ cargo run --features bindgen -p rondo-ffi --bin uniffi-bindgen -- generate \
     --library target/debug/librondo_ffi.dylib --language swift --out-dir /tmp/bindings
 ```
 
+## The macOS app
+
+The Xcode project is generated from `apple/project.yml`, so settings are
+edited there and not in Xcode's inspector - anything changed in the
+inspector is lost on the next generate. Xcode's "update to recommended
+settings" prompt is the same trap; note down what it offers and add the
+equivalent to the spec.
+
+```sh
+scripts/build-xcframework.sh          # the app links this
+xcodegen generate --spec apple/project.yml --project apple
+xcodebuild test -project apple/Rondo.xcodeproj -scheme Rondo -destination 'platform=macOS'
+```
+
+Then open `apple/Rondo.xcodeproj` and run, or launch the built `.app`.
+
+For an editor other than Xcode, sourcekit-lsp needs to know where the
+build is. [xcode-build-server](https://github.com/SolaWing/xcode-build-server)
+writes that down, once per checkout, after the project exists:
+
+```sh
+xcode-build-server config -project apple/Rondo.xcodeproj -scheme Rondo
+```
+
+It is not in nixpkgs, so install it separately (`brew install
+xcode-build-server`). The `buildServer.json` it writes holds absolute
+paths to this machine, and is not in version control.
+
 `build-xcframework.sh` builds for this machine by default. Another target
 (Intel macOS, iOS) needs its standard library added to the Rust toolchain
 in `flake.nix` first; the script says so rather than failing obscurely.

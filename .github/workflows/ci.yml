@@ -46,3 +46,13 @@ jobs:
         run: |
           nix develop -c scripts/build-xcframework.sh
           nix develop -c scripts/swift-smoke-test.sh
+
+      # The project file is generated, so it is built from its spec here
+      # exactly as it is locally - a spec that no longer produces a working
+      # project would otherwise only be discovered by the next person to
+      # open Xcode.
+      - name: Build and test the macOS app
+        if: runner.os == 'macOS'
+        run: |
+          nix develop -c xcodegen generate --spec apple/project.yml --project apple
+          xcodebuild test -project apple/Rondo.xcodeproj -scheme Rondo -destination 'platform=macOS'

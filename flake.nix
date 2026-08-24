@@ -50,6 +50,7 @@
           packages = [
             pkgs.shfmt
             pkgs.swiftformat
+            pkgs.xcodegen
           ];
         };
       };

@@ -10,24 +10,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  rust:
-    strategy:
-      matrix:
-        # macOS is the delivery target; Linux keeps the core portable for
-        # future frontends.
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+  # Linux checks only the core, which is the part that has to stay
+  # portable: a frontend for another platform would be built on it, and a
+  # dependency that quietly went Darwin-only would show up here first.
+  # Everything Apple-specific belongs to the macOS job.
+  core:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31
       - uses: Swatinem/rust-cache@v2
 
-      # Run everything inside the flake dev shell so CI uses the same
-      # toolchain as local development.
-      # Two spaces throughout. The swiftformat flags must stay identical to
-      # the ones editors run on save, or it rejects files that were just
-      # formatted; and it is pointed at hand-written Swift only, never the
-      # generated bindings under apple/RondoCore.
+      # Run inside the flake dev shell so CI uses the toolchain that local
+      # development does.
+      - name: Format
+        run: nix develop -c cargo fmt --check
+      - name: Clippy
+        run: nix develop -c cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        run: nix develop -c cargo test --workspace
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - uses: Swatinem/rust-cache@v2
+
+      # The swiftformat flags must stay identical to the ones editors run
+      # on save, or it rejects files that were just formatted; and it is
+      # pointed at hand-written Swift only, never the generated bindings.
       - name: Format
         run: |
           nix develop -c cargo fmt --check
@@ -39,10 +51,8 @@ jobs:
         run: nix develop -c cargo test --workspace
 
       # The Rust tests never link the packaged artifact, so they cannot see
-      # a package that builds but cannot be used. Only macOS has the Xcode
-      # tooling this needs.
+      # a package that builds but cannot be used.
       - name: Package for Xcode and run the Swift smoke test
-        if: runner.os == 'macOS'
         run: |
           nix develop -c scripts/build-xcframework.sh
           nix develop -c scripts/swift-smoke-test.sh
@@ -51,8 +61,7 @@ jobs:
       # exactly as it is locally - a spec that no longer produces a working
       # project would otherwise only be discovered by the next person to
       # open Xcode.
-      - name: Build and test the macOS app
-        if: runner.os == 'macOS'
+      - name: Build and test the app
         run: |
           nix develop -c xcodegen generate --spec apple/project.yml --project apple
           xcodebuild test -project apple/Rondo.xcodeproj -scheme Rondo -destination 'platform=macOS'

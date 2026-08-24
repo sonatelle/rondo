@@ -16,18 +16,33 @@ struct ContentView: View {
       SpendingHeader(summaries: model.summaries)
       Divider()
       if model.renewals.isEmpty {
-        ContentUnavailableView {
-          Label("No subscriptions yet", systemImage: "repeat")
-        } description: {
-          Text("Add one to start tracking what renews and when.")
-        } actions: {
-          Button("Add Subscription") { isAdding = true }
+        if model.hasArchived, !model.showsArchived {
+          ContentUnavailableView {
+            Label("Nothing active", systemImage: "archivebox")
+          } description: {
+            Text("Everything here is archived. Show it to restore or remove it.")
+          } actions: {
+            Button("Show Archived") { model.showsArchived = true }
+            Button("Add Subscription") { isAdding = true }
+          }
+        } else {
+          ContentUnavailableView {
+            Label("No subscriptions yet", systemImage: "repeat")
+          } description: {
+            Text("Add one to start tracking what renews and when.")
+          } actions: {
+            Button("Add Subscription") { isAdding = true }
+          }
         }
       } else {
         List(model.renewals, id: \.subscription.id) { renewal in
           RenewalRow(renewal: renewal)
             .contextMenu {
-              Button("Archive") { model.archive(renewal.subscription) }
+              if renewal.subscription.status == .archived {
+                Button("Restore") { model.setArchived(renewal.subscription, false) }
+              } else {
+                Button("Archive") { model.setArchived(renewal.subscription, true) }
+              }
               Button("Delete…", role: .destructive) {
                 pendingDeletion = renewal.subscription
               }
@@ -37,6 +52,12 @@ struct ContentView: View {
       }
     }
     .toolbar {
+      ToolbarItem {
+        Toggle(isOn: Bindable(model).showsArchived) {
+          Label("Show Archived", systemImage: "archivebox")
+        }
+        .help("Show archived subscriptions")
+      }
       ToolbarItem(placement: .primaryAction) {
         Button {
           isAdding = true
@@ -118,10 +139,23 @@ private struct SpendingHeader: View {
 private struct RenewalRow: View {
   let renewal: Renewal
 
+  private var isArchived: Bool {
+    renewal.subscription.status == .archived
+  }
+
   var body: some View {
     HStack {
       VStack(alignment: .leading, spacing: 2) {
-        Text(renewal.subscription.name)
+        HStack(spacing: 6) {
+          Text(renewal.subscription.name)
+          if isArchived {
+            Text("Archived")
+              .font(.caption2)
+              .padding(.horizontal, 5)
+              .padding(.vertical, 1)
+              .background(.quaternary, in: Capsule())
+          }
+        }
         Text(Formatting.date(renewal.date))
           .font(.caption)
           .foregroundStyle(.secondary)
@@ -141,5 +175,8 @@ private struct RenewalRow: View {
       }
     }
     .padding(.vertical, 4)
+    // Dimmed because an archived row is history: still readable, but not
+    // something the person is being asked to act on.
+    .opacity(isArchived ? 0.55 : 1)
   }
 }

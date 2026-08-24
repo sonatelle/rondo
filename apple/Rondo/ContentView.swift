@@ -3,23 +3,39 @@ import SwiftUI
 /// The main window: what is due, and what it all costs.
 struct ContentView: View {
   let model: SubscriptionsModel
+  @State private var isAdding = false
 
   var body: some View {
     VStack(spacing: 0) {
       SpendingHeader(summaries: model.summaries)
       Divider()
       if model.renewals.isEmpty {
-        ContentUnavailableView(
-          "No subscriptions yet",
-          systemImage: "repeat",
-          description: Text("Add one to start tracking what renews and when.")
-        )
+        ContentUnavailableView {
+          Label("No subscriptions yet", systemImage: "repeat")
+        } description: {
+          Text("Add one to start tracking what renews and when.")
+        } actions: {
+          Button("Add Subscription") { isAdding = true }
+        }
       } else {
         List(model.renewals, id: \.subscription.id) { renewal in
           RenewalRow(renewal: renewal)
         }
         .listStyle(.inset)
       }
+    }
+    .toolbar {
+      ToolbarItem(placement: .primaryAction) {
+        Button {
+          isAdding = true
+        } label: {
+          Label("Add Subscription", systemImage: "plus")
+        }
+        .keyboardShortcut("n")
+      }
+    }
+    .sheet(isPresented: $isAdding) {
+      AddSubscriptionView(model: model)
     }
     .alert(
       "Something went wrong",

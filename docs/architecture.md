@@ -176,6 +176,18 @@ not about duplication but about what a mistake costs:
   (`error`), and `Rondo`, the object a frontend opens and calls.
 - `scripts/` - `build-xcframework.sh` packages the core for Xcode;
   `swift-smoke-test.sh` proves the packaged result actually runs.
+- `apple/project.yml` - the Xcode project's specification. The
+  `.xcodeproj` is generated from it and is not in version control, so
+  settings are edited here rather than in Xcode's inspector, where they
+  would be lost on the next generate.
+- `apple/Rondo/` - the macOS app. `SubscriptionsModel` holds the open
+  database and the last-read values; the views read from it and call back
+  into it, and none of them compute anything about money or dates.
+  `Formatting` is where the core's plain strings become words for a
+  locale, and `CoreTypes` carries the conformances SwiftUI needs but the
+  generated bindings cannot keep.
+- `apple/RondoTests/` - tests for the app's own logic, which is the
+  formatting: the parts that can be wrong without anything crashing.
 - `apple/smoke/` - the Swift program that smoke test compiles and runs.
 - `apple/RondoCore/` - the packaged XCFramework and generated Swift. Build
   output, not source; it is not in version control.

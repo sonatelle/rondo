@@ -19,16 +19,19 @@ its own before the next begins.
 - [x] `RondoCore.xcframework` build script
 - [x] Swift smoke test against the bridge
 
-## M3 - macOS app (next, first usable release)
+## M3 - macOS app (done, first usable release)
 
-- [ ] Subscription list sorted by next billing date
-- [ ] Add / edit form with template picker
-- [ ] Monthly spending summary header
+- [x] Subscription list sorted by next billing date
+- [x] Add / edit form with template picker
+- [x] Monthly spending summary header
+- [x] Archive, restore, and delete
 
-## M4 - Reminders and polish
+## M4 - Reminders and polish (next)
 
 - [ ] Local notifications ahead of renewals
-- [ ] Archive view, settings, import/export UI
+- [ ] Settings, including a way to reach the data file
+- [ ] Backup export and restore from the app
+- [ ] An app icon
 
 ## M5 - Release
 

@@ -13,23 +13,36 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-Early development. Nothing is usable yet.
+Early development. The macOS app runs and keeps real data, but there is no
+release to download yet: it has to be built from source.
 
-Planned for the first release:
+What works:
 
-- Record subscriptions with price, billing cycle, and next billing date.
+- Record subscriptions with a price, a billing cycle, and a first charge,
+  starting from a bundled service or from nothing.
+- See what renews next, and what it all costs per month, per currency.
+- Edit, archive, restore, and delete.
+- Local SQLite storage. No cloud, no account, no network.
+
+Still to come:
+
 - Renewal reminders through local notifications.
-- Monthly and yearly spending summaries.
-- Local SQLite storage with JSON import and export. No cloud, no account.
+- Backup export and restore from the app; the core already does both.
+- A release you can download.
 
 ## Layout
 
 ```text
-crates/rondo-core/   Domain model, cycle math, storage, import/export (Rust)
-crates/rondo-ffi/    UniFFI bindings for platform frontends (Rust)
+crates/rondo-core/   Domain model, cycle math, storage, backup (Rust)
+crates/rondo-ffi/    UniFFI bindings for frontends in other languages
 apple/               SwiftUI application for macOS (iOS later)
 scripts/             Build helpers (XCFramework, packaging)
 ```
+
+Building it, in short: `scripts/build-xcframework.sh`, then
+`xcodegen generate --spec apple/project.yml --project apple`, then open
+`apple/Rondo.xcodeproj`. [docs/development.md](docs/development.md) has the
+environment it expects.
 
 ## Documentation
 

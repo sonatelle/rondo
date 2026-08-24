@@ -87,6 +87,28 @@ struct ContentView: View {
         .help("Add a subscription")
       }
     }
+    // What the menu bar acts on: whatever this window has selected.
+    .focusedSceneValue(\.subscriptionActions, actions)
+  }
+
+  /// The commands the menus offer for the window's own selection.
+  private var actions: SubscriptionActions {
+    actions(for: selection)
+  }
+
+  /// The commands that apply to a given selection, left `nil` when it
+  /// gives them nothing to do - which is what greys a menu item out.
+  private func actions(for ids: Set<Uuid>) -> SubscriptionActions {
+    let chosen = subscriptions(for: ids)
+    let active = chosen.filter { $0.status == .active }
+    let archived = chosen.filter { $0.status == .archived }
+    return SubscriptionActions(
+      add: { isAdding = true },
+      edit: chosen.count == 1 ? { editing = chosen.first } : nil,
+      archive: active.isEmpty ? nil : { active.forEach { model.setArchived($0, true) } },
+      restore: archived.isEmpty ? nil : { archived.forEach { model.setArchived($0, false) } },
+      delete: chosen.isEmpty ? nil : { pendingDeletion = chosen }
+    )
   }
 
   private var table: some View {
@@ -138,28 +160,24 @@ struct ContentView: View {
     }
   }
 
+  /// The same commands the menu bar offers, for a right-click.
+  ///
+  /// Built from the selection the click implies rather than from the
+  /// window's own, since clicking an unselected row acts on that row.
   @ViewBuilder
   private func menuItems(for ids: Set<Uuid>) -> some View {
-    let chosen = subscriptions(for: ids)
-    if chosen.count == 1, let only = chosen.first {
-      Button("Edit…") { editing = only }
+    let acting = actions(for: ids)
+    if let edit = acting.edit {
+      Button("Edit…", action: edit)
     }
-    if chosen.contains(where: { $0.status == .active }) {
-      Button("Archive") {
-        for subscription in chosen where subscription.status == .active {
-          model.setArchived(subscription, true)
-        }
-      }
+    if let archive = acting.archive {
+      Button("Archive", action: archive)
     }
-    if chosen.contains(where: { $0.status == .archived }) {
-      Button("Restore") {
-        for subscription in chosen where subscription.status == .archived {
-          model.setArchived(subscription, false)
-        }
-      }
+    if let restore = acting.restore {
+      Button("Restore", action: restore)
     }
-    if !chosen.isEmpty {
-      Button("Delete…", role: .destructive) { pendingDeletion = chosen }
+    if let delete = acting.delete {
+      Button("Delete…", role: .destructive, action: delete)
     }
   }
 

@@ -26,6 +26,11 @@ settings:
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     SWIFT_VERSION: "6.0"
+
+    # Every bundle here is described by this file, so Xcode synthesizes
+    # each Info.plist from build settings rather than from a plist file
+    # that would have to be kept in step by hand.
+    GENERATE_INFOPLIST_FILE: "YES"
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
 
@@ -40,6 +45,20 @@ settings:
     # script phase added later would fail rather than quietly reach out of
     # the build.
     ENABLE_USER_SCRIPT_SANDBOXING: "YES"
+
+# Without this, XcodeGen's per-target scheme has no test action and
+# `xcodebuild test` refuses to run.
+schemes:
+  Rondo:
+    build:
+      targets:
+        Rondo: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - RondoTests
 
 targets:
   Rondo:
@@ -60,11 +79,18 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sonatelle.rondo
-        # Xcode synthesizes Info.plist from the keys below, so there is no
-        # plist file to keep in step with this spec by hand.
-        GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: Rondo
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
         # A subscription tracker keeps its own file and talks to nobody.
         ENABLE_APP_SANDBOX: "YES"
         ENABLE_USER_SELECTED_FILES: readwrite
+
+  RondoTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: RondoTests
+    # The app is the test host, so `@testable import Rondo` reaches its
+    # internals without those types having to be made public.
+    dependencies:
+      - target: Rondo

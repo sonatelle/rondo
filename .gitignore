@@ -18,5 +18,11 @@ build/
 # source and this is output.
 /apple/Rondo.xcodeproj/
 
+# Written by `xcode-build-server config` so sourcekit-lsp can find the
+# build. It records absolute paths to this checkout, this machine's
+# DerivedData, and wherever the tool happens to be installed, so it is
+# per-machine and belongs to whoever generated it.
+/apple/buildServer.json
+
 # Generated FFI artifacts (built by scripts/build-xcframework.sh)
 /apple/RondoCore/

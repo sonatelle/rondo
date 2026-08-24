@@ -14,10 +14,16 @@ enum Formatting {
   /// locale and quietly return 1590.
   private static let machine = Locale(identifier: "en_US_POSIX")
 
+  /// Reads an amount the core wrote, without letting the locale reinterpret
+  /// the separator.
+  static func decimal(_ text: DecimalString) -> Decimal? {
+    Decimal(string: text, locale: machine)
+  }
+
   /// Formats an exact amount as currency, or returns it plainly if the
   /// code is one the system does not know.
   static func amount(_ text: DecimalString, currency: String) -> String {
-    guard let value = Decimal(string: text, locale: machine) else {
+    guard let value = decimal(text) else {
       return "\(currency) \(text)"
     }
     return value.formatted(.currency(code: currency))

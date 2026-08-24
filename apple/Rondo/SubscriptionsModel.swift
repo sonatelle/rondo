@@ -17,21 +17,17 @@ final class SubscriptionsModel {
   /// Spending totals, one entry per currency.
   private(set) var summaries: [SpendingSummary] = []
 
-  /// Whether anything is hidden behind the archived filter.
+  /// How many subscriptions each sidebar entry would show.
   ///
-  /// Without this the empty list would claim there are no subscriptions
-  /// while some are merely archived, which is not the same thing and
-  /// leaves the person with no hint that the filter is what to change.
-  private(set) var hasArchived = false
+  /// Shown as counts beside the filters, and it is what lets an empty list
+  /// say whether there is nothing at all or only nothing active.
+  private(set) var counts: [SubscriptionFilter: Int] = [:]
 
   /// The last failure, for the interface to show and the person to dismiss.
   var failure: String?
 
-  /// Whether archived subscriptions appear in the list.
-  ///
-  /// Without a way to see them, archiving would be indistinguishable from
-  /// deleting: the promise it makes is that the record is still there.
-  var showsArchived = false {
+  /// Which subscriptions the window is showing.
+  var filter: SubscriptionFilter = .active {
     didSet { reload() }
   }
 
@@ -53,13 +49,25 @@ final class SubscriptionsModel {
   /// day the person is looking at.
   func reload() {
     do {
-      renewals = try rondo.renewals(from: Self.today(), includeArchived: showsArchived)
+      let everything = try rondo.renewals(from: Self.today(), includeArchived: true)
+      renewals = everything.filter(filter.matches)
       summaries = try rondo.spendingSummary()
-      hasArchived = try rondo.subscriptions(includeArchived: true)
-        .contains { $0.status == .archived }
+      counts = [
+        .active: everything.count { $0.subscription.status == .active },
+        .archived: everything.count { $0.subscription.status == .archived },
+        .all: everything.count,
+      ]
     } catch {
       report(error)
     }
+  }
+
+  /// Reorders the rows for a table column the person clicked.
+  ///
+  /// Sorting is a property of the view, but the array it sorts lives here,
+  /// so the reorder has to be asked for rather than done in place.
+  func sort(using order: [KeyPathComparator<Renewal>]) {
+    renewals.sort(using: order)
   }
 
   /// Records a subscription and refreshes what the window shows.

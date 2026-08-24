@@ -1,26 +1,48 @@
 import SwiftUI
 
-/// The sheet for recording a subscription.
+/// The sheet for recording a subscription, or for changing one.
 ///
-/// The form collects text and hands it to the core, which decides whether
-/// it is acceptable. Nothing is validated twice: a rejected draft comes
-/// back with the core's own words, so the two sides cannot disagree about
-/// what counts as a valid amount or cycle.
-struct AddSubscriptionView: View {
+/// One form serves both so the fields, their order, and their validation
+/// cannot drift apart between adding and editing.
+///
+/// It collects text and hands it to the core, which decides whether it is
+/// acceptable. Nothing is validated twice: a rejected value comes back in
+/// the core's own words, so the two sides cannot disagree about what
+/// counts as a valid amount or cycle.
+struct SubscriptionFormView: View {
   let model: SubscriptionsModel
+
+  /// The subscription being changed, or nothing when adding one.
+  let editing: Subscription?
+
   @Environment(\.dismiss) private var dismiss
 
-  @State private var name = ""
-  @State private var amount = ""
-  @State private var currency = "CNY"
-  @State private var cycleCount = 1
-  @State private var cycleUnit: CycleUnit = .month
-  @State private var firstBillingDate = Date()
-  @State private var notes = ""
+  @State private var name: String
+  @State private var amount: String
+  @State private var currency: String
+  @State private var cycleCount: Int
+  @State private var cycleUnit: CycleUnit
+  @State private var firstBillingDate: Date
+  @State private var notes: String
   @State private var templateID: String?
   @State private var rejection: String?
 
   private let templates = serviceTemplates()
+
+  init(model: SubscriptionsModel, editing: Subscription? = nil) {
+    self.model = model
+    self.editing = editing
+    _name = State(initialValue: editing?.name ?? "")
+    _amount = State(initialValue: editing?.amount ?? "")
+    _currency = State(initialValue: editing?.currency ?? "CNY")
+    _cycleCount = State(initialValue: Int(editing?.cycleCount ?? 1))
+    _cycleUnit = State(initialValue: editing?.cycleUnit ?? .month)
+    _firstBillingDate = State(
+      initialValue: editing.flatMap { Formatting.parseCivilDate($0.firstBillingDate) } ?? Date()
+    )
+    _notes = State(initialValue: editing?.notes ?? "")
+    _templateID = State(initialValue: editing?.templateId)
+  }
 
   var body: some View {
     VStack(spacing: 0) {
@@ -79,7 +101,7 @@ struct AddSubscriptionView: View {
         Spacer()
         Button("Cancel", role: .cancel) { dismiss() }
           .keyboardShortcut(.cancelAction)
-        Button("Add") { save() }
+        Button(editing == nil ? "Add" : "Save") { save() }
           .keyboardShortcut(.defaultAction)
           .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || amount.isEmpty)
       }
@@ -89,19 +111,36 @@ struct AddSubscriptionView: View {
   }
 
   private func save() {
-    let draft = NewSubscription(
-      name: name,
-      amount: amount.trimmingCharacters(in: .whitespaces),
-      currency: currency.uppercased(),
-      cycleCount: UInt32(cycleCount),
-      cycleUnit: cycleUnit,
-      firstBillingDate: Formatting.civilDate(from: firstBillingDate),
-      notes: notes.isEmpty ? nil : notes,
-      templateId: templateID,
-      categoryId: nil,
-      reminderLeadDays: nil
-    )
-    if model.add(draft) {
+    let accepted: Bool
+    if var subscription = editing {
+      // Identity and timestamps stay as stored; the core refreshes
+      // `updated_at` itself when it writes.
+      subscription.name = name
+      subscription.amount = amount.trimmingCharacters(in: .whitespaces)
+      subscription.currency = currency.uppercased()
+      subscription.cycleCount = UInt32(cycleCount)
+      subscription.cycleUnit = cycleUnit
+      subscription.firstBillingDate = Formatting.civilDate(from: firstBillingDate)
+      subscription.notes = notes.isEmpty ? nil : notes
+      subscription.templateId = templateID
+      accepted = model.update(subscription)
+    } else {
+      accepted = model.add(
+        NewSubscription(
+          name: name,
+          amount: amount.trimmingCharacters(in: .whitespaces),
+          currency: currency.uppercased(),
+          cycleCount: UInt32(cycleCount),
+          cycleUnit: cycleUnit,
+          firstBillingDate: Formatting.civilDate(from: firstBillingDate),
+          notes: notes.isEmpty ? nil : notes,
+          templateId: templateID,
+          categoryId: nil,
+          reminderLeadDays: nil
+        )
+      )
+    }
+    if accepted {
       dismiss()
     } else {
       // The model has the core's message; showing it here keeps the form

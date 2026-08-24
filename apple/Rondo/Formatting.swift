@@ -55,6 +55,10 @@ enum Formatting {
   /// Noon rather than midnight so that a daylight-saving shift cannot move
   /// the date onto the day before, which would misreport every renewal in
   /// the affected week.
+  static func parseCivilDate(_ text: CivilDate) -> Date? {
+    parse(text)
+  }
+
   private static func parse(_ text: CivilDate) -> Date? {
     let parts = text.split(separator: "-").compactMap { Int($0) }
     guard parts.count == 3 else { return nil }

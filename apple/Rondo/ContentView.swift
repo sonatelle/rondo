@@ -11,6 +11,9 @@ struct ContentView: View {
   /// so it asks first and names what it would remove.
   @State private var pendingDeletion: Subscription?
 
+  /// The subscription open for editing, if any.
+  @State private var editing: Subscription?
+
   var body: some View {
     VStack(spacing: 0) {
       SpendingHeader(summaries: model.summaries)
@@ -35,9 +38,12 @@ struct ContentView: View {
           }
         }
       } else {
-        List(model.renewals, id: \.subscription.id) { renewal in
+        List(model.renewals) { renewal in
           RenewalRow(renewal: renewal)
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) { editing = renewal.subscription }
             .contextMenu {
+              Button("Edit…") { editing = renewal.subscription }
               if renewal.subscription.status == .archived {
                 Button("Restore") { model.setArchived(renewal.subscription, false) }
               } else {
@@ -68,7 +74,10 @@ struct ContentView: View {
       }
     }
     .sheet(isPresented: $isAdding) {
-      AddSubscriptionView(model: model)
+      SubscriptionFormView(model: model)
+    }
+    .sheet(item: $editing) { subscription in
+      SubscriptionFormView(model: model, editing: subscription)
     }
     .confirmationDialog(
       "Delete \(pendingDeletion?.name ?? "")?",

@@ -17,8 +17,23 @@ final class SubscriptionsModel {
   /// Spending totals, one entry per currency.
   private(set) var summaries: [SpendingSummary] = []
 
+  /// Whether anything is hidden behind the archived filter.
+  ///
+  /// Without this the empty list would claim there are no subscriptions
+  /// while some are merely archived, which is not the same thing and
+  /// leaves the person with no hint that the filter is what to change.
+  private(set) var hasArchived = false
+
   /// The last failure, for the interface to show and the person to dismiss.
   var failure: String?
+
+  /// Whether archived subscriptions appear in the list.
+  ///
+  /// Without a way to see them, archiving would be indistinguishable from
+  /// deleting: the promise it makes is that the record is still there.
+  var showsArchived = false {
+    didSet { reload() }
+  }
 
   init(rondo: Rondo) {
     self.rondo = rondo
@@ -38,8 +53,10 @@ final class SubscriptionsModel {
   /// day the person is looking at.
   func reload() {
     do {
-      renewals = try rondo.renewals(from: Self.today(), includeArchived: false)
+      renewals = try rondo.renewals(from: Self.today(), includeArchived: showsArchived)
       summaries = try rondo.spendingSummary()
+      hasArchived = try rondo.subscriptions(includeArchived: true)
+        .contains { $0.status == .archived }
     } catch {
       report(error)
     }
@@ -61,14 +78,14 @@ final class SubscriptionsModel {
     }
   }
 
-  /// Stops counting a subscription without discarding what it recorded.
+  /// Stops counting a subscription, or starts again.
   ///
   /// Archiving is the answer for a service the person has left: the row
   /// and its history stay, and only the active list and the totals lose
   /// it. Deleting is for something entered by mistake.
-  func archive(_ subscription: Subscription) {
+  func setArchived(_ subscription: Subscription, _ archived: Bool) {
     do {
-      _ = try rondo.setArchived(id: subscription.id, archived: true)
+      _ = try rondo.setArchived(id: subscription.id, archived: archived)
       reload()
     } catch {
       report(error)

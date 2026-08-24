@@ -5,6 +5,12 @@ struct ContentView: View {
   let model: SubscriptionsModel
   @State private var isAdding = false
 
+  /// The subscription a confirmation is being asked about.
+  ///
+  /// Deleting cannot be undone and there is no backup taken automatically,
+  /// so it asks first and names what it would remove.
+  @State private var pendingDeletion: Subscription?
+
   var body: some View {
     VStack(spacing: 0) {
       SpendingHeader(summaries: model.summaries)
@@ -20,6 +26,12 @@ struct ContentView: View {
       } else {
         List(model.renewals, id: \.subscription.id) { renewal in
           RenewalRow(renewal: renewal)
+            .contextMenu {
+              Button("Archive") { model.archive(renewal.subscription) }
+              Button("Delete…", role: .destructive) {
+                pendingDeletion = renewal.subscription
+              }
+            }
         }
         .listStyle(.inset)
       }
@@ -36,6 +48,25 @@ struct ContentView: View {
     }
     .sheet(isPresented: $isAdding) {
       AddSubscriptionView(model: model)
+    }
+    .confirmationDialog(
+      "Delete \(pendingDeletion?.name ?? "")?",
+      isPresented: Binding(
+        get: { pendingDeletion != nil },
+        set: {
+          if !$0 {
+            pendingDeletion = nil
+          }
+        }
+      ),
+      presenting: pendingDeletion
+    ) { subscription in
+      Button("Delete", role: .destructive) {
+        model.delete(subscription)
+        pendingDeletion = nil
+      }
+    } message: { _ in
+      Text("This cannot be undone. To stop counting it but keep the record, archive it instead.")
     }
     .alert(
       "Something went wrong",

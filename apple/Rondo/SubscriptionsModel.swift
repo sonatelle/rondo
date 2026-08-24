@@ -61,6 +61,30 @@ final class SubscriptionsModel {
     }
   }
 
+  /// Stops counting a subscription without discarding what it recorded.
+  ///
+  /// Archiving is the answer for a service the person has left: the row
+  /// and its history stay, and only the active list and the totals lose
+  /// it. Deleting is for something entered by mistake.
+  func archive(_ subscription: Subscription) {
+    do {
+      _ = try rondo.setArchived(id: subscription.id, archived: true)
+      reload()
+    } catch {
+      report(error)
+    }
+  }
+
+  /// Removes a subscription for good.
+  func delete(_ subscription: Subscription) {
+    do {
+      _ = try rondo.deleteSubscription(id: subscription.id)
+      reload()
+    } catch {
+      report(error)
+    }
+  }
+
   /// Today in the person's own calendar, as `YYYY-MM-DD`.
   static func today() -> CivilDate {
     Formatting.civilDate(from: Date())

@@ -19,7 +19,8 @@ struct RondoApp: App {
         UnavailableView(error: error)
       }
     }
-    .defaultSize(width: 560, height: 420)
+    .defaultSize(width: 720, height: 460)
+    .commands { SubscriptionCommands() }
   }
 }
 

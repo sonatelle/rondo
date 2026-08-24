@@ -45,10 +45,25 @@ final class SubscriptionsModel {
     }
   }
 
+  /// Records a subscription and refreshes what the window shows.
+  ///
+  /// Returns whether it was accepted: the core validates, so a rejected
+  /// draft leaves the form open with the reason rather than closing over a
+  /// value that was never stored.
+  func add(_ draft: NewSubscription) -> Bool {
+    do {
+      _ = try rondo.addSubscription(draft: draft)
+      reload()
+      return true
+    } catch {
+      report(error)
+      return false
+    }
+  }
+
   /// Today in the person's own calendar, as `YYYY-MM-DD`.
   static func today() -> CivilDate {
-    let now = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-    return String(format: "%04d-%02d-%02d", now.year ?? 0, now.month ?? 0, now.day ?? 0)
+    Formatting.civilDate(from: Date())
   }
 
   /// Records a failure in the words the core used.

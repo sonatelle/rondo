@@ -35,6 +35,21 @@ enum Formatting {
     return date.formatted(.relative(presentation: .named))
   }
 
+  /// Writes a picked date as the calendar day the person chose.
+  ///
+  /// Taken from the current calendar rather than by formatting the
+  /// instant, so a date picked late in the evening does not travel to the
+  /// core as tomorrow.
+  static func civilDate(from date: Date) -> CivilDate {
+    let parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
+    return String(
+      format: "%04d-%02d-%02d",
+      parts.year ?? 0,
+      parts.month ?? 0,
+      parts.day ?? 0
+    )
+  }
+
   /// Reads `YYYY-MM-DD` as noon in the current time zone.
   ///
   /// Noon rather than midnight so that a daylight-saving shift cannot move

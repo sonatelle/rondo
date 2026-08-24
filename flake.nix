@@ -47,11 +47,17 @@
             # tools.deny.enable = true;                # cargo-deny (default off)
           };
 
-          packages = [
-            pkgs.shfmt
-            pkgs.swiftformat
-            pkgs.xcodegen
-          ];
+          packages =
+            [
+              pkgs.shfmt
+              pkgs.swiftformat
+            ]
+            # Xcode tooling exists only on Darwin, and an unconditional
+            # entry makes the shell impossible to enter anywhere else -
+            # including the Linux runner that keeps the core portable.
+            ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
+              pkgs.xcodegen
+            ];
         };
       };
     };

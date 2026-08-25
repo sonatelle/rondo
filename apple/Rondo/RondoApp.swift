@@ -1,10 +1,26 @@
 import SwiftUI
 
+/// Decides whether closing the last window ends the app.
+///
+/// SwiftUI has no scene-level equivalent, so this is the one place an
+/// AppKit delegate is needed. It reads the preference each time rather
+/// than caching it, so the toggle takes effect without a restart.
+final class AppDelegate: NSObject, NSApplicationDelegate {
+  func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
+    !UserDefaults.standard.bool(forKey: RondoApp.staysInMenuBarKey)
+  }
+}
+
 @main
 struct RondoApp: App {
   /// Names the main window so the status item can bring it back after it
   /// has been closed.
   static let mainWindowID = "main"
+
+  /// Shared with the delegate, which reads the preference directly.
+  static let staysInMenuBarKey = "staysInMenuBar"
+
+  @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
   /// Opening the database can fail, and the app has to say so rather than
   /// launching into a window that silently shows nothing.
@@ -37,6 +53,10 @@ struct RondoApp: App {
       Label("Rondo", systemImage: "repeat")
     }
     .menuBarExtraStyle(.window)
+
+    Settings {
+      SettingsView()
+    }
   }
 }
 

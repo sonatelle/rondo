@@ -26,12 +26,15 @@ its own before the next begins.
 - [x] Monthly spending summary header
 - [x] Archive, restore, and delete
 
-## M4 - Reminders and polish (next)
+## M4 - Reminders and polish (in progress)
 
+- [x] A window shaped like a macOS app: sidebar, sortable table, menus
+- [x] A menu bar item showing what is charged next
+- [x] Settings, including a way to reach the data file
 - [ ] Local notifications ahead of renewals
-- [ ] Settings, including a way to reach the data file
 - [ ] Backup export and restore from the app
 - [ ] An app icon
+- [ ] A visual pass; the shape is right but it is still plain
 
 ## M5 - Release
 

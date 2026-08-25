@@ -2,6 +2,10 @@ import SwiftUI
 
 @main
 struct RondoApp: App {
+  /// Names the main window so the status item can bring it back after it
+  /// has been closed.
+  static let mainWindowID = "main"
+
   /// Opening the database can fail, and the app has to say so rather than
   /// launching into a window that silently shows nothing.
   private let launch: Result<SubscriptionsModel, Error>
@@ -11,7 +15,7 @@ struct RondoApp: App {
   }
 
   var body: some Scene {
-    WindowGroup {
+    Window("Rondo", id: Self.mainWindowID) {
       switch launch {
       case let .success(model):
         ContentView(model: model)
@@ -21,6 +25,18 @@ struct RondoApp: App {
     }
     .defaultSize(width: 720, height: 460)
     .commands { SubscriptionCommands() }
+
+    // A glance at what is coming, without a window. It shows nothing when
+    // the database could not be opened: the main window is where that
+    // failure is explained, and a status item has no room to explain it.
+    MenuBarExtra {
+      if case let .success(model) = launch {
+        MenuBarView(model: model)
+      }
+    } label: {
+      Label("Rondo", systemImage: "repeat")
+    }
+    .menuBarExtraStyle(.window)
   }
 }
 

@@ -11,8 +11,22 @@ import Observation
 final class SubscriptionsModel {
   private let rondo: Rondo
 
-  /// Subscriptions with the date each is next charged, soonest first.
+  /// Subscriptions with the date each is next charged, narrowed to what
+  /// the sidebar is showing and ordered by whichever column was clicked.
   private(set) var renewals: [Renewal] = []
+
+  /// Everything the core returned, before the sidebar narrowed it.
+  private(set) var allRenewals: [Renewal] = []
+
+  /// The next charges, soonest first, whatever the window is filtered to.
+  ///
+  /// The status item asks about the world rather than about this window's
+  /// current view, so it must not read `renewals`.
+  var upcoming: [Renewal] {
+    allRenewals
+      .filter { $0.subscription.status == .active }
+      .sorted { $0.date < $1.date }
+  }
 
   /// Spending totals, one entry per currency.
   private(set) var summaries: [SpendingSummary] = []
@@ -49,7 +63,8 @@ final class SubscriptionsModel {
   /// day the person is looking at.
   func reload() {
     do {
-      let everything = try rondo.renewals(from: Self.today(), includeArchived: true)
+      allRenewals = try rondo.renewals(from: Self.today(), includeArchived: true)
+      let everything = allRenewals
       renewals = everything.filter(filter.matches)
       summaries = try rondo.spendingSummary()
       counts = [

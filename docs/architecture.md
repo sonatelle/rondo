@@ -186,6 +186,20 @@ not about duplication but about what a mistake costs:
   `Formatting` is where the core's plain strings become words for a
   locale, and `CoreTypes` carries the conformances SwiftUI needs but the
   generated bindings cannot keep.
+
+  The app has three surfaces. `ContentView` is the window, for managing:
+  a sidebar that chooses what to show and a table that sorts it.
+  `MenuBarView` is the status item, for glancing at what is charged next -
+  it reads `upcoming` rather than the window's filtered list, since it
+  answers a question about the world and not about the window.
+  `SettingsView` holds only what is true of the app as a whole; anything
+  that varies per subscription belongs on the subscription.
+
+  `SubscriptionActions` is how the menu bar reaches a window's selection.
+  Menus are built outside any window and cannot see into one, so the
+  window publishes the commands that currently apply and leaves the rest
+  `nil` - which is also what greys them out. The table's context menu is
+  built from the same values, so the two cannot drift apart.
 - `apple/RondoTests/` - tests for the app's own logic, which is the
   formatting: the parts that can be wrong without anything crashing.
 - `apple/smoke/` - the Swift program that smoke test compiles and runs.

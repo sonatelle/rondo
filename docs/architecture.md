@@ -175,11 +175,21 @@ not about duplication but about what a mistake costs:
   cross (`records`), the boundary value types (`types`), the failures
   (`error`), and `Rondo`, the object a frontend opens and calls.
 - `scripts/` - `build-xcframework.sh` packages the core for Xcode;
-  `swift-smoke-test.sh` proves the packaged result actually runs.
+  `swift-smoke-test.sh` proves the packaged result actually runs;
+  `make-app-icon.swift` draws the app's mark at every size the asset
+  catalogue asks for. The mark is code because rendering an SVG faithfully
+  needs a library the dev shell does not carry, while Core Graphics is on
+  every machine that can build this app at all.
 - `apple/project.yml` - the Xcode project's specification. The
   `.xcodeproj` is generated from it and is not in version control, so
   settings are edited here rather than in Xcode's inspector, where they
   would be lost on the next generate.
+- `apple/Rondo/Assets.xcassets/` - the app icon, written by
+  `make-app-icon.swift` and committed as PNGs. A ring that deepens as it
+  travels and returns to where it began, with a card at the centre. The
+  card is not a currency symbol on purpose: Rondo holds several currencies
+  at once and never converts between them, so one currency's glyph at the
+  centre of the mark would claim something the app does not do.
 - `apple/Rondo/` - the macOS app. `SubscriptionsModel` holds the open
   database and the last-read values; the views read from it and call back
   into it, and none of them compute anything about money or dates.

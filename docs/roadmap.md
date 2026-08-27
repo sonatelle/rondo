@@ -32,8 +32,9 @@ its own before the next begins.
 - [x] A menu bar item showing what is charged next
 - [x] Settings, including a way to reach the data file
 - [x] Backup export and restore from the app
+- [x] An app icon
+- [ ] A currency picker, in place of typing the code in
 - [ ] Local notifications ahead of renewals
-- [ ] An app icon
 - [ ] A visual pass; the shape is right but it is still plain
 
 ## M5 - Release

@@ -141,6 +141,36 @@ final class SubscriptionsModel {
     }
   }
 
+  /// The whole database as JSON, or nothing if it could not be read.
+  ///
+  /// Where it then goes is the window's business; the core only produces
+  /// the text.
+  func backupJSON() -> String? {
+    do {
+      return try rondo.exportBackup()
+    } catch {
+      report(error)
+      return nil
+    }
+  }
+
+  /// Merges a backup into the database and reports what it changed.
+  ///
+  /// Nothing is ever deleted: entries the file does not mention are left
+  /// alone, so restoring the wrong file cannot destroy data. A failure
+  /// part-way leaves the database exactly as it was, which is why this can
+  /// return nothing without the caller having to undo anything.
+  func restore(fromJSON json: String) -> ImportSummary? {
+    do {
+      let summary = try rondo.importBackup(json: json)
+      reload()
+      return summary
+    } catch {
+      report(error)
+      return nil
+    }
+  }
+
   /// Today in the person's own calendar, as `YYYY-MM-DD`.
   static func today() -> CivilDate {
     Formatting.civilDate(from: Date())

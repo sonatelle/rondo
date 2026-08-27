@@ -81,6 +81,12 @@ paths to this machine, and is not in version control.
 (Intel macOS, iOS) needs its standard library added to the Rust toolchain
 in `flake.nix` first; the script says so rather than failing obscurely.
 
+The app is pinned to `arm64` to match. Left at its default, Release asks
+for a universal binary and fails to link, since the framework carries no
+Intel slice - and Debug hides this, because it builds only the
+architecture it is running on. Supporting Intel means adding the target,
+merging both slices, and lifting `ARCHS` in `apple/project.yml` together.
+
 ## Workflow
 
 - All work lands through pull requests; `main` stays stable. One

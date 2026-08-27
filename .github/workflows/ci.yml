@@ -65,3 +65,10 @@ jobs:
         run: |
           nix develop -c xcodegen generate --spec apple/project.yml --project apple
           xcodebuild test -project apple/Rondo.xcodeproj -scheme Rondo -destination 'platform=macOS'
+
+      # Tests run against Debug, which builds only the architecture it is
+      # running on and so cannot see a Release-only link failure. That is
+      # exactly how a broken Release build survived until someone tried to
+      # cut a release; this step is what would have caught it.
+      - name: Build the app for release
+        run: xcodebuild build -project apple/Rondo.xcodeproj -scheme Rondo -configuration Release

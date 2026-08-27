@@ -77,6 +77,17 @@ It is not in nixpkgs, so install it separately (`brew install
 xcode-build-server`). The `buildServer.json` it writes holds absolute
 paths to this machine, and is not in version control.
 
+The app icon is drawn by a script rather than kept as artwork:
+
+```sh
+scripts/make-app-icon.swift apple/Rondo/Assets.xcassets/AppIcon.appiconset
+```
+
+Its PNGs are committed. Nothing regenerates them during a build - there
+are no script phases in this project, deliberately - so run it after
+editing the mark and commit what it writes. The mark's proportions and
+palette are the constants at the top of the script.
+
 `build-xcframework.sh` builds for this machine by default. Another target
 (Intel macOS, iOS) needs its standard library added to the Rust toolchain
 in `flake.nix` first; the script says so rather than failing obscurely.

@@ -34,6 +34,7 @@ Still to come:
 
 - Renewal reminders through local notifications.
 - A look of its own. The app is shaped like a macOS app now, but plain.
+- A currency picker; today the code is typed in by hand.
 - A release you can download.
 
 ## Layout

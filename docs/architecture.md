@@ -195,13 +195,20 @@ not about duplication but about what a mistake costs:
   `SettingsView` holds only what is true of the app as a whole; anything
   that varies per subscription belongs on the subscription.
 
+  `Backup` is the app's half of a backup: the core produces and consumes
+  the JSON, and this carries it to and from a file the person picked. It
+  is SwiftUI's document type rather than an `NSSavePanel` wrapper, so the
+  same code survives iOS, and reading claims the security scope the panel
+  hands back - a picked location is not by itself a right to read it.
+
   `SubscriptionActions` is how the menu bar reaches a window's selection.
   Menus are built outside any window and cannot see into one, so the
   window publishes the commands that currently apply and leaves the rest
   `nil` - which is also what greys them out. The table's context menu is
   built from the same values, so the two cannot drift apart.
-- `apple/RondoTests/` - tests for the app's own logic, which is the
-  formatting: the parts that can be wrong without anything crashing.
+- `apple/RondoTests/` - tests for the app's own logic: the formatting, and
+  that a backup's text survives being written and read back. These are the
+  parts that can be wrong without anything crashing.
 - `apple/smoke/` - the Swift program that smoke test compiles and runs.
 - `apple/RondoCore/` - the packaged XCFramework and generated Swift. Build
   output, not source; it is not in version control.

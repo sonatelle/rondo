@@ -31,8 +31,8 @@ its own before the next begins.
 - [x] A window shaped like a macOS app: sidebar, sortable table, menus
 - [x] A menu bar item showing what is charged next
 - [x] Settings, including a way to reach the data file
+- [x] Backup export and restore from the app
 - [ ] Local notifications ahead of renewals
-- [ ] Backup export and restore from the app
 - [ ] An app icon
 - [ ] A visual pass; the shape is right but it is still plain
 

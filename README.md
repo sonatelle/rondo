@@ -26,12 +26,13 @@ What works:
 - See what renews next, and what it all costs per month, per currency.
 - Edit, archive, restore, and delete.
 - Glance at the next charges from the menu bar without opening a window.
+- Export a backup, and restore one. Restoring merges and never deletes, so
+  opening the wrong file cannot cost you data.
 - Local SQLite storage. No cloud, no account, no network.
 
 Still to come:
 
 - Renewal reminders through local notifications.
-- Backup export and restore from the app; the core already does both.
 - A look of its own. The app is shaped like a macOS app now, but plain.
 - A release you can download.
 

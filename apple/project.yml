@@ -87,6 +87,10 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sonatelle.rondo
         INFOPLIST_KEY_CFBundleDisplayName: Rondo
+        # Drawn by scripts/make-app-icon.swift, which writes every size the
+        # catalogue names. The PNGs are committed rather than generated at
+        # build time; there are no script phases here by design.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
         # A subscription tracker keeps its own file and talks to nobody.
         ENABLE_APP_SANDBOX: "YES"

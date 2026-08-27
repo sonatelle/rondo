@@ -55,6 +55,34 @@ struct FormattingTests {
     #expect(rendered.contains("28"))
   }
 
+  @Test("A restore says what it changed and stays quiet about what it did not")
+  func restoreReportsOnlyWhatHappened() {
+    let summary = ImportSummary(
+      categoriesAdded: 0,
+      categoriesUpdated: 0,
+      subscriptionsAdded: 3,
+      subscriptionsUpdated: 1
+    )
+    let sentence = Formatting.restored(summary)
+
+    #expect(sentence.contains("3 subscriptions added"))
+    // Singular, rather than "1 subscriptions updated".
+    #expect(sentence.contains("1 subscription updated"))
+    // The categories it did not touch are absent, not reported as zero.
+    #expect(!sentence.contains("categor"))
+  }
+
+  @Test("An empty backup is explained rather than shown as an empty sentence")
+  func emptyRestoreIsExplained() {
+    let nothing = ImportSummary(
+      categoriesAdded: 0,
+      categoriesUpdated: 0,
+      subscriptionsAdded: 0,
+      subscriptionsUpdated: 0
+    )
+    #expect(!Formatting.restored(nothing).isEmpty)
+  }
+
   /// Builds a local date, failing the test rather than crashing if the
   /// components do not name a real one.
   private func date(year: Int, month: Int, day: Int, hour: Int, minute: Int) throws -> Date {

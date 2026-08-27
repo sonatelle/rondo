@@ -63,3 +63,18 @@ struct BackupFile: FileDocument {
     "Rondo Backup \(Formatting.civilDate(from: date))"
   }
 }
+
+/// What the menus can do to the database itself, rather than to a selection.
+///
+/// Published by the window for the same reason as `SubscriptionActions`:
+/// the menu bar is built outside any window and cannot reach into one. Both
+/// commands always apply, since there is always a database to copy and
+/// always somewhere to restore one into.
+struct BackupActions {
+  var export: () -> Void
+  var restore: () -> Void
+}
+
+extension FocusedValues {
+  @Entry var backupActions: BackupActions?
+}

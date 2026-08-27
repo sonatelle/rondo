@@ -25,6 +25,7 @@ extension FocusedValues {
 /// action applies.
 struct SubscriptionCommands: Commands {
   @FocusedValue(\.subscriptionActions) private var actions
+  @FocusedValue(\.backupActions) private var backup
 
   var body: some Commands {
     // Replaces the "New Item" Xcode puts in the File menu by default.
@@ -39,6 +40,15 @@ struct SubscriptionCommands: Commands {
       Button("Edit Subscription…") { actions?.edit?() }
         .keyboardShortcut("e")
         .disabled(actions?.edit == nil)
+    }
+
+    // The group macOS reserves in the File menu for moving data in and
+    // out, which is where someone looking for a backup will look first.
+    CommandGroup(replacing: .importExport) {
+      Button("Export Backup…") { backup?.export() }
+        .disabled(backup == nil)
+      Button("Restore from Backup…") { backup?.restore() }
+        .disabled(backup == nil)
     }
 
     // A menu of its own, because these are the verbs particular to this

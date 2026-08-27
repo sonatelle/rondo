@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The main window: a sidebar for what to show, a table of it, and what it
 /// all costs.
@@ -16,6 +17,14 @@ struct ContentView: View {
   @State private var isAdding = false
   @State private var editing: Subscription?
   @State private var pendingDeletion: [Subscription] = []
+
+  /// The backup waiting to be saved; present only while the save panel is
+  /// up, since the JSON is read from the database at the moment it opens.
+  @State private var exporting: BackupFile?
+  @State private var isRestoring = false
+
+  /// What the last restore changed, kept until the person has read it.
+  @State private var restored: ImportSummary?
 
   var body: some View {
     NavigationSplitView {
@@ -48,6 +57,53 @@ struct ContentView: View {
       }
     } message: {
       Text("This cannot be undone. To stop counting it but keep the record, archive it instead.")
+    }
+    .fileExporter(
+      isPresented: Binding(
+        get: { exporting != nil },
+        set: {
+          if !$0 {
+            exporting = nil
+          }
+        }
+      ),
+      document: exporting,
+      contentType: .json,
+      defaultFilename: BackupFile.defaultFilename()
+    ) { result in
+      exporting = nil
+      if case let .failure(error) = result {
+        model.failure = error.localizedDescription
+      }
+    }
+    .fileImporter(isPresented: $isRestoring, allowedContentTypes: [.json]) { result in
+      switch result {
+      case let .success(url):
+        do {
+          let json = try BackupFile.read(contentsOf: url)
+          restored = model.restore(fromJSON: json)
+        } catch {
+          model.failure = error.localizedDescription
+        }
+      case let .failure(error):
+        model.failure = error.localizedDescription
+      }
+    }
+    .alert(
+      "Backup restored",
+      isPresented: Binding(
+        get: { restored != nil },
+        set: {
+          if !$0 {
+            restored = nil
+          }
+        }
+      ),
+      presenting: restored
+    ) { _ in
+      Button("OK") { restored = nil }
+    } message: { summary in
+      Text(Formatting.restored(summary))
     }
     .alert(
       "Something went wrong",
@@ -89,6 +145,24 @@ struct ContentView: View {
     }
     // What the menu bar acts on: whatever this window has selected.
     .focusedSceneValue(\.subscriptionActions, actions)
+    // And what it acts on when the command is about the whole database.
+    .focusedSceneValue(\.backupActions, backupActions)
+  }
+
+  /// The commands the menus offer for the database rather than a selection.
+  ///
+  /// Exporting reads the database at the moment the panel opens rather than
+  /// when it is dismissed, so what is saved is what was on screen when the
+  /// person asked for it.
+  private var backupActions: BackupActions {
+    BackupActions(
+      export: {
+        if let json = model.backupJSON() {
+          exporting = BackupFile(json: json)
+        }
+      },
+      restore: { isRestoring = true }
+    )
   }
 
   /// The commands the menus offer for the window's own selection.

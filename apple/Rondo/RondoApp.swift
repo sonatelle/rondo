@@ -50,7 +50,11 @@ struct RondoApp: App {
         MenuBarView(model: model)
       }
     } label: {
-      Label("Rondo", systemImage: "repeat")
+      // The card from the middle of the app's own mark. Not the ring that
+      // surrounds it there: a circling arrow in a menu bar reads as a
+      // refresh control, and this item refreshes nothing - it lists what
+      // is charged next.
+      Label("Rondo", systemImage: "creditcard")
     }
     .menuBarExtraStyle(.window)
 

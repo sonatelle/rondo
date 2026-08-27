@@ -34,6 +34,13 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
 
+    # Apple Silicon only. The core is built for one target by
+    # scripts/build-xcframework.sh, and Release would otherwise ask for a
+    # universal binary and fail to link against a framework that has no
+    # Intel slice. Supporting Intel means adding the Rust target to
+    # flake.nix and merging both slices; the README says which this is.
+    ARCHS: arm64
+
     # The Rust core is linked statically, so the linker can drop whatever
     # the app never calls - most of what a general-purpose library carries.
     # This is the payoff for choosing a static library over a dylib.

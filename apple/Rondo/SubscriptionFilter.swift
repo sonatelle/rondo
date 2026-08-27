@@ -30,11 +30,6 @@ enum SubscriptionFilter: String, CaseIterable, Identifiable {
     }
   }
 
-  /// Whether the core should include archived rows in its answer.
-  var includesArchived: Bool {
-    self != .active
-  }
-
   /// Keeps only what this filter names, once the core has answered.
   func matches(_ renewal: Renewal) -> Bool {
     switch self {

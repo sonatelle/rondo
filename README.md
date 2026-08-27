@@ -16,6 +16,9 @@ native interface, starting with a SwiftUI app for macOS.
 Early development. The macOS app runs and keeps real data, but there is no
 release to download yet: it has to be built from source.
 
+It builds for Apple Silicon only. An Intel build would need the Rust
+target added to the dev shell and both slices merged, which is not done.
+
 What works:
 
 - Record subscriptions with a price, a billing cycle, and a first charge,

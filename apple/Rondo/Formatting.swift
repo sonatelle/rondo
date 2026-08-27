@@ -41,6 +41,36 @@ enum Formatting {
     return date.formatted(.relative(presentation: .named))
   }
 
+  /// What restoring a backup changed, in a sentence.
+  ///
+  /// Counts of zero are left out rather than shown as "0 added", so the
+  /// sentence says only what happened. An entry overwritten with identical
+  /// values still counts as updated: the core reports what it wrote, and
+  /// claiming otherwise would mean comparing values here.
+  static func restored(_ summary: ImportSummary) -> String {
+    let parts = [
+      counted(summary.subscriptionsAdded, "subscription", "subscriptions", "added"),
+      counted(summary.subscriptionsUpdated, "subscription", "subscriptions", "updated"),
+      counted(summary.categoriesAdded, "category", "categories", "added"),
+      counted(summary.categoriesUpdated, "category", "categories", "updated"),
+    ].compactMap { $0 }
+    guard !parts.isEmpty else {
+      return "The file held nothing to restore."
+    }
+    return parts.formatted(.list(type: .and)) + "."
+  }
+
+  /// One clause of that sentence, or nothing when it would say zero.
+  private static func counted(
+    _ count: UInt32,
+    _ singular: String,
+    _ plural: String,
+    _ verb: String
+  ) -> String? {
+    guard count > 0 else { return nil }
+    return "\(count) \(count == 1 ? singular : plural) \(verb)"
+  }
+
   /// Writes a picked date as the calendar day the person chose.
   ///
   /// Taken from the current calendar rather than by formatting the

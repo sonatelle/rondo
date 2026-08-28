@@ -176,6 +176,7 @@ not about duplication but about what a mistake costs:
   (`error`), and `Rondo`, the object a frontend opens and calls.
 - `scripts/` - `build-xcframework.sh` packages the core for Xcode;
   `swift-smoke-test.sh` proves the packaged result actually runs;
+  `package-dmg.sh` builds the app for release and puts it in a disk image;
   `make-app-icon.swift` draws the app's mark at every size the asset
   catalogue asks for. The mark is code because rendering an SVG faithfully
   needs a library the dev shell does not carry, while Core Graphics is on

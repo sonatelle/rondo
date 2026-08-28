@@ -98,6 +98,37 @@ Intel slice - and Debug hides this, because it builds only the
 architecture it is running on. Supporting Intel means adding the target,
 merging both slices, and lifting `ARCHS` in `apple/project.yml` together.
 
+## Cutting a release
+
+```sh
+scripts/package-dmg.sh          # dist/Rondo-<version>.dmg
+```
+
+The version in the file name is read from the app that was built, not from
+any file that claims one, so the name cannot disagree with what the app
+reports about itself.
+
+A release is cut by pushing a tag; the workflow runs this same script, so
+a release is never built by a path that has only ever run in CI:
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+What it leaves behind is a **draft** release with the image attached.
+Read the notes, then publish it from the Releases page - a published
+release is the one thing here that cannot be taken back once people have
+downloaded it.
+
+The tag and `MARKETING_VERSION` in `apple/project.yml` have to agree, and
+the workflow fails early if they do not - otherwise a forgotten version
+bump ships a release holding an app that calls itself something else.
+Re-run the workflow by hand (choosing the tag as the ref) rather than
+deleting and re-pushing a tag when publishing fails for its own reasons.
+
+The app is ad-hoc signed and not notarized, so a downloaded copy needs
+right-click - Open on first launch. Notarizing needs a paid Developer ID.
+
 ## Workflow
 
 - All work lands through pull requests; `main` stays stable. One

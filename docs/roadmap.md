@@ -39,9 +39,9 @@ its own before the next begins.
 
 ## M5 - Release
 
-- [ ] dmg packaging, GitHub Releases
-- [ ] Known limitation: without notarization the first launch needs
-      right-click -> Open past Gatekeeper
+- [x] dmg packaging, drafted by pushing a version tag and published by hand
+- [x] Known limitation recorded: without notarization the first launch
+      needs right-click -> Open past Gatekeeper
 
 ## Later, undated
 

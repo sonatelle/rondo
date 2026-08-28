@@ -26,3 +26,7 @@ build/
 
 # Generated FFI artifacts (built by scripts/build-xcframework.sh)
 /apple/RondoCore/
+
+# Disk images built by scripts/package-dmg.sh. A release carries them
+# as attachments; the repository does not carry them at all.
+/dist/

@@ -33,7 +33,7 @@ its own before the next begins.
 - [x] Settings, including a way to reach the data file
 - [x] Backup export and restore from the app
 - [x] An app icon
-- [ ] A currency picker, in place of typing the code in
+- [x] A currency picker, in place of typing the code in
 - [ ] Local notifications ahead of renewals
 - [ ] A visual pass; the shape is right but it is still plain
 

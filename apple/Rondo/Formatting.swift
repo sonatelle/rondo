@@ -22,11 +22,65 @@ enum Formatting {
 
   /// Formats an exact amount as currency, or returns it plainly if the
   /// code is one the system does not know.
+  ///
+  /// The number is laid out this person's way - their separators, their
+  /// digits - whatever currency it is in. Formatting each amount in the
+  /// currency's own home locale would fetch a nicer symbol but bring that
+  /// locale's numbers with it, and a column holding "₺1.499,99" beside
+  /// "¥1,499.99" cannot be read down.
   static func amount(_ text: DecimalString, currency: String) -> String {
     guard let value = decimal(text) else {
       return "\(currency) \(text)"
     }
-    return value.formatted(.currency(code: currency))
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.currencyCode = currency
+    if let borrowed = borrowedSymbols[currency] {
+      formatter.currencySymbol = borrowed
+    }
+    return formatter.string(from: value as NSDecimalNumber) ?? "\(currency) \(text)"
+  }
+
+  /// Symbols taken from the places that spend a currency, for the codes
+  /// this person's own locale has no symbol for.
+  ///
+  /// Their locale is left in charge wherever it has an answer, because its
+  /// answers are deliberately told apart: a Chinese reader is shown "JP¥"
+  /// and "¥" for yen and yuan, and replacing the first with the "¥" Japan
+  /// writes would make two currencies identical in one list. It names only
+  /// about twenty codes, though, and the rest arrived as bare "TRY" and
+  /// "PLN"; borrowing covers all but fourteen of the remainder.
+  ///
+  /// Built once, on first use, at a cost of about seventeen milliseconds -
+  /// finding these means walking every locale the system knows.
+  private static let borrowedSymbols: [String: String] = {
+    var spenders: [String: [Locale]] = [:]
+    for identifier in Locale.availableIdentifiers {
+      let locale = Locale(identifier: identifier)
+      guard let code = locale.currency?.identifier else { continue }
+      spenders[code, default: []].append(locale)
+    }
+
+    var borrowed: [String: String] = [:]
+    for code in Locale.commonISOCurrencyCodes where symbol(for: code, in: .current) == nil {
+      for locale in spenders[code] ?? [] {
+        if let theirs = symbol(for: code, in: locale) {
+          borrowed[code] = theirs
+          break
+        }
+      }
+    }
+    return borrowed
+  }()
+
+  /// One locale's symbol for a code, or nothing when it just echoes it.
+  private static func symbol(for code: String, in locale: Locale) -> String? {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.locale = locale
+    formatter.currencyCode = code
+    guard let symbol = formatter.currencySymbol, symbol != code else { return nil }
+    return symbol
   }
 
   /// Formats a civil date the way a calendar would show it.

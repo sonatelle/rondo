@@ -33,6 +33,35 @@ struct FormattingTests {
     #expect(Formatting.amount("0.99", currency: "USD").contains("0.99"))
   }
 
+  @Test("A currency the reader's locale has no symbol for borrows one")
+  func symbolIsBorrowedWhenTheLocaleHasNone() {
+    // These arrive as bare "TRY 499.00" and "THB 499.00" beside rows that
+    // do have a symbol, which is what makes a price column look unfinished.
+    #expect(Formatting.amount("499.00", currency: "TRY").contains("₺"))
+    #expect(Formatting.amount("499.00", currency: "THB").contains("฿"))
+  }
+
+  @Test("Borrowing a symbol never makes two currencies look the same")
+  func borrowingKeepsCurrenciesApart() {
+    // Japan writes yen as "¥" and China writes yuan as "¥". A locale that
+    // holds both tells them apart on purpose, and overriding its answer
+    // would print one string for two currencies.
+    let yen = Formatting.amount("1499.00", currency: "JPY")
+    let yuan = Formatting.amount("1499.00", currency: "CNY")
+    #expect(yen != yuan)
+  }
+
+  @Test("Amounts are laid out the reader's way whatever the currency")
+  func numbersDoNotFollowTheCurrencyHome() {
+    // Formatting in the currency's home locale would bring its separators
+    // too: Turkish writes 1499.99 as "1.499,99". A column mixing that with
+    // "1,499.99" cannot be read down.
+    let turkish = Formatting.amount("1499.99", currency: "TRY")
+    let local = Formatting.amount("1499.99", currency: "USD")
+    let separators = { (text: String) in text.filter { $0 == "." || $0 == "," } }
+    #expect(separators(turkish) == separators(local))
+  }
+
   @Test("An unknown currency code still shows the amount")
   func unknownCurrencyDegradesGracefully() {
     let formatted = Formatting.amount("15.90", currency: "ZZZ")

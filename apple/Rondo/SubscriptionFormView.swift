@@ -34,7 +34,10 @@ struct SubscriptionFormView: View {
     self.editing = editing
     _name = State(initialValue: editing?.name ?? "")
     _amount = State(initialValue: editing?.amount ?? "")
-    _currency = State(initialValue: editing?.currency ?? "CNY")
+    // A new subscription starts in this Mac's own currency. Naming one
+    // here would be right for whoever picked it and wrong for everyone
+    // else.
+    _currency = State(initialValue: editing?.currency ?? Currencies.preferred)
     _cycleCount = State(initialValue: Int(editing?.cycleCount ?? 1))
     _cycleUnit = State(initialValue: editing?.cycleUnit ?? .month)
     _firstBillingDate = State(
@@ -56,9 +59,16 @@ struct SubscriptionFormView: View {
           HStack {
             TextField("Amount", text: $amount)
               .monospacedDigit()
-            TextField("Currency", text: $currency)
-              .frame(width: 70)
-              .textCase(.uppercase)
+            // Picked rather than typed. The core rejects anything that is
+            // not three uppercase letters, and a text field's way of
+            // saying so is to refuse the whole form after the fact.
+            Picker("Currency", selection: $currency) {
+              ForEach(Currencies.including(currency), id: \.self) { code in
+                Text(code).tag(code)
+              }
+            }
+            .labelsHidden()
+            .frame(width: 120)
           }
         }
 
@@ -117,7 +127,7 @@ struct SubscriptionFormView: View {
       // `updated_at` itself when it writes.
       subscription.name = name
       subscription.amount = amount.trimmingCharacters(in: .whitespaces)
-      subscription.currency = currency.uppercased()
+      subscription.currency = currency
       subscription.cycleCount = UInt32(cycleCount)
       subscription.cycleUnit = cycleUnit
       subscription.firstBillingDate = Formatting.civilDate(from: firstBillingDate)
@@ -129,7 +139,7 @@ struct SubscriptionFormView: View {
         NewSubscription(
           name: name,
           amount: amount.trimmingCharacters(in: .whitespaces),
-          currency: currency.uppercased(),
+          currency: currency,
           cycleCount: UInt32(cycleCount),
           cycleUnit: cycleUnit,
           firstBillingDate: Formatting.civilDate(from: firstBillingDate),

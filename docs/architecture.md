@@ -195,7 +195,17 @@ not about duplication but about what a mistake costs:
   into it, and none of them compute anything about money or dates.
   `Formatting` is where the core's plain strings become words for a
   locale, and `CoreTypes` carries the conformances SwiftUI needs but the
-  generated bindings cannot keep.
+  generated bindings cannot keep. `Currencies` is the list of codes a
+  price can be recorded in - the system's list, since keeping our own
+  would mean maintaining a currency table by hand and shipping it stale.
+
+  Amounts are laid out in the reader's locale whatever currency they are
+  in, so a column of them can be read down; formatting each in its own
+  home locale would fetch a nicer symbol and bring that locale's
+  separators with it. Where the reader's locale has no symbol for a code,
+  one is borrowed from a locale that spends it - but only there, because
+  a locale that knows both yen and yuan writes them "JP¥" and "¥" on
+  purpose, and overriding that would print one string for two currencies.
 
   The app has three surfaces. `ContentView` is the window, for managing:
   a sidebar that chooses what to show and a table that sorts it.

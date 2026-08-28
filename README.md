@@ -28,13 +28,14 @@ What works:
 - Glance at the next charges from the menu bar without opening a window.
 - Export a backup, and restore one. Restoring merges and never deletes, so
   opening the wrong file cannot cost you data.
+- Record a price in any currency the system knows, picked from a list.
+  Currencies are kept apart; Rondo never converts between them.
 - Local SQLite storage. No cloud, no account, no network.
 
 Still to come:
 
 - Renewal reminders through local notifications.
 - A look of its own. The app is shaped like a macOS app now, but plain.
-- A currency picker; today the code is typed in by hand.
 - A release you can download.
 
 ## Layout

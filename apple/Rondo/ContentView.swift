@@ -208,6 +208,10 @@ struct ContentView: View {
           )
         )
         .monospacedDigit()
+        // Trailing, so the amounts line up on their last digit. Led out
+        // from the left they cannot: the symbol in front runs from one
+        // character to three, and every row starts somewhere else.
+        .frame(maxWidth: .infinity, alignment: .trailing)
       }
       .width(min: 90, ideal: 110)
       TableColumn("Cycle", value: \.cycleDays) { renewal in

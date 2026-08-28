@@ -1,0 +1,78 @@
+name: "Release rondo"
+
+# Pushing a version tag cuts the release. The tag is the durable record of
+# what was shipped, and it can be pushed from a terminal, so nothing about
+# a release depends on anyone's machine or on clicking through a web page.
+#
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# workflow_dispatch is here for the second attempt: when publishing fails
+# on something that has nothing to do with the code, re-running beats
+# deleting a tag and pushing it again. Choose the tag as the ref.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+# The job creates a release and uploads to it; nothing else needs writing.
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - uses: Swatinem/rust-cache@v2
+
+      # The tag names a version and so does apple/project.yml, and nothing
+      # forces them to agree. Left unchecked, a forgotten MARKETING_VERSION
+      # ships a v0.2.0 release holding an app that calls itself 0.1.0 -
+      # wrong in a way no one notices until someone reports a bug against a
+      # version that was never built.
+      - name: Check the tag against the app's version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          spec="$(sed -n 's/^ *MARKETING_VERSION: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' apple/project.yml)"
+          echo "tag ${tag}, spec ${spec}"
+          if [[ "${tag}" != "${spec}" ]]; then
+            echo "::error::tag v${tag} does not match MARKETING_VERSION ${spec} in apple/project.yml"
+            exit 1
+          fi
+
+      # The same script that runs locally, so a release is never built by a
+      # path that has only ever run in CI.
+      - name: Build the disk image
+        run: nix develop -c scripts/package-dmg.sh
+
+      # The script names the image from the built bundle rather than from
+      # the tag, so this also proves the app really carries the version
+      # being released.
+      - name: Check the image is the one this tag names
+        run: |
+          expected="dist/Rondo-${GITHUB_REF_NAME#v}.dmg"
+          if [[ ! -f "${expected}" ]]; then
+            echo "::error::expected ${expected}; found:"
+            ls -l dist
+            exit 1
+          fi
+
+      # Drafted, not published. A release is the one thing here that
+      # cannot be taken back once people have it, so the last step is a
+      # person reading the notes and pressing the button.
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            "dist/Rondo-${GITHUB_REF_NAME#v}.dmg" \
+            --title "Rondo ${GITHUB_REF_NAME}" \
+            --notes-file .github/release-notes.md \
+            --generate-notes \
+            --draft
+          echo "::notice::Draft release ${GITHUB_REF_NAME} created. Review it and publish from the Releases page."

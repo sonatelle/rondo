@@ -6,6 +6,13 @@ import SwiftUI
 /// AppKit delegate is needed. Preferences are read on each call rather than
 /// cached, so a toggle takes effect without a restart.
 final class AppDelegate: NSObject, NSApplicationDelegate {
+  /// Applies the stored appearance before any window is on screen, so the
+  /// first one does not appear in the wrong one and then correct itself.
+  func applicationDidFinishLaunching(_: Notification) {
+    let stored = UserDefaults.standard.string(forKey: Preference.appearance) ?? ""
+    (Appearance(rawValue: stored) ?? .system).apply()
+  }
+
   func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
     let defaults = UserDefaults.standard
     let quits = defaults.bool(forKey: Preference.quitsOnWindowClose)
@@ -32,7 +39,6 @@ struct RondoApp: App {
 
   @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
-  @AppStorage(Preference.appearance) private var appearance = Appearance.system
   @AppStorage(Preference.showsMenuBarItem) private var showsMenuBarItem = true
 
   /// Opening the database can fail, and the app has to say so rather than
@@ -56,7 +62,6 @@ struct RondoApp: App {
       // Back into the Dock whenever a window is on screen; the delegate
       // takes it out again when the last one closes.
       .onAppear { NSApp.setActivationPolicy(.regular) }
-      .preferredColorScheme(appearance.colorScheme)
     }
     .defaultSize(width: 1080, height: 760)
     .commands { SubscriptionCommands() }
@@ -67,7 +72,6 @@ struct RondoApp: App {
     MenuBarExtra(isInserted: $showsMenuBarItem) {
       if case let .success(model) = launch {
         MenuBarView(model: model)
-          .preferredColorScheme(appearance.colorScheme)
       }
     } label: {
       // The card from the middle of the app's own mark. Not the ring that
@@ -80,7 +84,6 @@ struct RondoApp: App {
 
     Settings {
       SettingsView()
-        .preferredColorScheme(appearance.colorScheme)
     }
   }
 }

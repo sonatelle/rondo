@@ -64,6 +64,9 @@ private struct GeneralSettings: View {
           }
         }
         .pickerStyle(.segmented)
+        .onChange(of: appearance) { _, chosen in
+          chosen.apply()
+        }
 
         Picker("Primary currency", selection: $primaryCurrency) {
           Text("Follow the system").tag("")

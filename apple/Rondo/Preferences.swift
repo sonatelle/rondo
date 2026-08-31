@@ -35,12 +35,27 @@ enum Appearance: String, CaseIterable, Identifiable {
     }
   }
 
-  /// What to hand SwiftUI. Nothing means "follow the system", which is
-  /// what `preferredColorScheme(nil)` already does.
-  var colorScheme: ColorScheme? {
+  /// Applies this appearance to the whole application.
+  ///
+  /// Set on `NSApp` rather than through `preferredColorScheme`, for two
+  /// reasons found by trying the other way. SwiftUI's modifier could not
+  /// undo itself: going from dark back to system left the window's chrome
+  /// light and its contents still dark, because passing `nil` does not
+  /// clear the override already applied to the sub-hierarchy. And it only
+  /// reaches SwiftUI scenes, so the menu bar window - a window of its own -
+  /// stayed light while everything else went dark.
+  ///
+  /// The AppKit property has neither problem: it covers every window the
+  /// app owns, and `nil` genuinely means "follow the system".
+  @MainActor
+  func apply() {
+    NSApp.appearance = nsAppearance
+  }
+
+  private var nsAppearance: NSAppearance? {
     switch self {
-    case .light: .light
-    case .dark: .dark
+    case .light: NSAppearance(named: .aqua)
+    case .dark: NSAppearance(named: .darkAqua)
     case .system: nil
     }
   }

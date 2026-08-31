@@ -1,13 +1,26 @@
 import SwiftUI
 
-/// Decides whether closing the last window ends the app.
+/// Decides what closing the last window means.
 ///
 /// SwiftUI has no scene-level equivalent, so this is the one place an
-/// AppKit delegate is needed. It reads the preference each time rather
-/// than caching it, so the toggle takes effect without a restart.
+/// AppKit delegate is needed. Preferences are read on each call rather than
+/// cached, so a toggle takes effect without a restart.
 final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
-    !UserDefaults.standard.bool(forKey: RondoApp.staysInMenuBarKey)
+    let defaults = UserDefaults.standard
+    let quits = defaults.bool(forKey: Preference.quitsOnWindowClose)
+    let hasMenuBarItem = defaults.object(forKey: Preference.showsMenuBarItem) as? Bool ?? true
+
+    // Closing the window normally leaves Rondo running in the menu bar and
+    // drops it from the Dock, which is the shape of a thing you glance at.
+    // But with no menu bar item there would be nothing left to click: the
+    // app would be running, invisible, and reachable only through Force
+    // Quit. So the absence of that item makes closing the window quit.
+    guard !quits, hasMenuBarItem else {
+      return true
+    }
+    NSApp.setActivationPolicy(.accessory)
+    return false
   }
 }
 
@@ -17,10 +30,10 @@ struct RondoApp: App {
   /// has been closed.
   static let mainWindowID = "main"
 
-  /// Shared with the delegate, which reads the preference directly.
-  static let staysInMenuBarKey = "staysInMenuBar"
-
   @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+
+  @AppStorage(Preference.appearance) private var appearance = Appearance.system
+  @AppStorage(Preference.showsMenuBarItem) private var showsMenuBarItem = true
 
   /// Opening the database can fail, and the app has to say so rather than
   /// launching into a window that silently shows nothing.
@@ -32,22 +45,29 @@ struct RondoApp: App {
 
   var body: some Scene {
     Window("Rondo", id: Self.mainWindowID) {
-      switch launch {
-      case let .success(model):
-        ContentView(model: model)
-      case let .failure(error):
-        UnavailableView(error: error)
+      Group {
+        switch launch {
+        case let .success(model):
+          ContentView(model: model)
+        case let .failure(error):
+          UnavailableView(error: error)
+        }
       }
+      // Back into the Dock whenever a window is on screen; the delegate
+      // takes it out again when the last one closes.
+      .onAppear { NSApp.setActivationPolicy(.regular) }
+      .preferredColorScheme(appearance.colorScheme)
     }
-    .defaultSize(width: 720, height: 460)
+    .defaultSize(width: 1080, height: 760)
     .commands { SubscriptionCommands() }
 
     // A glance at what is coming, without a window. It shows nothing when
     // the database could not be opened: the main window is where that
     // failure is explained, and a status item has no room to explain it.
-    MenuBarExtra {
+    MenuBarExtra(isInserted: $showsMenuBarItem) {
       if case let .success(model) = launch {
         MenuBarView(model: model)
+          .preferredColorScheme(appearance.colorScheme)
       }
     } label: {
       // The card from the middle of the app's own mark. Not the ring that
@@ -60,6 +80,7 @@ struct RondoApp: App {
 
     Settings {
       SettingsView()
+        .preferredColorScheme(appearance.colorScheme)
     }
   }
 }

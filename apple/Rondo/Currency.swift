@@ -26,11 +26,20 @@ enum Currencies {
     return [code] + all
   }
 
-  /// What a new subscription starts in: whatever this Mac is set to.
+  /// What a new subscription starts in.
   ///
-  /// Naming one here would be right for whoever picked it and wrong for
-  /// everyone else.
+  /// The person's own choice wins; failing that, whatever this Mac is set
+  /// to. Naming one in code would be right for whoever picked it and wrong
+  /// for everyone else.
+  ///
+  /// This does **not** make one currency the one everything is measured
+  /// in. Rondo never converts between currencies: a primary currency only
+  /// decides where a form starts and which total is listed first.
   static var preferred: String {
-    Locale.current.currency?.identifier ?? "USD"
+    let chosen = UserDefaults.standard.string(forKey: Preference.primaryCurrency) ?? ""
+    if !chosen.isEmpty {
+      return chosen
+    }
+    return Locale.current.currency?.identifier ?? "USD"
   }
 }

@@ -42,6 +42,7 @@ its own before the next begins.
 - [x] dmg packaging, drafted by pushing a version tag and published by hand
 - [x] Known limitation recorded: without notarization the first launch
       needs right-click -> Open past Gatekeeper
+- [x] v0.1.0 published, 2026-08-28
 
 ## Later, undated
 

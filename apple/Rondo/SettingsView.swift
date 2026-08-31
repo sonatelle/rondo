@@ -183,19 +183,69 @@ private struct DataSettings: View {
 private struct AboutSettings: View {
   var body: some View {
     Form {
-      LabeledContent("Version", value: Self.version)
-      Text(
-        """
-        Rondo is a subscription tracker. Everything it knows stays in one \
-        file on this Mac: no cloud, no account, and no network requests of \
-        any kind.
-        """
-      )
-      .font(.caption)
-      .foregroundStyle(.secondary)
-      Link("Source and releases", destination: URL(string: "https://github.com/sonatelle/rondo")!)
+      Section {
+        identity
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, Theme.Space.m)
+      }
+
+      Section("Links") {
+        AboutLink(
+          "Source",
+          systemImage: "curlybraces",
+          tint: .navAll,
+          to: "https://github.com/sonatelle/rondo"
+        )
+        AboutLink(
+          "Releases",
+          systemImage: "shippingbox",
+          tint: .navAnalytics,
+          to: "https://github.com/sonatelle/rondo/releases"
+        )
+        AboutLink(
+          "Report an issue",
+          systemImage: "ladybug",
+          tint: .categoryStorage,
+          to: "https://github.com/sonatelle/rondo/issues"
+        )
+      }
+
+      Section {
+        Text("© 2026 Sonatelle · aliaxy · MIT License")
+          .font(Theme.Font.caption)
+          .foregroundStyle(Color.textFaint)
+          .frame(maxWidth: .infinity)
+      }
     }
     .formStyle(.grouped)
+  }
+
+  private var identity: some View {
+    VStack(spacing: Theme.Space.xs) {
+      // The app's own icon, read from the bundle rather than drawn again,
+      // so it cannot drift from what the Dock shows.
+      if let icon = NSImage(named: "AppIcon") {
+        Image(nsImage: icon)
+          .resizable()
+          .frame(width: 72, height: 72)
+          .padding(.bottom, Theme.Space.xs)
+      }
+      Text("Rondo")
+        .font(.system(size: 17, weight: .semibold))
+      Text(Self.version)
+        .font(Theme.Font.caption)
+        .foregroundStyle(Color.textMuted)
+        .monospacedDigit()
+      Text("A theme that keeps returning — and so does every subscription.")
+        .font(Theme.Font.caption)
+        .foregroundStyle(Color.textMuted)
+        .multilineTextAlignment(.center)
+        .padding(.top, Theme.Space.s)
+      Text("Everything stays in one file on this Mac. No cloud, no account, no network.")
+        .font(Theme.Font.footnote)
+        .foregroundStyle(Color.textFaint)
+        .multilineTextAlignment(.center)
+    }
   }
 
   /// Read from the bundle rather than written here, so it cannot disagree
@@ -204,6 +254,49 @@ private struct AboutSettings: View {
     let info = Bundle.main.infoDictionary
     let short = info?["CFBundleShortVersionString"] as? String ?? "—"
     let build = info?["CFBundleVersion"] as? String ?? "—"
-    return "\(short) (\(build))"
+    return "Version \(short) (\(build))"
+  }
+}
+
+/// A row that leaves the app, marked as such.
+///
+/// The icons are tinted, the way the design tints the settings tabs and
+/// the sidebar: colour here marks what a row is, not how urgent it is.
+/// They are deliberately drawn from the cool end of the palette, because
+/// red and amber mean "this is charged soon" everywhere else in Rondo and
+/// spending them on a link would make that quieter.
+private struct AboutLink: View {
+  let title: String
+  let systemImage: String
+  let tint: Color
+  let destination: URL
+
+  init(_ title: String, systemImage: String, tint: Color, to address: String) {
+    self.title = title
+    self.systemImage = systemImage
+    self.tint = tint
+    // The addresses are literals in this file, so a typo is a row that
+    // goes to the project rather than a crash.
+    destination = URL(string: address) ?? URL(string: "https://github.com/sonatelle/rondo")!
+  }
+
+  var body: some View {
+    Link(destination: destination) {
+      HStack(spacing: Theme.Space.m) {
+        // A column of a fixed width rather than a `Label`, which sizes
+        // each icon to itself: the code symbol is half again as wide as a
+        // circle, so the titles beside them started at different places.
+        Image(systemName: systemImage)
+          .foregroundStyle(tint)
+          .frame(width: 18)
+        Text(title)
+        Spacer()
+        Image(systemName: "arrow.up.right")
+          .font(.caption)
+          .foregroundStyle(Color.textFaint)
+      }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
   }
 }

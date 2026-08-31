@@ -31,6 +31,14 @@ final class SubscriptionsModel {
   /// Spending totals, one entry per currency.
   private(set) var summaries: [SpendingSummary] = []
 
+  /// The day the loaded renewals were reckoned against.
+  ///
+  /// Kept rather than re-read from the clock, because "in 3 days" has to
+  /// be measured against the same day the core was asked about. Reading
+  /// the clock in each view would let a window left open overnight colour
+  /// one row against yesterday and the next against today.
+  private(set) var referenceDay: CivilDate = SubscriptionsModel.today()
+
   /// How many subscriptions each sidebar entry would show.
   ///
   /// Shown as counts beside the filters, and it is what lets an empty list
@@ -63,10 +71,11 @@ final class SubscriptionsModel {
   /// day the person is looking at.
   func reload() {
     do {
-      allRenewals = try rondo.renewals(from: Self.today(), includeArchived: true)
+      referenceDay = Self.today()
+      allRenewals = try rondo.renewals(from: referenceDay, includeArchived: true)
       let everything = allRenewals
       renewals = everything.filter(filter.matches)
-      summaries = try rondo.spendingSummary()
+      summaries = try Self.ordered(rondo.spendingSummary())
       counts = [
         .active: everything.count { $0.subscription.status == .active },
         .archived: everything.count { $0.subscription.status == .archived },
@@ -168,6 +177,21 @@ final class SubscriptionsModel {
     } catch {
       report(error)
       return nil
+    }
+  }
+
+  /// Totals with the person's primary currency first, the rest by code.
+  ///
+  /// Ordering only - the currencies stay apart and nothing is converted.
+  /// Whichever one someone mostly pays in is the one they want to read
+  /// without hunting for it.
+  private static func ordered(_ summaries: [SpendingSummary]) -> [SpendingSummary] {
+    let primary = Currencies.preferred
+    return summaries.sorted { left, right in
+      if (left.currency == primary) != (right.currency == primary) {
+        return left.currency == primary
+      }
+      return left.currency < right.currency
     }
   }
 

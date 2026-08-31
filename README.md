@@ -13,11 +13,7 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-Early development. The macOS app runs and keeps real data, but there is no
-release to download yet: it has to be built from source.
-
-It builds for Apple Silicon only. An Intel build would need the Rust
-target added to the dev shell and both slices merged, which is not done.
+v0.1.0 is out. The macOS app runs and keeps real data.
 
 What works:
 
@@ -36,7 +32,19 @@ Still to come:
 
 - Renewal reminders through local notifications.
 - A look of its own. The app is shaped like a macOS app now, but plain.
-- A release you can download.
+
+## Install
+
+[Download the latest release](https://github.com/sonatelle/rondo/releases/latest),
+open the disk image, and drag Rondo to Applications.
+
+Rondo is ad-hoc signed and not notarized, so the first launch needs
+**right-click the app, then Open**, and confirming once. Double-clicking it
+gives an error instead, with no way forward. Notarizing needs a paid Apple
+Developer ID, which this project does not have.
+
+It runs on Apple Silicon, macOS 14 or later. There is no Intel build: one
+would need the Rust target added to the dev shell and both slices merged.
 
 ## Layout
 

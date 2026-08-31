@@ -208,6 +208,29 @@ not about duplication but about what a mistake costs:
   a locale that knows both yen and yuan writes them "JP¥" and "¥" on
   purpose, and overriding that would print one string for two currencies.
 
+  `Theme` carries the design's measurements - the spacing scale, the
+  radii, the type scale - and `Urgency`, which turns a charge date into
+  how loudly to say it. The colours are not there but in the asset
+  catalogue, which is what resolves a light and a dark value for one name;
+  views ask for a role (`surface`, `textMuted`) and never for a value.
+  Urgency is the only thing in the interface that carries meaning through
+  colour: red for three days out, amber for seven, and grey past that.
+  Icons may be tinted to say what a row is, but red and amber are spent
+  only on how soon a charge lands.
+
+  `Preference` gathers the keys the app stores settings under, because
+  several are read from more than one place and a key spelled differently
+  in two files is a setting that silently stops working. `Appearance`
+  applies itself through `NSApp.appearance` rather than SwiftUI's
+  `preferredColorScheme`: that modifier cannot undo itself - going back to
+  "follow the system" left the chrome light and the contents dark - and it
+  never reached the menu bar window, which is a window of its own.
+
+  `ServiceMark` is the rounded block that stands in for a service. It
+  carries initials, permanently: bundling each service's logo would put
+  other people's trademarks in an MIT repository, and the design names the
+  letter block as the answer rather than as a placeholder.
+
   The app has three surfaces. `ContentView` is the window, for managing:
   a sidebar that chooses what to show and a table that sorts it.
   `MenuBarView` is the status item, for glancing at what is charged next -

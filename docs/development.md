@@ -98,6 +98,41 @@ Intel slice - and Debug hides this, because it builds only the
 architecture it is running on. Supporting Intel means adding the target,
 merging both slices, and lifting `ARCHS` in `apple/project.yml` together.
 
+## Words on screen
+
+Every string the interface shows lives in `apple/Rondo/Localizable.xcstrings`,
+in English and Simplified Chinese. Adding a language is a matter of adding
+it to that catalogue: the picker in Settings is built from whatever the
+bundle carries, so no Swift changes.
+
+Two things do not extract themselves, and both fail silently:
+
+- `Text(someString)` is the verbatim initializer. It shows the text as
+  written and never looks anything up, so a title passed as a `String`
+  stays in English. Pass a `LocalizedStringKey`.
+- A sentence assembled in Swift - a count and a noun, a list joined with
+  "and" - can only ever be English. Ask for the whole phrase with
+  `String(localized:)` and let the catalogue carry the grammar.
+
+**`xcodebuild` does not write new keys back into the catalogue.** The
+compiler extracts them into `.stringsdata`, and Xcode's own sync is what
+copies them across; a command-line build leaves the catalogue as it was, so
+new text quietly appears untranslated. After adding strings, sync from the
+compiler's own list:
+
+```sh
+find ~/Library/Developer/Xcode/DerivedData -path '*Rondo.build/Debug*' -name '*.stringsdata'
+```
+
+Each is a plist or JSON holding the keys from one source file. Anything
+there but not in the catalogue is a string nobody can translate yet;
+anything in the catalogue but not there is a leftover.
+
+Three tests guard the catalogue, and each was checked by breaking it on
+purpose: every language is translated all the way through, Chinese
+sentences use Chinese punctuation, and a translation keeps the format
+specifiers its key had.
+
 ## Cutting a release
 
 ```sh

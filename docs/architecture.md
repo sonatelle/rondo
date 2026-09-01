@@ -226,6 +226,21 @@ not about duplication but about what a mistake costs:
   "follow the system" left the chrome light and the contents dark - and it
   never reached the menu bar window, which is a window of its own.
 
+  `Localization` decides which language the interface is in. The choice is
+  the person's rather than the Mac's, since a computer set to one language
+  is not a promise about which language its owner reads an app in, and it
+  is applied by handing every scene a locale - SwiftUI resolves a
+  `LocalizedStringKey` against that, so the convenience initialisers keep
+  working and no call site changes. A language change also forces the view
+  tree to rebuild: text already on screen keeps the words it resolved, and
+  without that it stayed in the old language until the next launch.
+
+  What the languages are is read from the bundle rather than listed, so
+  adding one to the catalogue is the whole job. `Formatting` follows the
+  same locale, so dates and numbers cannot end up in a different language
+  from the words around them - which they did, dating an English interface
+  in Chinese.
+
   `ServiceMark` is the rounded block that stands in for a service. It
   carries initials, permanently: bundling each service's logo would put
   other people's trademarks in an MIT repository, and the design names the

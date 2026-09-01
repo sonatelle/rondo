@@ -1,7 +1,6 @@
 import Foundation
-import Testing
-
 @testable import Rondo
+import Testing
 
 /// Tests for the frontend's half of the split: turning the core's plain
 /// strings into words, and a picked date back into one.
@@ -84,21 +83,52 @@ struct FormattingTests {
     #expect(rendered.contains("28"))
   }
 
-  @Test("A restore says what it changed and stays quiet about what it did not")
+  @Test("A restore says what it changed, in the chosen language")
   func restoreReportsOnlyWhatHappened() {
+    // Pinned rather than left to the machine: the wording now comes from
+    // the catalogue, so a test that did not choose a language would be
+    // asserting whatever this Mac happens to be set to.
     let summary = ImportSummary(
       categoriesAdded: 0,
       categoriesUpdated: 0,
       subscriptionsAdded: 3,
       subscriptionsUpdated: 1
     )
-    let sentence = Formatting.restored(summary)
 
-    #expect(sentence.contains("3 subscriptions added"))
-    // Singular, rather than "1 subscriptions updated".
-    #expect(sentence.contains("1 subscription updated"))
+    let english = inLanguage("en") { Formatting.restored(summary) }
+    #expect(english.contains("3 subscriptions added"))
+    // Singular, and not "1 subscriptions updated". English needs the
+    // distinction; the rule lives in the catalogue rather than in Swift.
+    #expect(english.contains("1 subscription updated"))
     // The categories it did not touch are absent, not reported as zero.
-    #expect(!sentence.contains("categor"))
+    #expect(!english.contains("categor"))
+
+    let chinese = inLanguage("zh-Hans") { Formatting.restored(summary) }
+    #expect(chinese.contains("3 项订阅"))
+    #expect(chinese.contains("1 项订阅"))
+    #expect(!chinese.contains("分类"))
+  }
+
+  @Test("The sentence is joined and ended the way its own language does it")
+  func sentenceFollowsItsLanguage() {
+    let summary = ImportSummary(
+      categoriesAdded: 0,
+      categoriesUpdated: 0,
+      subscriptionsAdded: 3,
+      subscriptionsUpdated: 1
+    )
+
+    // The failure this pins down: clauses in one language joined by
+    // another's conjunction, because the words follow the language and
+    // list formatting follows the region.
+    let english = inLanguage("en") { Formatting.restored(summary) }
+    #expect(english.contains(" and "))
+    #expect(english.hasSuffix("."))
+    #expect(!english.contains("和"))
+
+    let chinese = inLanguage("zh-Hans") { Formatting.restored(summary) }
+    #expect(chinese.hasSuffix("。"))
+    #expect(!chinese.contains(" and "))
   }
 
   @Test("An empty backup is explained rather than shown as an empty sentence")
@@ -109,7 +139,20 @@ struct FormattingTests {
       subscriptionsAdded: 0,
       subscriptionsUpdated: 0
     )
-    #expect(!Formatting.restored(nothing).isEmpty)
+    #expect(!inLanguage("en") { Formatting.restored(nothing) }.isEmpty)
+    #expect(inLanguage("zh-Hans") { Formatting.restored(nothing) }.contains("没有"))
+  }
+
+  /// Runs something with the interface pinned to one language.
+  ///
+  /// Restores whatever was there before, so a test cannot leave the
+  /// preference changed for the next one.
+  private func inLanguage<T>(_ code: String, _ body: () -> T) -> T {
+    let defaults = UserDefaults.standard
+    let previous = defaults.string(forKey: Preference.appLanguage)
+    defaults.set(code, forKey: Preference.appLanguage)
+    defer { defaults.set(previous, forKey: Preference.appLanguage) }
+    return body()
   }
 
   /// Builds a local date, failing the test rather than crashing if the

@@ -43,6 +43,7 @@ its own before the next begins.
 - [x] Known limitation recorded: without notarization the first launch
       needs right-click -> Open past Gatekeeper
 - [x] v0.1.0 published, 2026-08-28
+- [x] v0.2.0 published, 2026-09-01
 
 ## M6 - The design handoff (in progress)
 

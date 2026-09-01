@@ -8,6 +8,15 @@ import Foundation
 /// amount reads "US$15.90" is localization, where Foundation already knows
 /// far more than we would encode by hand.
 enum Formatting {
+  // Words, dates and numbers follow the language the person chose, not
+  // the Mac's region. The two differ: an English interface on a Chinese
+  // Mac was dating charges in Chinese and joining English clauses with a
+  // Chinese conjunction.
+  //
+  // Which calendar *day* it is stays with the region, though - see
+  // `civilDate(from:)`. What day it is where you are standing is not a
+  // question about which language you read.
+
   /// The core always writes decimals with a dot, whatever the locale.
   ///
   /// `Decimal(string:)` would otherwise read "15.90" against a comma
@@ -34,6 +43,7 @@ enum Formatting {
     }
     let formatter = NumberFormatter()
     formatter.numberStyle = .currency
+    formatter.locale = Localization.locale
     formatter.currencyCode = currency
     if let borrowed = borrowedSymbols[currency] {
       formatter.currencySymbol = borrowed
@@ -62,7 +72,8 @@ enum Formatting {
     }
 
     var borrowed: [String: String] = [:]
-    for code in Locale.commonISOCurrencyCodes where symbol(for: code, in: .current) == nil {
+    let reader = Localization.locale
+    for code in Locale.commonISOCurrencyCodes where symbol(for: code, in: reader) == nil {
       for locale in spenders[code] ?? [] {
         if let theirs = symbol(for: code, in: locale) {
           borrowed[code] = theirs
@@ -86,43 +97,55 @@ enum Formatting {
   /// Formats a civil date the way a calendar would show it.
   static func date(_ text: CivilDate) -> String {
     guard let date = parse(text) else { return text }
-    return date.formatted(.dateTime.year().month(.abbreviated).day())
+    return date.formatted(
+      .dateTime.year().month(.abbreviated).day().locale(Localization.locale)
+    )
   }
 
   /// Says how far off a date is from now: "today", "tomorrow", "in 10 days".
   static func relative(_ text: CivilDate) -> String {
     guard let date = parse(text) else { return "" }
-    return date.formatted(.relative(presentation: .named))
+    return date.formatted(.relative(presentation: .named).locale(Localization.locale))
   }
 
   /// What restoring a backup changed, in a sentence.
+  ///
+  /// Each clause is asked for with its own count, so the catalogue can
+  /// carry a plural rule per language: English needs "1 subscription" and
+  /// "3 subscriptions", Chinese needs neither. Choosing the wording here,
+  /// as this once did, hard-codes English grammar into the app.
   ///
   /// Counts of zero are left out rather than shown as "0 added", so the
   /// sentence says only what happened. An entry overwritten with identical
   /// values still counts as updated: the core reports what it wrote, and
   /// claiming otherwise would mean comparing values here.
   static func restored(_ summary: ImportSummary) -> String {
-    let parts = [
-      counted(summary.subscriptionsAdded, "subscription", "subscriptions", "added"),
-      counted(summary.subscriptionsUpdated, "subscription", "subscriptions", "updated"),
-      counted(summary.categoriesAdded, "category", "categories", "added"),
-      counted(summary.categoriesUpdated, "category", "categories", "updated"),
-    ].compactMap { $0 }
-    guard !parts.isEmpty else {
-      return "The file held nothing to restore."
+    var parts: [String] = []
+    if summary.subscriptionsAdded > 0 {
+      parts.append(String(localized: "\(summary.subscriptionsAdded) subscriptions added", bundle: Localization.bundle, locale: Localization.locale))
     }
-    return parts.formatted(.list(type: .and)) + "."
-  }
-
-  /// One clause of that sentence, or nothing when it would say zero.
-  private static func counted(
-    _ count: UInt32,
-    _ singular: String,
-    _ plural: String,
-    _ verb: String
-  ) -> String? {
-    guard count > 0 else { return nil }
-    return "\(count) \(count == 1 ? singular : plural) \(verb)"
+    if summary.subscriptionsUpdated > 0 {
+      parts.append(String(localized: "\(summary.subscriptionsUpdated) subscriptions updated", bundle: Localization.bundle, locale: Localization.locale))
+    }
+    if summary.categoriesAdded > 0 {
+      parts.append(String(localized: "\(summary.categoriesAdded) categories added", bundle: Localization.bundle, locale: Localization.locale))
+    }
+    if summary.categoriesUpdated > 0 {
+      parts.append(String(localized: "\(summary.categoriesUpdated) categories updated", bundle: Localization.bundle, locale: Localization.locale))
+    }
+    guard !parts.isEmpty else {
+      return String(localized: "The file held nothing to restore.", bundle: Localization.bundle, locale: Localization.locale)
+    }
+    // Joined in the chosen language, not the region's. The full stop is
+    // part of the sentence rather than appended, for the same reason: it
+    // is a different character in Chinese.
+    let joined = parts.formatted(.list(type: .and).locale(Localization.locale))
+    return String(
+      localized: "\(joined).",
+      bundle: Localization.bundle,
+      locale: Localization.locale,
+      comment: "A restore's clauses, made into a sentence"
+    )
   }
 
   /// Writes a picked date as the calendar day the person chose.
@@ -130,6 +153,10 @@ enum Formatting {
   /// Taken from the current calendar rather than by formatting the
   /// instant, so a date picked late in the evening does not travel to the
   /// core as tomorrow.
+  ///
+  /// This one keeps `Calendar.current` on purpose, where the rest of this
+  /// file follows the chosen language: which day it is depends on where
+  /// someone is, not on which language they read the app in.
   static func civilDate(from date: Date) -> CivilDate {
     let parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
     return String(

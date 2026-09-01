@@ -1,12 +1,427 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@." : {
+      "comment" : "A restore's clauses, made into a sentence",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@。"
+          }
+        }
+      }
+    },
+    "%u categories added" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u category added"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u categories added"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增 %u 个分类"
+          }
+        }
+      }
+    },
+    "%u categories updated" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u category updated"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u categories updated"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 %u 个分类"
+          }
+        }
+      }
+    },
+    "%u subscriptions added" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u subscription added"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u subscriptions added"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增 %u 项订阅"
+          }
+        }
+      }
+    },
+    "%u subscriptions updated" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u subscription updated"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u subscriptions updated"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 %u 项订阅"
+          }
+        }
+      }
+    },
+    "© 2026 Sonatelle · aliaxy · MIT License" : {
+
+    },
+    "a month" : {
+
+    },
+    "A month" : {
+
+    },
+    "A theme that keeps returning — and so does every subscription." : {
+
+    },
+    "About" : {
+
+    },
+    "Active" : {
+
+    },
+    "Add" : {
+
+    },
+    "Add a subscription" : {
+
+    },
+    "Add one to start tracking what renews and when." : {
+
+    },
+    "Add Subscription" : {
+
+    },
+    "All" : {
+
+    },
+    "Amount" : {
+
+    },
+    "and %lld more" : {
+
+    },
+    "Appearance" : {
+
+    },
+    "Archive" : {
+
+    },
+    "Archived" : {
+
+    },
+    "Archiving keeps a subscription's record but stops counting it." : {
+
+    },
+    "Backup restored" : {
+
+    },
+    "Billing cycle unit" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Currency" : {
+
+    },
+    "Custom" : {
+
+    },
+    "Cycle" : {
+
+    },
+    "Dark" : {
+
+    },
+    "Data" : {
+
+    },
+    "Database" : {
+
+    },
+    "day" : {
+
+    },
+    "days" : {
+
+    },
+    "Delete" : {
+
+    },
+    "Delete %@?" : {
+
+    },
+    "Delete %lld subscriptions?" : {
+
+    },
+    "Delete…" : {
+
+    },
+    "Edit Subscription…" : {
+
+    },
+    "Edit…" : {
+
+    },
+    "Every" : {
+
+    },
+    "Everything here is archived. Show it to restore or remove it." : {
+
+    },
+    "Everything stays in one file on this Mac. No cloud, no account, no network." : {
+
+    },
+    "Export a backup or restore one from the File menu." : {
+
+    },
+    "Export Backup…" : {
+
+    },
+    "First charge" : {
+
+    },
+    "Follow the system" : {
+
+    },
+    "General" : {
+
+    },
+    "Glance at the next charges without opening a window." : {
+
+    },
+    "Light" : {
+
+    },
+    "Links" : {
+
+    },
+    "Monday" : {
+
+    },
+    "month" : {
+
+    },
+    "months" : {
+
+    },
+    "Name" : {
+
+    },
+    "New Subscription" : {
+
+    },
+    "Next charge" : {
+
+    },
+    "No reminders yet" : {
+
+    },
+    "No subscriptions yet" : {
+
+    },
+    "Notes" : {
+
+    },
+    "Nothing active" : {
+
+    },
+    "Nothing archived" : {
+
+    },
+    "Nothing scheduled" : {
+
+    },
+    "OK" : {
+
+    },
+    "Open Rondo" : {
+
+    },
+    "Open Rondo at login" : {
+
+    },
+    "Optional" : {
+
+    },
+    "Price" : {
+
+    },
+    "Primary currency" : {
+
+    },
+    "Quit Rondo" : {
+
+    },
+    "Quit when the window closes" : {
+
+    },
     "Reminders" : {
       "localizations" : {
         "zh-Hans" : {
-          "stringUnit" : { "state" : "translated", "value" : "提醒" }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提醒"
+          }
         }
       }
+    },
+    "Renews" : {
+
+    },
+    "Restore" : {
+
+    },
+    "Restore from Backup…" : {
+
+    },
+    "Restoring merges and never deletes, so opening the wrong file cannot cost you data." : {
+
+    },
+    "Rondo" : {
+
+    },
+    "Rondo cannot open its database" : {
+
+    },
+    "Rondo keeps everything in this one file and never sends it anywhere. Copy it, and its -wal and -shm companions, to keep a backup." : {
+
+    },
+    "Rondo will be able to tell you before a charge lands. It cannot yet." : {
+
+    },
+    "Saturday" : {
+
+    },
+    "Save" : {
+
+    },
+    "Service" : {
+
+    },
+    "Sets how the calendar is laid out." : {
+
+    },
+    "Show" : {
+
+    },
+    "Show Archived" : {
+
+    },
+    "Show in Finder" : {
+
+    },
+    "Show Rondo in the menu bar" : {
+
+    },
+    "Something went wrong" : {
+
+    },
+    "Subscription" : {
+
+    },
+    "Sunday" : {
+
+    },
+    "System" : {
+
+    },
+    "The file held nothing to restore." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件里没有可恢复的内容。"
+          }
+        }
+      }
+    },
+    "This cannot be undone. To stop counting it but keep the record, archive it instead." : {
+
+    },
+    "Up next" : {
+
+    },
+    "week" : {
+
+    },
+    "weeks" : {
+
+    },
+    "Weeks start on" : {
+
+    },
+    "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies." : {
+
+    },
+    "year" : {
+
+    },
+    "years" : {
+
     }
   },
   "version" : "1.0"

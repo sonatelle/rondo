@@ -182,6 +182,13 @@ downloaded it.
 The tag and `MARKETING_VERSION` in `apple/project.yml` have to agree, and
 the workflow fails early if they do not - otherwise a forgotten version
 bump ships a release holding an app that calls itself something else.
+
+Whatever the README says about the new version belongs in that same
+version-bump pull request, before the tag is pushed. Written afterwards, it
+lands between two tags and the next release's generated notes advertise it
+as a change of their own - which is how v0.2.0 came to list "Point the
+README at the v0.1.0 release". Only the roadmap's published line has to
+wait, since publishing is a decision made after the tag exists.
 Re-run the workflow by hand (choosing the tag as the ref) rather than
 deleting and re-pushing a tag when publishing fails for its own reasons.
 

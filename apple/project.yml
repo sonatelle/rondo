@@ -36,7 +36,7 @@ settings:
     # each Info.plist from build settings rather than from a plist file
     # that would have to be kept in step by hand.
     GENERATE_INFOPLIST_FILE: "YES"
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "0.2.0"
     CURRENT_PROJECT_VERSION: "1"
 
     # Apple Silicon only. The core is built for one target by

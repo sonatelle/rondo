@@ -1,431 +1,1219 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "%@." : {
-      "comment" : "A restore's clauses, made into a sentence",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@。"
+  "sourceLanguage": "en",
+  "strings": {
+    "%@.": {
+      "comment": "A restore's clauses, made into a sentence",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@。"
           }
         }
       }
     },
-    "%u categories added" : {
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%u category added"
+    "%u categories added": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%u category added"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%u categories added"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%u categories added"
                 }
               }
             }
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新增 %u 个分类"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增 %u 个分类"
           }
         }
       }
     },
-    "%u categories updated" : {
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%u category updated"
+    "%u categories updated": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%u category updated"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%u categories updated"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%u categories updated"
                 }
               }
             }
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更新 %u 个分类"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新 %u 个分类"
           }
         }
       }
     },
-    "%u subscriptions added" : {
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%u subscription added"
+    "%u subscriptions added": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%u subscription added"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%u subscriptions added"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%u subscriptions added"
                 }
               }
             }
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新增 %u 项订阅"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增 %u 项订阅"
           }
         }
       }
     },
-    "%u subscriptions updated" : {
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%u subscription updated"
+    "%u subscriptions updated": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%u subscription updated"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%u subscriptions updated"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%u subscriptions updated"
                 }
               }
             }
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更新 %u 项订阅"
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新 %u 项订阅"
           }
         }
       }
     },
-    "© 2026 Sonatelle · aliaxy · MIT License" : {
-
-    },
-    "a month" : {
-
-    },
-    "A month" : {
-
-    },
-    "A theme that keeps returning — and so does every subscription." : {
-
-    },
-    "About" : {
-
-    },
-    "Active" : {
-
-    },
-    "Add" : {
-
-    },
-    "Add a subscription" : {
-
-    },
-    "Add one to start tracking what renews and when." : {
-
-    },
-    "Add Subscription" : {
-
-    },
-    "All" : {
-
-    },
-    "Amount" : {
-
-    },
-    "and %lld more" : {
-
-    },
-    "Appearance" : {
-
-    },
-    "Archive" : {
-
-    },
-    "Archived" : {
-
-    },
-    "Archiving keeps a subscription's record but stops counting it." : {
-
-    },
-    "Backup restored" : {
-
-    },
-    "Billing cycle unit" : {
-
-    },
-    "Cancel" : {
-
-    },
-    "Currency" : {
-
-    },
-    "Custom" : {
-
-    },
-    "Cycle" : {
-
-    },
-    "Dark" : {
-
-    },
-    "Data" : {
-
-    },
-    "Database" : {
-
-    },
-    "day" : {
-
-    },
-    "days" : {
-
-    },
-    "Delete" : {
-
-    },
-    "Delete %@?" : {
-
-    },
-    "Delete %lld subscriptions?" : {
-
-    },
-    "Delete…" : {
-
-    },
-    "Edit Subscription…" : {
-
-    },
-    "Edit…" : {
-
-    },
-    "Every" : {
-
-    },
-    "Everything here is archived. Show it to restore or remove it." : {
-
-    },
-    "Everything stays in one file on this Mac. No cloud, no account, no network." : {
-
-    },
-    "Export a backup or restore one from the File menu." : {
-
-    },
-    "Export Backup…" : {
-
-    },
-    "First charge" : {
-
-    },
-    "Follow the system" : {
-
-    },
-    "General" : {
-
-    },
-    "Glance at the next charges without opening a window." : {
-
-    },
-    "Language" : {
-
-    },
-    "Light" : {
-
-    },
-    "Links" : {
-
-    },
-    "Monday" : {
-
-    },
-    "month" : {
-
-    },
-    "months" : {
-
-    },
-    "Name" : {
-
-    },
-    "New Subscription" : {
-
-    },
-    "Next charge" : {
-
-    },
-    "No reminders yet" : {
-
-    },
-    "No subscriptions yet" : {
-
-    },
-    "Notes" : {
-
-    },
-    "Nothing active" : {
-
-    },
-    "Nothing archived" : {
-
-    },
-    "Nothing scheduled" : {
-
-    },
-    "OK" : {
-
-    },
-    "Open Rondo" : {
-
-    },
-    "Open Rondo at login" : {
-
-    },
-    "Optional" : {
-
-    },
-    "Price" : {
-
-    },
-    "Primary currency" : {
-
-    },
-    "Quit Rondo" : {
-
-    },
-    "Quit when the window closes" : {
-
-    },
-    "Reminders" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "提醒"
+    "A month": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每月均摊"
           }
         }
       }
     },
-    "Renews" : {
-
-    },
-    "Restore" : {
-
-    },
-    "Restore from Backup…" : {
-
-    },
-    "Restoring merges and never deletes, so opening the wrong file cannot cost you data." : {
-
-    },
-    "Rondo" : {
-
-    },
-    "Rondo cannot open its database" : {
-
-    },
-    "Rondo keeps everything in this one file and never sends it anywhere. Copy it, and its -wal and -shm companions, to keep a backup." : {
-
-    },
-    "Rondo will be able to tell you before a charge lands. It cannot yet." : {
-
-    },
-    "Saturday" : {
-
-    },
-    "Save" : {
-
-    },
-    "Service" : {
-
-    },
-    "Sets how the calendar is laid out." : {
-
-    },
-    "Show" : {
-
-    },
-    "Show Archived" : {
-
-    },
-    "Show in Finder" : {
-
-    },
-    "Show Rondo in the menu bar" : {
-
-    },
-    "Something went wrong" : {
-
-    },
-    "Subscription" : {
-
-    },
-    "Sunday" : {
-
-    },
-    "System" : {
-
-    },
-    "The file held nothing to restore." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文件里没有可恢复的内容。"
+    "A theme that keeps returning — and so does every subscription.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一个不断回归的主题 —— 每一笔订阅也是。"
           }
         }
       }
     },
-    "This cannot be undone. To stop counting it but keep the record, archive it instead." : {
-
+    "About": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于"
+          }
+        }
+      }
     },
-    "Up next" : {
-
+    "Active": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在用"
+          }
+        }
+      }
     },
-    "week" : {
-
+    "Add": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加"
+          }
+        }
+      }
     },
-    "weeks" : {
-
+    "Add Subscription": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加订阅"
+          }
+        }
+      }
     },
-    "Weeks start on" : {
-
+    "Add a subscription": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加一项订阅"
+          }
+        }
+      }
     },
-    "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies." : {
-
+    "Add one to start tracking what renews and when.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加一项，开始记录什么时候扣、扣多少。"
+          }
+        }
+      }
     },
-    "year" : {
-
+    "All": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部"
+          }
+        }
+      }
     },
-    "years" : {
-
+    "Amount": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "金额"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外观"
+          }
+        }
+      }
+    },
+    "Archive": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "归档"
+          }
+        }
+      }
+    },
+    "Archived": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已归档"
+          }
+        }
+      }
+    },
+    "Archiving keeps a subscription's record but stops counting it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "归档会保留记录，但不再计入总额。"
+          }
+        }
+      }
+    },
+    "Backup restored": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已恢复备份"
+          }
+        }
+      }
+    },
+    "Billing cycle unit": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计费周期单位"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
+          }
+        }
+      }
+    },
+    "Currency": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "币种"
+          }
+        }
+      }
+    },
+    "Custom": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义"
+          }
+        }
+      }
+    },
+    "Cycle": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周期"
+          }
+        }
+      }
+    },
+    "Daily": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每天"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深色"
+          }
+        }
+      }
+    },
+    "Data": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数据"
+          }
+        }
+      }
+    },
+    "Database": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数据文件"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除"
+          }
+        }
+      }
+    },
+    "Delete %@?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除「%@」？"
+          }
+        }
+      }
+    },
+    "Delete %lld subscriptions?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除这 %lld 项订阅？"
+          }
+        }
+      }
+    },
+    "Delete…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除…"
+          }
+        }
+      }
+    },
+    "Edit Subscription…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑订阅…"
+          }
+        }
+      }
+    },
+    "Edit…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑…"
+          }
+        }
+      }
+    },
+    "Every": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每"
+          }
+        }
+      }
+    },
+    "Every %lld days": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每 %lld 天"
+          }
+        }
+      }
+    },
+    "Every %lld months": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每 %lld 个月"
+          }
+        }
+      }
+    },
+    "Every %lld weeks": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每 %lld 周"
+          }
+        }
+      }
+    },
+    "Every %lld years": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每 %lld 年"
+          }
+        }
+      }
+    },
+    "Everything here is archived. Show it to restore or remove it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "现有的都已归档。切到「已归档」可以恢复或删除。"
+          }
+        }
+      }
+    },
+    "Everything stays in one file on this Mac. No cloud, no account, no network.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有数据都留在这台 Mac 的一个文件里。无云端、无账号、无网络请求。"
+          }
+        }
+      }
+    },
+    "Export Backup…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出备份…"
+          }
+        }
+      }
+    },
+    "Export a backup or restore one from the File menu.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在「文件」菜单里导出备份或从备份恢复。"
+          }
+        }
+      }
+    },
+    "First charge": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "首次扣款"
+          }
+        }
+      }
+    },
+    "Follow the system": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随系统"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通用"
+          }
+        }
+      }
+    },
+    "Glance at the next charges without opening a window.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不打开窗口也能看到接下来的扣款。"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "语言"
+          }
+        }
+      }
+    },
+    "Light": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浅色"
+          }
+        }
+      }
+    },
+    "Links": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "链接"
+          }
+        }
+      }
+    },
+    "Monday": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期一"
+          }
+        }
+      }
+    },
+    "Monthly": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每月"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名称"
+          }
+        }
+      }
+    },
+    "New Subscription": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增订阅"
+          }
+        }
+      }
+    },
+    "Next charge": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下次扣款"
+          }
+        }
+      }
+    },
+    "No reminders yet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有提醒"
+          }
+        }
+      }
+    },
+    "No subscriptions yet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有订阅"
+          }
+        }
+      }
+    },
+    "Notes": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备注"
+          }
+        }
+      }
+    },
+    "Nothing active": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有在用的订阅"
+          }
+        }
+      }
+    },
+    "Nothing archived": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有归档的订阅"
+          }
+        }
+      }
+    },
+    "Nothing scheduled": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有待扣款项"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好"
+          }
+        }
+      }
+    },
+    "Off, closing the window leaves Rondo in the menu bar and out of the Dock.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭时，关窗后 Rondo 留在菜单栏，并从 Dock 中隐藏。"
+          }
+        }
+      }
+    },
+    "Open Rondo": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 Rondo"
+          }
+        }
+      }
+    },
+    "Open Rondo at login": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开机时启动"
+          }
+        }
+      }
+    },
+    "Optional": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选填"
+          }
+        }
+      }
+    },
+    "Price": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "价格"
+          }
+        }
+      }
+    },
+    "Primary currency": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主要币种"
+          }
+        }
+      }
+    },
+    "Quit Rondo": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出 Rondo"
+          }
+        }
+      }
+    },
+    "Quit when the window closes": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭窗口时退出"
+          }
+        }
+      }
+    },
+    "Releases": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发布版本"
+          }
+        }
+      }
+    },
+    "Reminders": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提醒"
+          }
+        }
+      }
+    },
+    "Renews": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计费周期"
+          }
+        }
+      }
+    },
+    "Report an issue": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "反馈问题"
+          }
+        }
+      }
+    },
+    "Restore": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复"
+          }
+        }
+      }
+    },
+    "Restore from Backup…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从备份恢复…"
+          }
+        }
+      }
+    },
+    "Restoring merges and never deletes, so opening the wrong file cannot cost you data.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复只合并、不删除，打开错文件也不会丢数据。"
+          }
+        }
+      }
+    },
+    "Rondo": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rondo"
+          }
+        }
+      }
+    },
+    "Rondo cannot open its database": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rondo 打不开它的数据文件"
+          }
+        }
+      }
+    },
+    "Rondo keeps everything in this one file and never sends it anywhere. Copy it, and its -wal and -shm companions, to keep a backup.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rondo 的全部数据都在这一个文件里，不会发送到任何地方。连同 -wal 和 -shm 一起复制即可留存备份。"
+          }
+        }
+      }
+    },
+    "Rondo will be able to tell you before a charge lands. It cannot yet.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以后 Rondo 会在扣款前提醒你，目前还不能。"
+          }
+        }
+      }
+    },
+    "Saturday": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期六"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        }
+      }
+    },
+    "Service": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务商"
+          }
+        }
+      }
+    },
+    "Sets how the calendar is laid out.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "影响日历的排列方式。"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示"
+          }
+        }
+      }
+    },
+    "Show Archived": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看已归档"
+          }
+        }
+      }
+    },
+    "Show Rondo in the menu bar": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在菜单栏显示"
+          }
+        }
+      }
+    },
+    "Show in Finder": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Finder 中显示"
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出错了"
+          }
+        }
+      }
+    },
+    "Source": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "源代码"
+          }
+        }
+      }
+    },
+    "Subscription": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "订阅"
+          }
+        }
+      }
+    },
+    "Sunday": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期日"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随系统"
+          }
+        }
+      }
+    },
+    "The file held nothing to restore.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件里没有可恢复的内容。"
+          }
+        }
+      }
+    },
+    "This cannot be undone. To stop counting it but keep the record, archive it instead.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此操作不可撤销。只是想不再计入总额、但保留记录的话，请改用归档。"
+          }
+        }
+      }
+    },
+    "Up next": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接下来"
+          }
+        }
+      }
+    },
+    "Weekly": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每周"
+          }
+        }
+      }
+    },
+    "Weeks start on": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每周起始日"
+          }
+        }
+      }
+    },
+    "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新建订阅的默认币种，也决定哪个合计排在最前。Rondo 从不在币种之间换算。"
+          }
+        }
+      }
+    },
+    "With no menu bar item, closing the window quits either way.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有菜单栏图标时，关窗一律退出。"
+          }
+        }
+      }
+    },
+    "Yearly": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每年"
+          }
+        }
+      }
+    },
+    "a month": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每月"
+          }
+        }
+      }
+    },
+    "and %lld more": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另有 %lld 项"
+          }
+        }
+      }
+    },
+    "day": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "天"
+          }
+        }
+      }
+    },
+    "days": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "天"
+          }
+        }
+      }
+    },
+    "month": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月"
+          }
+        }
+      }
+    },
+    "months": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月"
+          }
+        }
+      }
+    },
+    "week": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周"
+          }
+        }
+      }
+    },
+    "weeks": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周"
+          }
+        }
+      }
+    },
+    "year": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年"
+          }
+        }
+      }
+    },
+    "years": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年"
+          }
+        }
+      }
+    },
+    "© 2026 Sonatelle · aliaxy · MIT License": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "© 2026 Sonatelle · aliaxy · MIT 许可证"
+          }
+        }
+      }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

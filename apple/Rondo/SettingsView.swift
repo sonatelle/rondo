@@ -256,6 +256,14 @@ private struct AboutSettings: View {
         .font(Theme.Font.caption)
         .foregroundStyle(Color.textMuted)
         .monospacedDigit()
+      // The core carries its own version and moves on its own schedule,
+      // so the two differing is normal. What it catches is a bundle built
+      // against a stale XCFramework: an app several releases along still
+      // reporting the core it shipped with on day one.
+      Text("Core \(Self.coreVersion)")
+        .font(Theme.Font.footnote)
+        .foregroundStyle(Color.textFaint)
+        .monospacedDigit()
       Text("A theme that keeps returning — and so does every subscription.")
         .font(Theme.Font.caption)
         .foregroundStyle(Color.textMuted)
@@ -270,11 +278,24 @@ private struct AboutSettings: View {
 
   /// Read from the bundle rather than written here, so it cannot disagree
   /// with what was actually built and released.
+  ///
+  /// The numbers come from the bundle; the word in front of them comes
+  /// from the catalogue. Written as one Swift string, as this was, the
+  /// word could only ever be "Version".
   private static var version: String {
     let info = Bundle.main.infoDictionary
     let short = info?["CFBundleShortVersionString"] as? String ?? "—"
     let build = info?["CFBundleVersion"] as? String ?? "—"
-    return "Version \(short) (\(build))"
+    return String(
+      localized: "Version \(short) (\(build))",
+      bundle: Localization.bundle,
+      locale: Localization.locale
+    )
+  }
+
+  /// What the linked Rust core reports about itself.
+  private static var coreVersion: String {
+    libraryVersion()
   }
 }
 

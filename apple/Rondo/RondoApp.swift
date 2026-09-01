@@ -67,6 +67,17 @@ struct RondoApp: App {
       // takes it out again when the last one closes.
       .onAppear { NSApp.setActivationPolicy(.regular) }
       .environment(\.locale, Localization.locale(for: appLanguage))
+      // Rebuilt rather than merely re-supplied. Handing the scene a new
+      // locale is not enough on its own: text already on screen keeps the
+      // words it resolved, and only a language change forced through the
+      // identity redraws it. Tried without this and the window stayed in
+      // the old language until the next launch.
+      //
+      // The cost is the view state that lives in the tree - which row is
+      // selected, which column sorts. Changing language is rare enough to
+      // pay that, and the data is safe either way: the model outlives the
+      // views. Moving that state into the model would make the rebuild
+      // free, and the overview rewrite is going to move it there anyway.
       .id(appLanguage)
     }
     .defaultSize(width: 1080, height: 760)

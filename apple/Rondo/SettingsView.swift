@@ -24,6 +24,7 @@ struct SettingsView: View {
 
 private struct GeneralSettings: View {
   @AppStorage(Preference.appearance) private var appearance = Appearance.system
+  @AppStorage(Preference.appLanguage) private var appLanguage = ""
   @AppStorage(Preference.showsMenuBarItem) private var showsMenuBarItem = true
   @AppStorage(Preference.quitsOnWindowClose) private var quitsOnWindowClose = false
   @AppStorage(Preference.primaryCurrency) private var primaryCurrency = ""
@@ -58,6 +59,17 @@ private struct GeneralSettings: View {
       }
 
       Section {
+        Picker("Language", selection: $appLanguage) {
+          Text("Follow the system").tag("")
+          Divider()
+          // Offered from the bundle rather than from a list here, so a
+          // language added to the catalogue turns up without any Swift
+          // being touched.
+          ForEach(Localization.available, id: \.self) { code in
+            Text(verbatim: Localization.displayName(of: code)).tag(code)
+          }
+        }
+
         Picker("Appearance", selection: $appearance) {
           ForEach(Appearance.allCases) { choice in
             Text(choice.title).tag(choice)

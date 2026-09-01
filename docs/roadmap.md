@@ -51,21 +51,27 @@ Eleven screens, delivered as a hifi design in August 2026. It is named a
 milestone of its own because it is not a coat of paint: six of the screens
 do not exist, the overview is a rewrite rather than a restyle, and the
 handoff asks the core for price history, payment methods and a provider
-table. One round per pull request, in dependency order.
+table. One round per pull request, in dependency order; the version each
+round ships in is named, because one of them changes the backup format and
+that needs a boundary a reader can point at.
 
-- [x] Design tokens, the menu bar window, the settings shell
-- [x] A bilingual interface with a language of its own to pick
-- [ ] A provider table, with aliases to search by
+- [x] Design tokens, the menu bar window, the settings shell - v0.2.0
+- [x] A bilingual interface with a language of its own to pick - v0.2.0
+- [ ] A provider table, with aliases to search by - v0.3.0
 - [ ] Price history, payment methods, category icons - one migration, and
-      the backup format to v2
-- [ ] The aggregations the analytics screen needs
-- [ ] Sidebar navigation and the overview
-- [ ] The form, and picking a provider
-- [ ] Subscription detail
-- [ ] Calendar
-- [ ] Analytics
-- [ ] First run
-- [ ] Local notifications - which also closes M4
+      the backup format to v2 - v0.3.0
+- [ ] The aggregations the analytics screen needs - v0.3.0
+- [ ] Sidebar navigation and the overview - v0.4.0
+- [ ] The form, and picking a provider - v0.4.0
+- [ ] Subscription detail - v0.5.0
+- [ ] Calendar - v0.5.0
+- [ ] Analytics - v0.6.0
+- [ ] First run - v0.7.0
+- [ ] Local notifications - which also closes M4 - v0.7.0
+
+v0.3.0 is the release to be careful with. Its screens barely change, but a
+backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse
+formats from the future by design.
 
 ## Later, undated
 

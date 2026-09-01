@@ -13,7 +13,7 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-v0.1.0 is out. The macOS app runs and keeps real data.
+v0.2.0 is out. The macOS app runs and keeps real data.
 
 What works:
 
@@ -26,12 +26,16 @@ What works:
   opening the wrong file cannot cost you data.
 - Record a price in any currency the system knows, picked from a list.
   Currencies are kept apart; Rondo never converts between them.
+- Read it in English or Simplified Chinese, chosen in Settings rather than
+  inherited from the system. Dates and amounts follow the language picked.
+- Light, dark, or follow the system, the menu bar item included.
 - Local SQLite storage. No cloud, no account, no network.
 
 Still to come:
 
 - Renewal reminders through local notifications.
-- A look of its own. The app is shaped like a macOS app now, but plain.
+- The rest of the design. The menu bar and settings carry it; the main
+  window, and the six screens that do not exist yet, do not.
 
 ## Install
 

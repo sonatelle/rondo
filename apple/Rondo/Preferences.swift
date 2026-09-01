@@ -13,6 +13,8 @@ enum Preference {
   static let showsMenuBarItem = "showsMenuBarItem"
   static let quitsOnWindowClose = "quitsOnWindowClose"
   static let primaryCurrency = "primaryCurrency"
+  /// A language code the bundle carries, or empty to follow the system.
+  static let appLanguage = "appLanguage"
   /// A weekday index in `Calendar`'s numbering, where Sunday is 1.
   static let firstWeekday = "firstWeekday"
 }

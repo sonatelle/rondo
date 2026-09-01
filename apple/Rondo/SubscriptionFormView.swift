@@ -76,9 +76,14 @@ struct SubscriptionFormView: View {
           HStack {
             Text("Every")
             Stepper(value: $cycleCount, in: 1 ... 100) {
-              Text("\(cycleCount)").monospacedDigit()
+              // A bare number, not prose: `Text("\(cycleCount)")` would put
+              // "%lld" in the string catalogue as something to translate.
+              Text(cycleCount, format: .number).monospacedDigit()
             }
-            Picker("", selection: $cycleUnit) {
+            // Named for the accessibility tree even though the label is
+            // hidden; an empty title would land in the catalogue as a
+            // blank string waiting to be translated.
+            Picker("Billing cycle unit", selection: $cycleUnit) {
               Text(cycleCount == 1 ? "day" : "days").tag(CycleUnit.day)
               Text(cycleCount == 1 ? "week" : "weeks").tag(CycleUnit.week)
               Text(cycleCount == 1 ? "month" : "months").tag(CycleUnit.month)

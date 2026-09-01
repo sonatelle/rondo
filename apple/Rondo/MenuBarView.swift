@@ -66,7 +66,9 @@ struct MenuBarView: View {
       Spacer(minLength: Theme.Space.m)
       VStack(alignment: .trailing, spacing: 1) {
         if model.summaries.isEmpty {
-          Text("—").foregroundStyle(Color.textFaint)
+          // A placeholder, not prose: it would otherwise sit in the
+          // catalogue as an em dash waiting to be translated.
+          Text(verbatim: "—").foregroundStyle(Color.textFaint)
         } else {
           ForEach(model.summaries, id: \.currency) { summary in
             Text(Formatting.amount(summary.monthly, currency: summary.currency))
@@ -150,13 +152,15 @@ private struct UpcomingRow: View {
 /// A row in the bottom group, which behaves like a menu item without being
 /// one - `MenuBarExtra(.window)` gives a window, so these are buttons.
 private struct MenuBarButton: View {
-  let title: String
+  /// A key, not a `String`: `Text(someString)` is the verbatim initialiser,
+  /// which shows the text as written and never looks it up.
+  let title: LocalizedStringKey
   var tint: Color = .textPrimary
   let action: () -> Void
 
   @State private var isHovering = false
 
-  init(_ title: String, tint: Color = .textPrimary, action: @escaping () -> Void) {
+  init(_ title: LocalizedStringKey, tint: Color = .textPrimary, action: @escaping () -> Void) {
     self.title = title
     self.tint = tint
     self.action = action

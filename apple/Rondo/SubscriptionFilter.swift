@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 /// Which subscriptions the window is showing.
 ///
@@ -14,7 +14,10 @@ enum SubscriptionFilter: String, CaseIterable, Identifiable {
     rawValue
   }
 
-  var title: String {
+  /// A key rather than a `String`: `Label` and `navigationTitle` take a
+  /// `LocalizedStringKey`, so this is looked up rather than shown as it
+  /// is written here.
+  var title: LocalizedStringKey {
     switch self {
     case .active: "Active"
     case .archived: "Archived"

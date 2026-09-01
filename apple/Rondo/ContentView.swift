@@ -263,11 +263,13 @@ struct ContentView: View {
     model.renewals.filter { ids.contains($0.id) }.map(\.subscription)
   }
 
+  /// Asked for by hand: this is built in Swift rather than written as a
+  /// `Text`, so nothing extracts it into the catalogue on its own.
   private var deletionTitle: String {
     guard pendingDeletion.count == 1, let only = pendingDeletion.first else {
-      return "Delete \(pendingDeletion.count) subscriptions?"
+      return String(localized: "Delete \(pendingDeletion.count) subscriptions?")
     }
-    return "Delete \(only.name)?"
+    return String(localized: "Delete \(only.name)?")
   }
 }
 

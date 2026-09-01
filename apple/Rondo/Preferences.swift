@@ -27,7 +27,8 @@ enum Appearance: String, CaseIterable, Identifiable {
     rawValue
   }
 
-  var title: String {
+  /// A key, for the same reason as `SubscriptionFilter.title`.
+  var title: LocalizedStringKey {
     switch self {
     case .light: "Light"
     case .dark: "Dark"

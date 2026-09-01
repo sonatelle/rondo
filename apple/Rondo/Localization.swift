@@ -26,9 +26,19 @@ enum Localization {
   /// The language actually in use: the stored choice when it is one this
   /// build has, and otherwise whichever of ours the system prefers.
   static var resolved: String {
-    let chosen = UserDefaults.standard.string(forKey: Preference.appLanguage) ?? ""
-    if !chosen.isEmpty, available.contains(chosen) {
-      return chosen
+    resolved(UserDefaults.standard.string(forKey: Preference.appLanguage) ?? "")
+  }
+
+  /// The same, for a choice handed in rather than read.
+  ///
+  /// SwiftUI only rebuilds what it has seen a view read. A scene that set
+  /// its locale from the stored value directly never registered a
+  /// dependency on the preference, so picking a language did nothing until
+  /// the next launch; passing the value through makes the dependency
+  /// something SwiftUI can see.
+  static func resolved(_ choice: String) -> String {
+    if !choice.isEmpty, available.contains(choice) {
+      return choice
     }
     return systemPreferred
   }
@@ -61,6 +71,11 @@ enum Localization {
   /// Chinese.
   static var locale: Locale {
     Locale(identifier: resolved)
+  }
+
+  /// The locale for a choice handed in; see `resolved(_:)`.
+  static func locale(for choice: String) -> Locale {
+    Locale(identifier: resolved(choice))
   }
 
   /// A language's name, written in that language.

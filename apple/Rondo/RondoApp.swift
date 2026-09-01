@@ -41,6 +41,10 @@ struct RondoApp: App {
 
   @AppStorage(Preference.showsMenuBarItem) private var showsMenuBarItem = true
 
+  /// The chosen language, used below rather than only declared: SwiftUI
+  /// rebuilds on what a body actually reads.
+  @AppStorage(Preference.appLanguage) private var appLanguage = ""
+
   /// Opening the database can fail, and the app has to say so rather than
   /// launching into a window that silently shows nothing.
   private let launch: Result<SubscriptionsModel, Error>
@@ -62,6 +66,8 @@ struct RondoApp: App {
       // Back into the Dock whenever a window is on screen; the delegate
       // takes it out again when the last one closes.
       .onAppear { NSApp.setActivationPolicy(.regular) }
+      .environment(\.locale, Localization.locale(for: appLanguage))
+      .id(appLanguage)
     }
     .defaultSize(width: 1080, height: 760)
     .commands { SubscriptionCommands() }
@@ -72,6 +78,8 @@ struct RondoApp: App {
     MenuBarExtra(isInserted: $showsMenuBarItem) {
       if case let .success(model) = launch {
         MenuBarView(model: model)
+          .environment(\.locale, Localization.locale(for: appLanguage))
+          .id(appLanguage)
       }
     } label: {
       // The card from the middle of the app's own mark. Not the ring that
@@ -84,6 +92,8 @@ struct RondoApp: App {
 
     Settings {
       SettingsView()
+        .environment(\.locale, Localization.locale(for: appLanguage))
+        .id(appLanguage)
     }
   }
 }

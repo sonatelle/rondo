@@ -47,23 +47,28 @@ extension Renewal {
   }
 
   /// How the cycle reads in a column: "Monthly", "Every 3 months".
+  ///
+  /// Asked for whole rather than assembled from a number and a unit. Built
+  /// by joining, as this once was, the phrase can only ever be English: a
+  /// language that puts the count elsewhere, or inflects the noun, has
+  /// nowhere to say so.
   var cycleDescription: String {
     let count = Int(subscription.cycleCount)
+    let bundle = Localization.bundle
+    let locale = Localization.locale
     guard count != 1 else {
       return switch subscription.cycleUnit {
-      case .day: "Daily"
-      case .week: "Weekly"
-      case .month: "Monthly"
-      case .year: "Yearly"
+      case .day: String(localized: "Daily", bundle: bundle, locale: locale)
+      case .week: String(localized: "Weekly", bundle: bundle, locale: locale)
+      case .month: String(localized: "Monthly", bundle: bundle, locale: locale)
+      case .year: String(localized: "Yearly", bundle: bundle, locale: locale)
       }
     }
-    let unit =
-      switch subscription.cycleUnit {
-      case .day: "days"
-      case .week: "weeks"
-      case .month: "months"
-      case .year: "years"
-      }
-    return "Every \(count) \(unit)"
+    return switch subscription.cycleUnit {
+    case .day: String(localized: "Every \(count) days", bundle: bundle, locale: locale)
+    case .week: String(localized: "Every \(count) weeks", bundle: bundle, locale: locale)
+    case .month: String(localized: "Every \(count) months", bundle: bundle, locale: locale)
+    case .year: String(localized: "Every \(count) years", bundle: bundle, locale: locale)
+    }
   }
 }

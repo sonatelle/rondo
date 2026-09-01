@@ -127,8 +127,16 @@ private struct GeneralSettings: View {
   /// otherwise Rondo would keep running with nothing left to click.
   private var closingExplanation: String {
     showsMenuBarItem
-      ? "Off, closing the window leaves Rondo in the menu bar and out of the Dock."
-      : "With no menu bar item, closing the window quits either way."
+      ? String(
+        localized: "Off, closing the window leaves Rondo in the menu bar and out of the Dock.",
+        bundle: Localization.bundle,
+        locale: Localization.locale
+      )
+      : String(
+        localized: "With no menu bar item, closing the window quits either way.",
+        bundle: Localization.bundle,
+        locale: Localization.locale
+      )
   }
 }
 
@@ -278,12 +286,14 @@ private struct AboutSettings: View {
 /// red and amber mean "this is charged soon" everywhere else in Rondo and
 /// spending them on a link would make that quieter.
 private struct AboutLink: View {
-  let title: String
+  /// A key, not a `String`: `Text(someString)` shows the text as written
+  /// and never looks it up, so these rows stayed English.
+  let title: LocalizedStringKey
   let systemImage: String
   let tint: Color
   let destination: URL
 
-  init(_ title: String, systemImage: String, tint: Color, to address: String) {
+  init(_ title: LocalizedStringKey, systemImage: String, tint: Color, to address: String) {
     self.title = title
     self.systemImage = systemImage
     self.tint = tint

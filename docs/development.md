@@ -133,6 +133,30 @@ purpose: every language is translated all the way through, Chinese
 sentences use Chinese punctuation, and a translation keeps the format
 specifiers its key had.
 
+## Two version numbers
+
+The app and the core are versioned apart, because they change apart.
+
+- **The app** is `MARKETING_VERSION` in `apple/project.yml`, and it is what
+  a release tag names. It moves whenever a release goes out, whether or not
+  the Rust side was touched.
+- **The core** is `version` in the workspace `Cargo.toml`, shared by
+  `rondo-core` and `rondo-ffi`. It moves only when the core's own surface
+  does - the FFI records, the schema, the backup format - and follows
+  semver on that surface. Below 1.0 a breaking change is a minor bump, so
+  reshaping a record or raising `backup::FORMAT_VERSION` moves the minor.
+
+So the two differing is normal, and the About screen shows both on purpose.
+What it catches is the pair drifting the wrong way: an app several releases
+along still reporting the core it shipped with means the bundle was built
+against a stale `RondoCore.xcframework`.
+
+The crates are not published anywhere, so nothing outside this repository
+reads the core's version. Its audience is that About line and whoever is
+deciding whether a change to the core is breaking. If another frontend ever
+ships on its own schedule, that is the moment the number gains a real
+consumer.
+
 ## Cutting a release
 
 ```sh

@@ -57,6 +57,78 @@ pub fn service_templates() -> &'static [ServiceTemplate] {
     })
 }
 
+/// How closely a template answered a query. Ordered worst to best, so the
+/// derived `Ord` sorts the good matches last and a reversed sort puts them
+/// first.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum Match {
+    /// An alias carried the match rather than the name on screen.
+    Alias,
+    /// The name contains the query somewhere inside it.
+    Contained,
+    /// The name starts with the query, which is what typing usually means.
+    Prefix,
+}
+
+/// Folds away the differences people do not intend when they type: case,
+/// spaces, and the punctuation that separates words in a brand name.
+///
+/// It deliberately leaves letters and digits from every script alone, so
+/// Chinese names match on their own characters rather than being
+/// transliterated into something approximate.
+fn normalized(text: &str) -> String {
+    text.chars()
+        .filter(|c| c.is_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+/// Bundled services matching `query`, best match first.
+///
+/// Matching is by substring rather than by edit distance, because the
+/// mistake worth forgiving here is an abbreviation - "prime" for Amazon
+/// Prime - and not a typo. A nickname sharing no characters with the name,
+/// "B站" for Bilibili, cannot be reached by any amount of fuzziness and is
+/// carried by `aliases` instead.
+///
+/// An empty query returns the whole catalogue in its bundled order, which
+/// is what a picker shows before anyone types.
+pub fn search_service_templates(query: &str) -> Vec<&'static ServiceTemplate> {
+    let needle = normalized(query);
+    if needle.is_empty() {
+        return service_templates().iter().collect();
+    }
+
+    let mut hits: Vec<(Match, usize, &'static ServiceTemplate)> = service_templates()
+        .iter()
+        .enumerate()
+        .filter_map(|(position, template)| {
+            rank(template, &needle).map(|how| (how, position, template))
+        })
+        .collect();
+
+    // Best match first; ties keep the catalogue's own order, so a list
+    // rearranges as little as possible while someone is still typing.
+    hits.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+    hits.into_iter().map(|(_, _, template)| template).collect()
+}
+
+/// How well one template answers an already-normalized query.
+fn rank(template: &ServiceTemplate, needle: &str) -> Option<Match> {
+    let name = normalized(&template.name);
+    if name.starts_with(needle) {
+        return Some(Match::Prefix);
+    }
+    if name.contains(needle) {
+        return Some(Match::Contained);
+    }
+    template
+        .aliases
+        .iter()
+        .any(|alias| normalized(alias).contains(needle))
+        .then_some(Match::Alias)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -98,6 +170,87 @@ mod tests {
                 .all(|t| t.id != CUSTOM_TEMPLATE_ID),
             "a bundled service took the id reserved for the custom choice"
         );
+    }
+
+    fn ids_for(query: &str) -> Vec<&'static str> {
+        search_service_templates(query)
+            .into_iter()
+            .map(|t| t.id.as_str())
+            .collect()
+    }
+
+    #[test]
+    fn an_empty_query_returns_the_whole_catalogue() {
+        assert_eq!(
+            search_service_templates("").len(),
+            service_templates().len()
+        );
+        assert_eq!(
+            search_service_templates("   ").len(),
+            service_templates().len()
+        );
+    }
+
+    #[test]
+    fn an_abbreviation_inside_a_name_matches() {
+        assert_eq!(ids_for("prime"), ["amazon-prime"]);
+        assert_eq!(ids_for("奇艺"), ["iqiyi"]);
+    }
+
+    #[test]
+    fn case_spaces_and_punctuation_are_forgiven() {
+        assert_eq!(ids_for("1 PASS.word"), ["1password"]);
+        assert_eq!(ids_for("disney +"), ["disney-plus"]);
+    }
+
+    /// A nickname sharing no characters with the name is exactly what the
+    /// alias list is for; no amount of fuzziness reaches it.
+    #[test]
+    fn a_nickname_is_reached_only_through_its_alias() {
+        assert_eq!(ids_for("B站"), ["bilibili"]);
+        assert_eq!(ids_for("office"), ["microsoft-365"]);
+        assert_eq!(ids_for("电报"), ["telegram-premium"]);
+    }
+
+    /// A prefix is what typing usually means, so it comes first; a name
+    /// beats an alias; and equal matches keep the catalogue's own order so
+    /// the list stays still while someone is still typing.
+    #[test]
+    fn matches_are_ordered_prefix_then_name_then_alias() {
+        assert_eq!(
+            ids_for("ne"),
+            [
+                "netflix",     // name starts with it
+                "apple-one",   // the rest only contain it, in
+                "disney-plus", // catalogue order: "disney" holds an
+                "google-one",  // "ne" as surely as "apple one" does
+                "nintendo-online",
+                "netease-music", // only its alias contains it
+            ]
+        );
+    }
+
+    #[test]
+    fn a_query_nothing_answers_returns_nothing() {
+        assert!(search_service_templates("zzzz").is_empty());
+    }
+
+    /// Aliases are maintenance, so each one has to earn its place: an alias
+    /// the search already reaches through the name is dead weight.
+    #[test]
+    fn no_alias_repeats_what_the_name_already_matches() {
+        for t in service_templates() {
+            let name = normalized(&t.name);
+            for alias in &t.aliases {
+                let alias = normalized(alias);
+                assert!(
+                    !name.contains(&alias),
+                    "alias {:?} on {} is already inside its own name",
+                    alias,
+                    t.id
+                );
+            }
+        }
     }
 
     #[test]

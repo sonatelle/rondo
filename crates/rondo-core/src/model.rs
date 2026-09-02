@@ -173,7 +173,13 @@ pub struct Subscription {
     pub notes: Option<String>,
     /// Id of the bundled service template this was created from, if any.
     pub template_id: Option<String>,
-    /// Price charged once per billing cycle.
+    /// The price in force on the day this was loaded for.
+    ///
+    /// A subscription charged for two years at two prices has two answers
+    /// to "what does it cost", so the prices live in their own history and
+    /// this is a reading of it, taken on the date the caller asked about.
+    /// Anything summing charges over time must walk the history instead:
+    /// this single value is right for one day only.
     pub price: Money,
     /// How often the price is charged.
     pub cycle: BillingCycle,
@@ -236,6 +242,59 @@ pub struct Category {
     pub name: String,
     /// Manual ordering position in category lists.
     pub sort_order: i32,
+}
+
+/// One price, and the day it took effect.
+///
+/// Prices are never edited into the past by accident: a correction changes
+/// the entry that is already there, and a rise adds a new one. Which of the
+/// two happened is the person's to say, not something to infer from the
+/// numbers, so the store offers a separate call for each.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Price {
+    /// Stable identity; a UUIDv7, like [`Subscription::id`].
+    pub id: Uuid,
+    /// The subscription this price belongs to.
+    pub subscription_id: Uuid,
+    /// The civil date this price took effect.
+    ///
+    /// It applies to charges on or after this day and before the next
+    /// entry's day. The earliest entry also stands for every day before
+    /// itself, since a subscription cannot have been charged at no price.
+    pub effective_from: Date,
+    /// What was charged from that day.
+    pub amount: Money,
+    /// Creation instant (UTC). Kept accurate for future sync.
+    pub created_at: Timestamp,
+    /// Last modification instant (UTC). Kept accurate for future sync.
+    pub updated_at: Timestamp,
+}
+
+impl Price {
+    /// Records a price with a fresh id and timestamps.
+    pub fn new(subscription_id: Uuid, amount: Money, effective_from: Date) -> Self {
+        let now = Timestamp::now();
+        Self {
+            id: Uuid::now_v7(),
+            subscription_id,
+            effective_from,
+            amount,
+            created_at: now,
+            updated_at: now,
+        }
+    }
+}
+
+/// The price in force on `date`, from a history sorted by `effective_from`.
+///
+/// Falls back to the earliest entry when every price starts later than the
+/// day asked about: a subscription whose first charge has not arrived yet
+/// still has a price, and it is the one it will be charged at.
+pub fn price_on(history: &[Price], date: Date) -> Option<&Price> {
+    history
+        .iter()
+        .rfind(|price| price.effective_from <= date)
+        .or_else(|| history.first())
 }
 
 impl Category {

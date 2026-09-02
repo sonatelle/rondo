@@ -2,169 +2,210 @@
   {
     "id": "netflix",
     "name": "Netflix",
+    "aliases": ["网飞", "奶飞"],
     "color": "#E50914",
+    "default_category": "video",
     "url": "https://www.netflix.com"
   },
   {
     "id": "spotify",
     "name": "Spotify",
     "color": "#1DB954",
+    "default_category": "music",
     "url": "https://www.spotify.com"
   },
   {
     "id": "apple-music",
     "name": "Apple Music",
     "color": "#FA243C",
+    "default_category": "music",
     "url": "https://music.apple.com"
   },
   {
     "id": "apple-icloud",
     "name": "iCloud+",
     "color": "#3693F3",
+    "default_category": "storage",
     "url": "https://www.icloud.com"
   },
   {
     "id": "apple-tv",
     "name": "Apple TV+",
     "color": "#000000",
+    "default_category": "video",
     "url": "https://tv.apple.com"
   },
   {
     "id": "apple-one",
     "name": "Apple One",
     "color": "#7D7D7D",
+    "default_category": "video",
     "url": "https://www.apple.com/apple-one"
   },
   {
     "id": "youtube-premium",
     "name": "YouTube Premium",
+    "aliases": ["油管"],
     "color": "#FF0000",
+    "default_category": "video",
     "url": "https://www.youtube.com/premium"
   },
   {
     "id": "disney-plus",
     "name": "Disney+",
+    "aliases": ["迪士尼"],
     "color": "#01147C",
+    "default_category": "video",
     "url": "https://www.disneyplus.com"
   },
   {
     "id": "hbo-max",
     "name": "HBO Max",
     "color": "#5822B4",
+    "default_category": "video",
     "url": "https://www.max.com"
   },
   {
     "id": "amazon-prime",
     "name": "Amazon Prime",
     "color": "#00A8E1",
+    "default_category": "video",
     "url": "https://www.amazon.com/prime"
   },
   {
     "id": "github",
     "name": "GitHub",
     "color": "#181717",
+    "default_category": "dev",
     "url": "https://github.com"
   },
   {
     "id": "github-copilot",
     "name": "GitHub Copilot",
     "color": "#8957E5",
+    "default_category": "dev",
     "url": "https://github.com/features/copilot"
   },
   {
     "id": "chatgpt",
     "name": "ChatGPT",
     "color": "#10A37F",
+    "default_category": "ai",
     "url": "https://chatgpt.com"
   },
   {
     "id": "claude",
     "name": "Claude",
     "color": "#D97757",
+    "default_category": "ai",
     "url": "https://claude.ai"
   },
   {
     "id": "notion",
     "name": "Notion",
     "color": "#000000",
+    "default_category": "tools",
     "url": "https://www.notion.com"
   },
   {
     "id": "1password",
     "name": "1Password",
     "color": "#3B66BC",
+    "default_category": "tools",
     "url": "https://1password.com"
   },
   {
     "id": "dropbox",
     "name": "Dropbox",
     "color": "#0061FF",
+    "default_category": "storage",
     "url": "https://www.dropbox.com"
   },
   {
     "id": "google-one",
     "name": "Google One",
     "color": "#4285F4",
+    "default_category": "storage",
     "url": "https://one.google.com"
   },
   {
     "id": "adobe-cc",
     "name": "Adobe Creative Cloud",
+    "aliases": ["CC"],
     "color": "#DA1F26",
+    "default_category": "tools",
     "url": "https://www.adobe.com/creativecloud"
   },
   {
     "id": "microsoft-365",
     "name": "Microsoft 365",
+    "aliases": ["Office", "Office 365"],
     "color": "#D83B01",
+    "default_category": "tools",
     "url": "https://www.microsoft.com/microsoft-365"
   },
   {
     "id": "playstation-plus",
     "name": "PlayStation Plus",
+    "aliases": ["PS Plus", "PSN"],
     "color": "#003791",
+    "default_category": "games",
     "url": "https://www.playstation.com/ps-plus"
   },
   {
     "id": "nintendo-online",
     "name": "Nintendo Switch Online",
+    "aliases": ["NSO"],
     "color": "#E60012",
+    "default_category": "games",
     "url": "https://www.nintendo.com/switch/online"
   },
   {
     "id": "telegram-premium",
     "name": "Telegram Premium",
+    "aliases": ["TG", "电报"],
     "color": "#26A5E4",
+    "default_category": "tools",
     "url": "https://telegram.org"
   },
   {
     "id": "bilibili",
     "name": "Bilibili 大会员",
+    "aliases": ["B站", "哔哩哔哩", "小破站"],
     "color": "#FB7299",
+    "default_category": "video",
     "url": "https://www.bilibili.com"
   },
   {
     "id": "netease-music",
     "name": "网易云音乐",
+    "aliases": ["NetEase Cloud Music"],
     "color": "#C20C0C",
+    "default_category": "music",
     "url": "https://music.163.com"
   },
   {
     "id": "tencent-video",
     "name": "腾讯视频 VIP",
+    "aliases": ["Tencent Video"],
     "color": "#FF6022",
+    "default_category": "video",
     "url": "https://v.qq.com"
   },
   {
     "id": "iqiyi",
     "name": "爱奇艺 VIP",
+    "aliases": ["iQIYI"],
     "color": "#00BE06",
+    "default_category": "video",
     "url": "https://www.iqiyi.com"
   },
   {
     "id": "wechat-read",
     "name": "微信读书",
+    "aliases": ["WeChat Read"],
     "color": "#207346",
+    "default_category": "reading",
     "url": "https://weread.qq.com"
   }
 ]

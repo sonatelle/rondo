@@ -85,4 +85,14 @@ expect(
 
 expect(!serviceTemplates().isEmpty, "the bundled templates are readable without a database")
 
+/// A nickname sharing no characters with the name it finds: proof the query
+/// reached the core rather than being matched, or dropped, on this side.
+let nicknamed = searchServiceTemplates(query: "B站")
+expect(nicknamed.count == 1, "a nickname finds its service across the bridge")
+expect(nicknamed.first?.defaultCategory == "video", "a template arrives with its category")
+expect(
+  serviceTemplates().allSatisfy { $0.id != customTemplateId() },
+  "the custom id belongs to no bundled service"
+)
+
 print("all checks passed")

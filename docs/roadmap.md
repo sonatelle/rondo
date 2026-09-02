@@ -57,8 +57,8 @@ that needs a boundary a reader can point at.
 
 - [x] Design tokens, the menu bar window, the settings shell - v0.2.0
 - [x] A bilingual interface with a language of its own to pick - v0.2.0
-- [ ] A provider table, with aliases to search by - v0.3.0
-- [ ] Price history, payment methods, category icons - one migration, and
+- [x] A provider table, with aliases to search by - v0.3.0
+- [x] Price history, payment methods, category icons - one migration, and
       the backup format to v2 - v0.3.0
 - [ ] The aggregations the analytics screen needs - v0.3.0
 - [ ] Sidebar navigation and the overview - v0.4.0

@@ -477,6 +477,31 @@ mod tests {
         let templates = crate::records::service_templates();
         assert!(!templates.is_empty());
         assert!(templates.iter().any(|t| t.name == "Netflix"));
+        assert!(templates.iter().all(|t| !t.default_category.is_empty()));
+    }
+
+    /// The ranking itself is the core's, and tested there. What this holds
+    /// down is that the query survives the crossing at all - a bridge that
+    /// dropped it would still return a plausible list.
+    #[test]
+    fn searching_the_catalogue_crosses_the_bridge() {
+        let hits = crate::records::search_service_templates("B站".into());
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].name, "Bilibili 大会员");
+
+        let all = crate::records::search_service_templates(String::new());
+        assert_eq!(all.len(), crate::records::service_templates().len());
+    }
+
+    #[test]
+    fn the_custom_id_is_not_a_bundled_service() {
+        let custom = crate::records::custom_template_id();
+        assert!(!custom.is_empty());
+        assert!(
+            crate::records::service_templates()
+                .iter()
+                .all(|t| t.id != custom)
+        );
     }
 
     #[test]

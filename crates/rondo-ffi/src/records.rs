@@ -123,12 +123,20 @@ impl From<Category> for CoreCategory {
 }
 
 /// A bundled service the person can start from instead of typing details.
+///
+/// The aliases a service is searchable under deliberately do not cross:
+/// they are the input to matching, not something to show, and handing them
+/// over would invite a frontend to match on them itself and drift from
+/// what every other frontend finds.
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct ServiceTemplate {
     pub id: String,
     pub name: String,
     /// Accent color as `#RRGGBB`.
     pub color: String,
+    /// Semantic key of the category a subscription starts in, such as
+    /// `"video"`. Each frontend maps it to its own icon and colour.
+    pub default_category: String,
     pub url: Option<String>,
 }
 
@@ -138,6 +146,7 @@ impl From<&rondo_core::ServiceTemplate> for ServiceTemplate {
             id: template.id.clone(),
             name: template.name.clone(),
             color: template.color.clone(),
+            default_category: template.default_category.clone(),
             url: template.url.clone(),
         }
     }
@@ -154,6 +163,28 @@ pub fn service_templates() -> Vec<ServiceTemplate> {
         .iter()
         .map(ServiceTemplate::from)
         .collect()
+}
+
+/// Bundled services matching what someone has typed, best match first.
+///
+/// An empty query returns the whole catalogue, so a picker can call this
+/// for every keystroke and for the state before the first one.
+#[uniffi::export]
+pub fn search_service_templates(query: String) -> Vec<ServiceTemplate> {
+    rondo_core::templates::search_service_templates(&query)
+        .into_iter()
+        .map(ServiceTemplate::from)
+        .collect()
+}
+
+/// The template id standing for "not on this list".
+///
+/// Exposed rather than spelled out in each frontend so that "the person
+/// chose custom" and "the person has not chosen" stay two different
+/// things, and stay the same two things everywhere.
+#[uniffi::export]
+pub fn custom_template_id() -> String {
+    rondo_core::templates::CUSTOM_TEMPLATE_ID.to_string()
 }
 
 /// Normalized spending for one currency.

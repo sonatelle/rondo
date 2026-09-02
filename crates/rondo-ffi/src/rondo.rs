@@ -98,20 +98,27 @@ impl Rondo {
         }))
     }
 
-    /// Lists subscriptions, archived ones included only when asked.
-    pub fn subscriptions(&self, include_archived: bool) -> Result<Vec<Subscription>> {
+    /// Lists subscriptions, archived ones included only when asked, each
+    /// priced as of `on`.
+    ///
+    /// `on` is the frontend's own calendar day, for the same reason
+    /// [`Self::renewals`] takes one: a subscription whose price rose in
+    /// March costs one thing in February and another in April, and only the
+    /// frontend knows which day the person is looking at.
+    pub fn subscriptions(&self, on: Date, include_archived: bool) -> Result<Vec<Subscription>> {
         let filter = (!include_archived).then_some(SubscriptionStatus::Active);
         Ok(self
             .store()?
-            .subscriptions(filter)?
+            .subscriptions(filter, on)?
             .into_iter()
             .map(Subscription::from)
             .collect())
     }
 
-    /// Loads one subscription, or nothing if that id is unknown.
-    pub fn subscription(&self, id: Uuid) -> Result<Option<Subscription>> {
-        Ok(self.store()?.subscription(id)?.map(Subscription::from))
+    /// Loads one subscription priced as of `on`, or nothing if that id is
+    /// unknown.
+    pub fn subscription(&self, id: Uuid, on: Date) -> Result<Option<Subscription>> {
+        Ok(self.store()?.subscription(id, on)?.map(Subscription::from))
     }
 
     /// Records a new subscription and returns it as stored.
@@ -134,9 +141,18 @@ impl Rondo {
 
     /// Saves an edited subscription and returns it with a fresh
     /// `updated_at`, which is the value the frontend should keep.
-    pub fn update_subscription(&self, subscription: Subscription) -> Result<Subscription> {
+    ///
+    /// A changed price **corrects** the entry in force on `on`; it does not
+    /// record a rise. Mistyping a price is common and a rise is rare, and
+    /// only the person knows which just happened, so recording a real
+    /// change is a separate call: [`Self::add_price_change`].
+    pub fn update_subscription(
+        &self,
+        subscription: Subscription,
+        on: Date,
+    ) -> Result<Subscription> {
         let sub = CoreSubscription::try_from(subscription)?;
-        Ok(self.store()?.update_subscription(&sub)?.into())
+        Ok(self.store()?.update_subscription(&sub, on)?.into())
     }
 
     /// Deletes a subscription; reports whether one was there to delete.
@@ -153,7 +169,7 @@ impl Rondo {
     /// shuffle between refreshes.
     pub fn renewals(&self, from: Date, include_archived: bool) -> Result<Vec<Renewal>> {
         let mut renewals = Vec::new();
-        for sub in self.subscriptions(include_archived)? {
+        for sub in self.subscriptions(from, include_archived)? {
             let date = rondo_core::cycle::next_billing_date(
                 sub.first_billing_date,
                 BillingCycle::new(sub.cycle_count, sub.cycle_unit)?,
@@ -197,8 +213,12 @@ impl Rondo {
     /// Currencies are never mixed and archived subscriptions are left out.
     /// The totals carry full precision; rounding is the frontend's call,
     /// made once when the number is shown.
-    pub fn spending_summary(&self) -> Result<Vec<SpendingSummary>> {
-        let subscriptions = self.store()?.subscriptions(None)?;
+    ///
+    /// Totalled at the prices in force on `on`, which is what "costs per
+    /// month" means: a rise that takes effect next March is not part of
+    /// this month's bill.
+    pub fn spending_summary(&self, on: Date) -> Result<Vec<SpendingSummary>> {
+        let subscriptions = self.store()?.subscriptions(None, on)?;
         Ok(rondo_core::summary::summarize(&subscriptions)
             .into_iter()
             .map(SpendingSummary::from)
@@ -239,10 +259,10 @@ impl Rondo {
     ///
     /// Archiving keeps the record and its history but drops it from the
     /// active list and from spending totals.
-    pub fn set_archived(&self, id: Uuid, archived: bool) -> Result<Subscription> {
+    pub fn set_archived(&self, id: Uuid, archived: bool, on: Date) -> Result<Subscription> {
         let store = self.store()?;
         let mut sub = store
-            .subscription(id)?
+            .subscription(id, on)?
             .ok_or_else(|| RondoError::InvalidInput {
                 message: format!("no subscription with id {id}"),
             })?;
@@ -251,7 +271,7 @@ impl Rondo {
         } else {
             SubscriptionStatus::Active
         };
-        Ok(store.update_subscription(&sub)?.into())
+        Ok(store.update_subscription(&sub, on)?.into())
     }
 }
 
@@ -273,6 +293,10 @@ mod tests {
     use super::*;
     use rondo_core::model::CycleUnit;
     use std::str::FromStr;
+
+    /// The day these tests read prices as of, standing in for the calendar
+    /// day a frontend would pass. Later than every draft's first charge.
+    const TODAY: Date = Date::constant(2026, 6, 1);
 
     fn draft(name: &str) -> NewSubscription {
         NewSubscription {
@@ -300,15 +324,15 @@ mod tests {
         assert_eq!(added.name, "Netflix");
         assert_eq!(added.amount.to_string(), "15.90");
 
-        let loaded = rondo.subscription(added.id).unwrap().unwrap();
+        let loaded = rondo.subscription(added.id, TODAY).unwrap().unwrap();
         assert_eq!(loaded, added);
-        assert_eq!(rondo.subscriptions(false).unwrap(), vec![added]);
+        assert_eq!(rondo.subscriptions(TODAY, false).unwrap(), vec![added]);
     }
 
     #[test]
     fn an_unknown_id_reads_as_nothing_rather_than_failing() {
         let rondo = open();
-        assert!(rondo.subscription(Uuid::now_v7()).unwrap().is_none());
+        assert!(rondo.subscription(Uuid::now_v7(), TODAY).unwrap().is_none());
         assert!(!rondo.delete_subscription(Uuid::now_v7()).unwrap());
     }
 
@@ -321,7 +345,7 @@ mod tests {
             rondo.add_subscription(bad),
             Err(RondoError::InvalidInput { .. })
         ));
-        assert!(rondo.subscriptions(true).unwrap().is_empty());
+        assert!(rondo.subscriptions(TODAY, true).unwrap().is_empty());
     }
 
     #[test]
@@ -329,11 +353,11 @@ mod tests {
         let rondo = open();
         let mut sub = rondo.add_subscription(draft("Netflix")).unwrap();
         sub.name = "Netflix Premium".into();
-        let saved = rondo.update_subscription(sub.clone()).unwrap();
+        let saved = rondo.update_subscription(sub.clone(), TODAY).unwrap();
 
         assert_eq!(saved.name, "Netflix Premium");
         assert!(saved.updated_at >= sub.updated_at);
-        assert_eq!(rondo.subscription(sub.id).unwrap().unwrap(), saved);
+        assert_eq!(rondo.subscription(sub.id, TODAY).unwrap().unwrap(), saved);
     }
 
     #[test]
@@ -341,12 +365,12 @@ mod tests {
         let rondo = open();
         let sub = rondo.add_subscription(draft("Netflix")).unwrap();
 
-        rondo.set_archived(sub.id, true).unwrap();
-        assert!(rondo.subscriptions(false).unwrap().is_empty());
-        assert_eq!(rondo.subscriptions(true).unwrap().len(), 1);
+        rondo.set_archived(sub.id, true, TODAY).unwrap();
+        assert!(rondo.subscriptions(TODAY, false).unwrap().is_empty());
+        assert_eq!(rondo.subscriptions(TODAY, true).unwrap().len(), 1);
 
-        rondo.set_archived(sub.id, false).unwrap();
-        assert_eq!(rondo.subscriptions(false).unwrap().len(), 1);
+        rondo.set_archived(sub.id, false, TODAY).unwrap();
+        assert_eq!(rondo.subscriptions(TODAY, false).unwrap().len(), 1);
     }
 
     #[test]
@@ -431,7 +455,7 @@ mod tests {
         let sub = rondo.add_subscription(with_category).unwrap();
 
         rondo.delete_category(category.id).unwrap();
-        let reloaded = rondo.subscription(sub.id).unwrap().unwrap();
+        let reloaded = rondo.subscription(sub.id, TODAY).unwrap().unwrap();
         assert_eq!(reloaded.category_id, None);
     }
 
@@ -458,9 +482,9 @@ mod tests {
         cny.currency = "CNY".into();
         rondo.add_subscription(cny).unwrap();
         let archived = rondo.add_subscription(draft("Gone")).unwrap();
-        rondo.set_archived(archived.id, true).unwrap();
+        rondo.set_archived(archived.id, true, TODAY).unwrap();
 
-        let summary = rondo.spending_summary().unwrap();
+        let summary = rondo.spending_summary(TODAY).unwrap();
         assert_eq!(summary.len(), 2, "currencies are never mixed");
         let cny = &summary[0];
         assert_eq!(cny.currency, "CNY");
@@ -518,13 +542,13 @@ mod tests {
         assert_eq!(summary.categories_added, 1);
         assert_eq!(summary.subscriptions_added, 1);
         // Every field survives, timestamps included.
-        assert_eq!(target.subscription(sub.id).unwrap().unwrap(), sub);
+        assert_eq!(target.subscription(sub.id, TODAY).unwrap().unwrap(), sub);
 
         // Restoring the same file again changes nothing.
         let again = target.import_backup(json).unwrap();
         assert_eq!(again.subscriptions_added, 0);
         assert_eq!(again.subscriptions_updated, 1);
-        assert_eq!(target.subscriptions(true).unwrap().len(), 1);
+        assert_eq!(target.subscriptions(TODAY, true).unwrap().len(), 1);
     }
 
     #[test]
@@ -536,14 +560,14 @@ mod tests {
             rondo.import_backup("not json".into()),
             Err(RondoError::UnusableData { .. })
         ));
-        assert_eq!(rondo.subscriptions(true).unwrap(), vec![kept]);
+        assert_eq!(rondo.subscriptions(TODAY, true).unwrap(), vec![kept]);
     }
 
     #[test]
     fn archiving_an_unknown_id_says_so() {
         let rondo = open();
         assert!(matches!(
-            rondo.set_archived(Uuid::now_v7(), true),
+            rondo.set_archived(Uuid::now_v7(), true, TODAY),
             Err(RondoError::InvalidInput { .. })
         ));
     }

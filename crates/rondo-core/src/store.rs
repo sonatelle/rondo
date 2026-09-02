@@ -528,8 +528,15 @@ impl Store {
     /// Inserts a category exactly as given.
     pub fn insert_category(&self, category: &Category) -> Result<()> {
         self.conn.execute(
-            "INSERT INTO category (id, name, sort_order) VALUES (?1, ?2, ?3)",
-            params![category.id.to_string(), category.name, category.sort_order],
+            "INSERT INTO category (id, name, sort_order, icon_key, color_key)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![
+                category.id.to_string(),
+                category.name,
+                category.sort_order,
+                category.icon_key,
+                category.color_key,
+            ],
         )?;
         Ok(())
     }
@@ -538,8 +545,15 @@ impl Store {
     /// row has this id.
     pub fn update_category(&self, category: &Category) -> Result<()> {
         let changed = self.conn.execute(
-            "UPDATE category SET name = ?2, sort_order = ?3 WHERE id = ?1",
-            params![category.id.to_string(), category.name, category.sort_order],
+            "UPDATE category SET name = ?2, sort_order = ?3, icon_key = ?4, color_key = ?5
+             WHERE id = ?1",
+            params![
+                category.id.to_string(),
+                category.name,
+                category.sort_order,
+                category.icon_key,
+                category.color_key,
+            ],
         )?;
         if changed == 0 {
             return Err(Error::Corrupt(format!(
@@ -559,9 +573,17 @@ impl Store {
     pub fn upsert_category(&self, category: &Category) -> Result<bool> {
         let inserted = !self.exists("category", &category.id.to_string())?;
         self.conn.execute(
-            "INSERT INTO category (id, name, sort_order) VALUES (?1, ?2, ?3)
-             ON CONFLICT(id) DO UPDATE SET name = ?2, sort_order = ?3",
-            params![category.id.to_string(), category.name, category.sort_order],
+            "INSERT INTO category (id, name, sort_order, icon_key, color_key)
+             VALUES (?1, ?2, ?3, ?4, ?5)
+             ON CONFLICT(id) DO UPDATE SET
+                 name = ?2, sort_order = ?3, icon_key = ?4, color_key = ?5",
+            params![
+                category.id.to_string(),
+                category.name,
+                category.sort_order,
+                category.icon_key,
+                category.color_key,
+            ],
         )?;
         Ok(inserted)
     }
@@ -587,6 +609,8 @@ impl Store {
                 id: parse_uuid(row.get::<_, String>("id")?)?,
                 name: row.get("name")?,
                 sort_order: row.get("sort_order")?,
+                icon_key: row.get("icon_key")?,
+                color_key: row.get("color_key")?,
             });
         }
         Ok(categories)
@@ -997,6 +1021,30 @@ mod tests {
         store.insert_subscription(&sub).unwrap();
         assert!(store.delete_subscription(sub.id).unwrap());
         assert!(store.price_history(sub.id).unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_category_keeps_its_icon_and_colour_keys() {
+        let store = Store::open_in_memory().unwrap();
+        let mut category = Category::new("影音", 0).unwrap();
+        // A category made before these existed has neither, and says so
+        // rather than pretending to a default.
+        assert!(category.icon_key.is_none());
+        assert!(category.color_key.is_none());
+        store.insert_category(&category).unwrap();
+
+        category.icon_key = Some("video".into());
+        category.color_key = Some("pink".into());
+        store.update_category(&category).unwrap();
+        assert_eq!(store.categories().unwrap(), vec![category.clone()]);
+
+        // And through an upsert, the path a restore takes.
+        category.icon_key = Some("music".into());
+        assert!(!store.upsert_category(&category).unwrap());
+        assert_eq!(
+            store.categories().unwrap()[0].icon_key.as_deref(),
+            Some("music")
+        );
     }
 
     #[test]

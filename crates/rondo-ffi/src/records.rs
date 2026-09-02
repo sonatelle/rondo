@@ -9,7 +9,8 @@
 
 use jiff::civil::Date;
 use rondo_core::model::{
-    BillingCycle, Category as CoreCategory, CycleUnit, Money, Subscription as CoreSubscription,
+    BillingCycle, Category as CoreCategory, Channel, CycleUnit, Money,
+    PaymentMethod as CorePaymentMethod, Price as CorePrice, Subscription as CoreSubscription,
     SubscriptionStatus,
 };
 use rust_decimal::Decimal;
@@ -31,6 +32,14 @@ pub enum SubscriptionStatus {
     Archived,
 }
 
+#[uniffi::remote(Enum)]
+pub enum Channel {
+    AppStore,
+    GooglePlay,
+    Web,
+    Other,
+}
+
 /// A recurring subscription, as seen from a frontend.
 #[derive(Debug, Clone, PartialEq, uniffi::Record)]
 pub struct Subscription {
@@ -38,7 +47,9 @@ pub struct Subscription {
     pub name: String,
     pub notes: Option<String>,
     pub template_id: Option<String>,
-    /// Price charged once per cycle, exact.
+    /// Price charged once per cycle, exact, as of the day this was asked
+    /// for. A subscription whose price rose has more than one; the whole
+    /// history is `price_history`.
     pub amount: Decimal,
     /// Three-letter currency code the amount is denominated in.
     pub currency: String,
@@ -47,6 +58,11 @@ pub struct Subscription {
     pub first_billing_date: Date,
     pub reminder_lead_days: u16,
     pub category_id: Option<Uuid>,
+    /// Where it was bought; `None` when nobody has said.
+    pub channel: Option<Channel>,
+    /// The account it is billed to, as the person writes it.
+    pub account: Option<String>,
+    pub payment_method_id: Option<Uuid>,
     pub status: SubscriptionStatus,
     pub created_at: jiff::Timestamp,
     pub updated_at: jiff::Timestamp,
@@ -66,6 +82,9 @@ impl From<CoreSubscription> for Subscription {
             first_billing_date: sub.first_billing_date,
             reminder_lead_days: sub.reminder_lead_days,
             category_id: sub.category_id,
+            channel: sub.channel,
+            account: sub.account,
+            payment_method_id: sub.payment_method_id,
             status: sub.status,
             created_at: sub.created_at,
             updated_at: sub.updated_at,
@@ -87,10 +106,90 @@ impl TryFrom<Subscription> for CoreSubscription {
             first_billing_date: sub.first_billing_date,
             reminder_lead_days: sub.reminder_lead_days,
             category_id: sub.category_id,
+            channel: sub.channel,
+            account: sub.account,
+            payment_method_id: sub.payment_method_id,
             status: sub.status,
             created_at: sub.created_at,
             updated_at: sub.updated_at,
         })
+    }
+}
+
+/// One price and the day it took effect, as seen from a frontend.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct Price {
+    pub id: Uuid,
+    pub subscription_id: Uuid,
+    /// The day this price took effect. It applies to charges on or after
+    /// it and before the next entry's day.
+    pub effective_from: Date,
+    pub amount: Decimal,
+    pub currency: String,
+    pub created_at: jiff::Timestamp,
+    pub updated_at: jiff::Timestamp,
+}
+
+impl From<CorePrice> for Price {
+    fn from(price: CorePrice) -> Self {
+        Self {
+            id: price.id,
+            subscription_id: price.subscription_id,
+            effective_from: price.effective_from,
+            amount: price.amount.amount(),
+            currency: price.amount.currency().to_owned(),
+            created_at: price.created_at,
+            updated_at: price.updated_at,
+        }
+    }
+}
+
+impl TryFrom<Price> for CorePrice {
+    type Error = RondoError;
+
+    fn try_from(price: Price) -> Result<Self> {
+        Ok(Self {
+            id: price.id,
+            subscription_id: price.subscription_id,
+            effective_from: price.effective_from,
+            amount: Money::new(price.amount, &price.currency)?,
+            created_at: price.created_at,
+            updated_at: price.updated_at,
+        })
+    }
+}
+
+/// A way of paying, as seen from a frontend.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct PaymentMethod {
+    pub id: Uuid,
+    pub name: String,
+    pub sort_order: i32,
+    pub created_at: jiff::Timestamp,
+    pub updated_at: jiff::Timestamp,
+}
+
+impl From<CorePaymentMethod> for PaymentMethod {
+    fn from(method: CorePaymentMethod) -> Self {
+        Self {
+            id: method.id,
+            name: method.name,
+            sort_order: method.sort_order,
+            created_at: method.created_at,
+            updated_at: method.updated_at,
+        }
+    }
+}
+
+impl From<PaymentMethod> for CorePaymentMethod {
+    fn from(method: PaymentMethod) -> Self {
+        Self {
+            id: method.id,
+            name: method.name,
+            sort_order: method.sort_order,
+            created_at: method.created_at,
+            updated_at: method.updated_at,
+        }
     }
 }
 

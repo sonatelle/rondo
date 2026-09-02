@@ -19,7 +19,8 @@ use uuid::Uuid;
 use crate::error::{Error, Result};
 use crate::model;
 use crate::model::{
-    BillingCycle, Category, CycleUnit, Money, Price, Subscription, SubscriptionStatus,
+    BillingCycle, Category, Channel, CycleUnit, Money, PaymentMethod, Price, Subscription,
+    SubscriptionStatus,
 };
 
 /// Handle to one Rondo database.
@@ -94,9 +95,9 @@ impl Store {
                 sub.first_billing_date.to_string(),
                 sub.reminder_lead_days,
                 sub.category_id.map(|id| id.to_string()),
-                Option::<String>::None,
-                Option::<String>::None,
-                Option::<String>::None,
+                sub.channel.map(channel_str),
+                sub.account,
+                sub.payment_method_id.map(|id| id.to_string()),
                 status_str(sub.status),
                 sub.created_at.to_string(),
                 sub.updated_at.to_string(),
@@ -266,7 +267,8 @@ impl Store {
             "UPDATE subscription SET name = ?2, notes = ?3, template_id = ?4,
                  cycle_count = ?5, cycle_unit = ?6,
                  first_billing_date = ?7, reminder_lead_days = ?8, category_id = ?9,
-                 status = ?10, created_at = ?11, updated_at = ?12
+                 channel = ?10, account = ?11, payment_method_id = ?12,
+                 status = ?13, created_at = ?14, updated_at = ?15
              WHERE id = ?1",
             params![
                 stored.id.to_string(),
@@ -278,6 +280,9 @@ impl Store {
                 stored.first_billing_date.to_string(),
                 stored.reminder_lead_days,
                 stored.category_id.map(|id| id.to_string()),
+                stored.channel.map(channel_str),
+                stored.account,
+                stored.payment_method_id.map(|id| id.to_string()),
                 status_str(stored.status),
                 stored.created_at.to_string(),
                 stored.updated_at.to_string(),
@@ -344,9 +349,9 @@ impl Store {
                 sub.first_billing_date.to_string(),
                 sub.reminder_lead_days,
                 sub.category_id.map(|id| id.to_string()),
-                Option::<String>::None,
-                Option::<String>::None,
-                Option::<String>::None,
+                sub.channel.map(channel_str),
+                sub.account,
+                sub.payment_method_id.map(|id| id.to_string()),
                 status_str(sub.status),
                 sub.created_at.to_string(),
                 sub.updated_at.to_string(),
@@ -421,6 +426,101 @@ impl Store {
             subs.push(subscription_from_row(row, price.amount.clone())?);
         }
         Ok(subs)
+    }
+
+    // -- payment methods --
+
+    /// Inserts a payment method exactly as given.
+    pub fn insert_payment_method(&self, method: &PaymentMethod) -> Result<()> {
+        self.conn.execute(
+            "INSERT INTO payment_method (id, name, sort_order, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![
+                method.id.to_string(),
+                method.name,
+                method.sort_order,
+                method.created_at.to_string(),
+                method.updated_at.to_string(),
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Overwrites the stored payment method and refreshes its `updated_at`.
+    ///
+    /// Fails with [`Error::Corrupt`] if no row has this id.
+    pub fn update_payment_method(&self, method: &PaymentMethod) -> Result<PaymentMethod> {
+        let mut stored = method.clone();
+        stored.updated_at = Timestamp::now();
+        let changed = self.conn.execute(
+            "UPDATE payment_method SET name = ?2, sort_order = ?3, updated_at = ?4
+             WHERE id = ?1",
+            params![
+                stored.id.to_string(),
+                stored.name,
+                stored.sort_order,
+                stored.updated_at.to_string(),
+            ],
+        )?;
+        if changed == 0 {
+            return Err(Error::Corrupt(format!(
+                "no payment method with id {} to update",
+                stored.id
+            )));
+        }
+        Ok(stored)
+    }
+
+    /// Writes a payment method as given, inserting or overwriting by id.
+    ///
+    /// Preserves timestamps exactly, which is what restoring a backup must
+    /// do. Returns whether the row was newly inserted. Not `INSERT OR
+    /// REPLACE`, which would delete the old row and fire `ON DELETE SET
+    /// NULL` on every subscription paying by it.
+    pub fn upsert_payment_method(&self, method: &PaymentMethod) -> Result<bool> {
+        let inserted = !self.exists("payment_method", &method.id.to_string())?;
+        self.conn.execute(
+            "INSERT INTO payment_method (id, name, sort_order, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5)
+             ON CONFLICT(id) DO UPDATE SET
+                 name = ?2, sort_order = ?3, created_at = ?4, updated_at = ?5",
+            params![
+                method.id.to_string(),
+                method.name,
+                method.sort_order,
+                method.created_at.to_string(),
+                method.updated_at.to_string(),
+            ],
+        )?;
+        Ok(inserted)
+    }
+
+    /// Deletes a payment method; subscriptions keep existing with none
+    /// (`ON DELETE SET NULL`). Returns whether a row existed.
+    pub fn delete_payment_method(&self, id: Uuid) -> Result<bool> {
+        let changed = self
+            .conn
+            .execute("DELETE FROM payment_method WHERE id = ?1", [id.to_string()])?;
+        Ok(changed > 0)
+    }
+
+    /// Lists payment methods ordered by `sort_order`, then name.
+    pub fn payment_methods(&self) -> Result<Vec<PaymentMethod>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT * FROM payment_method ORDER BY sort_order, name COLLATE NOCASE")?;
+        let mut rows = stmt.query([])?;
+        let mut methods = Vec::new();
+        while let Some(row) = rows.next()? {
+            methods.push(PaymentMethod {
+                id: parse_uuid(row.get::<_, String>("id")?)?,
+                name: row.get("name")?,
+                sort_order: row.get("sort_order")?,
+                created_at: parse_text(row.get::<_, String>("created_at")?)?,
+                updated_at: parse_text(row.get::<_, String>("updated_at")?)?,
+            });
+        }
+        Ok(methods)
     }
 
     // -- categories --
@@ -555,6 +655,15 @@ fn subscription_from_row(row: &Row<'_>, price: Money) -> Result<Subscription> {
             .get::<_, Option<String>>("category_id")?
             .map(parse_uuid)
             .transpose()?,
+        channel: row
+            .get::<_, Option<String>>("channel")?
+            .map(|s| parse_channel(&s))
+            .transpose()?,
+        account: row.get("account")?,
+        payment_method_id: row
+            .get::<_, Option<String>>("payment_method_id")?
+            .map(parse_uuid)
+            .transpose()?,
         status: parse_status(&row.get::<_, String>("status")?)?,
         created_at: parse_text(row.get::<_, String>("created_at")?)?,
         updated_at: parse_text(row.get::<_, String>("updated_at")?)?,
@@ -624,6 +733,25 @@ fn parse_unit(s: &str) -> Result<CycleUnit> {
         "month" => Ok(CycleUnit::Month),
         "year" => Ok(CycleUnit::Year),
         other => Err(Error::Corrupt(format!("unknown cycle unit {other:?}"))),
+    }
+}
+
+fn channel_str(channel: Channel) -> &'static str {
+    match channel {
+        Channel::AppStore => "app_store",
+        Channel::GooglePlay => "google_play",
+        Channel::Web => "web",
+        Channel::Other => "other",
+    }
+}
+
+fn parse_channel(s: &str) -> Result<Channel> {
+    match s {
+        "app_store" => Ok(Channel::AppStore),
+        "google_play" => Ok(Channel::GooglePlay),
+        "web" => Ok(Channel::Web),
+        "other" => Ok(Channel::Other),
+        other => Err(Error::Corrupt(format!("unknown channel {other:?}"))),
     }
 }
 
@@ -869,6 +997,85 @@ mod tests {
         store.insert_subscription(&sub).unwrap();
         assert!(store.delete_subscription(sub.id).unwrap());
         assert!(store.price_history(sub.id).unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_subscription_keeps_its_channel_account_and_payment_method() {
+        let store = Store::open_in_memory().unwrap();
+        let card = PaymentMethod::new("Visa ·1234", 0).unwrap();
+        store.insert_payment_method(&card).unwrap();
+
+        let mut sub = sample();
+        sub.channel = Some(Channel::AppStore);
+        sub.account = Some("someone@example.com".into());
+        sub.payment_method_id = Some(card.id);
+        store.insert_subscription(&sub).unwrap();
+
+        let loaded = store.subscription(sub.id, TODAY).unwrap().unwrap();
+        assert_eq!(loaded, sub);
+
+        // And through an edit, which writes every column again.
+        let mut edited = loaded;
+        edited.channel = Some(Channel::Web);
+        edited.account = None;
+        let saved = store.update_subscription(&edited, TODAY).unwrap();
+        let reloaded = store.subscription(sub.id, TODAY).unwrap().unwrap();
+        assert_eq!(reloaded, saved);
+        assert_eq!(reloaded.channel, Some(Channel::Web));
+        assert!(reloaded.account.is_none());
+    }
+
+    /// Deleting a payment method must not take the subscriptions paying by
+    /// it: the record of what was paid for outlives the card that paid.
+    #[test]
+    fn deleting_a_payment_method_leaves_its_subscriptions_alone() {
+        let store = Store::open_in_memory().unwrap();
+        let card = PaymentMethod::new("Visa ·1234", 0).unwrap();
+        store.insert_payment_method(&card).unwrap();
+        let mut sub = sample();
+        sub.payment_method_id = Some(card.id);
+        store.insert_subscription(&sub).unwrap();
+
+        assert!(store.delete_payment_method(card.id).unwrap());
+        let survivor = store.subscription(sub.id, TODAY).unwrap().unwrap();
+        assert!(survivor.payment_method_id.is_none());
+        assert_eq!(survivor.name, sub.name);
+    }
+
+    #[test]
+    fn payment_methods_are_ordered_and_reject_an_empty_name() {
+        let store = Store::open_in_memory().unwrap();
+        assert!(PaymentMethod::new("   ", 0).is_err());
+
+        for (name, order) in [("Wallet", 2), ("Visa", 1), ("Amex", 1)] {
+            store
+                .insert_payment_method(&PaymentMethod::new(name, order).unwrap())
+                .unwrap();
+        }
+        let names: Vec<String> = store
+            .payment_methods()
+            .unwrap()
+            .into_iter()
+            .map(|m| m.name)
+            .collect();
+        assert_eq!(names, ["Amex", "Visa", "Wallet"]);
+    }
+
+    /// An upsert must not fire the delete action that would detach every
+    /// subscription paying by this method - the same trap categories have.
+    #[test]
+    fn upserting_a_payment_method_keeps_its_subscriptions_attached() {
+        let store = Store::open_in_memory().unwrap();
+        let mut card = PaymentMethod::new("Visa", 0).unwrap();
+        store.insert_payment_method(&card).unwrap();
+        let mut sub = sample();
+        sub.payment_method_id = Some(card.id);
+        store.insert_subscription(&sub).unwrap();
+
+        card.name = "Visa ·1234".into();
+        assert!(!store.upsert_payment_method(&card).unwrap());
+        let still = store.subscription(sub.id, TODAY).unwrap().unwrap();
+        assert_eq!(still.payment_method_id, Some(card.id));
     }
 
     #[test]

@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::error::{Error, Result};
-use crate::model::{Category, Price, Subscription};
+use crate::model::{Category, PaymentMethod, Price, Subscription};
 use crate::store::Store;
 
 /// Format version written by this build.
@@ -51,6 +51,12 @@ pub struct Backup {
     /// the signal to rebuild one from each subscription's own price.
     #[serde(default)]
     pub prices: Vec<Price>,
+    /// Payment methods, ordered as the store lists them.
+    ///
+    /// Also absent from version 1 files, where an empty list is simply the
+    /// truth: nothing could have referenced one.
+    #[serde(default)]
+    pub payment_methods: Vec<PaymentMethod>,
 }
 
 /// What an import changed.
@@ -90,6 +96,7 @@ pub fn export(store: &Store) -> Result<Backup> {
         categories: store.categories()?,
         subscriptions: store.subscriptions(None, today)?,
         prices,
+        payment_methods: store.payment_methods()?,
     })
 }
 
@@ -138,6 +145,11 @@ pub fn import(store: &Store, backup: &Backup) -> Result<ImportReport> {
 
     let tx = store.transaction()?;
     let mut report = ImportReport::default();
+    // Before the subscriptions, so their payment-method reference resolves,
+    // for the same reason categories go first.
+    for method in &backup.payment_methods {
+        store.upsert_payment_method(method)?;
+    }
     for category in &backup.categories {
         if store.upsert_category(category)? {
             report.categories_added += 1;
@@ -198,7 +210,7 @@ pub fn import_json(store: &Store, json: &str) -> Result<ImportReport> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{BillingCycle, CycleUnit, Money, SubscriptionStatus};
+    use crate::model::{BillingCycle, Channel, CycleUnit, Money, SubscriptionStatus};
     use jiff::civil::Date;
     use rust_decimal::Decimal;
     use std::str::FromStr;
@@ -462,6 +474,33 @@ mod tests {
             history,
             "a round trip must change nothing at all"
         );
+    }
+
+    /// Payment methods have to travel, and to travel before the
+    /// subscriptions that point at them, or the reference has nothing to
+    /// resolve against.
+    #[test]
+    fn payment_methods_and_what_they_pay_for_survive_a_round_trip() {
+        let source = Store::open_in_memory().unwrap();
+        let card = PaymentMethod::new("Visa ·1234", 0).unwrap();
+        source.insert_payment_method(&card).unwrap();
+        let mut subscription = sub("Netflix");
+        subscription.channel = Some(Channel::AppStore);
+        subscription.account = Some("someone@example.com".into());
+        subscription.payment_method_id = Some(card.id);
+        source.insert_subscription(&subscription).unwrap();
+
+        let json = export_json(&source).unwrap();
+        let target = Store::open_in_memory().unwrap();
+        import_json(&target, &json).unwrap();
+
+        assert_eq!(target.payment_methods().unwrap(), vec![card.clone()]);
+        let restored = target
+            .subscription(subscription.id, TODAY)
+            .unwrap()
+            .unwrap();
+        assert_eq!(restored, subscription);
+        assert_eq!(restored.payment_method_id, Some(card.id));
     }
 
     #[test]

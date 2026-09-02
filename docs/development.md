@@ -133,6 +133,29 @@ purpose: every language is translated all the way through, Chinese
 sentences use Chinese punctuation, and a translation keeps the format
 specifiers its key had.
 
+## The backup format
+
+The format is versioned by `backup::FORMAT_VERSION`. Import migrates
+anything older and refuses anything newer, since a build cannot know what
+a field it has never seen means.
+
+- **Version 1** carried one price per subscription.
+- **Version 2** carries a price history, and payment methods. Importing a
+  version 1 file opens a history holding its one price, effective from the
+  first charge - the same reconstruction the schema migration performs, so
+  a database restored from a file matches one migrated in place.
+
+Raising it again means: bump the constant, keep reading every earlier
+shape, and say so in the release notes. **A backup written after a bump
+cannot be read by builds from before it**, and that is the only
+incompatibility a person using Rondo can run into, so it deserves a release
+of its own to point at.
+
+Two tests hold this down, and both were checked by breaking them on
+purpose: a version 1 file restores with the history rebuilt and its
+timestamps intact, and restoring the same file twice leaves one history
+rather than two.
+
 ## Two version numbers
 
 The app and the core are versioned apart, because they change apart.

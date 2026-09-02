@@ -39,6 +39,14 @@ organization conventions; where the two differ, this file wins here.
 
 - Money is `rust_decimal::Decimal`, never a float. Persist amounts as
   TEXT; round only at presentation time.
+- A subscription has a price *history*, not a price. `Subscription::price`
+  is the entry in force on the day it was loaded for, which is why loading
+  one takes a date. Anything summing charges over time walks
+  `Store::price_history` instead; a total built by multiplying the current
+  price is wrong by every rise that ever happened.
+- Editing a subscription's price **corrects** the entry in force;
+  `add_price_change` records a rise. Which of the two happened is the
+  person's to say and must never be guessed from the numbers.
 - Billing dates are civil dates (`jiff::civil::Date`) with no time zone.
 - Billing occurrences are anchored to `first_billing_date`: occurrence *k*
   is `first + k * cycle`, with month-end clamping (Jan 31 + 1 month =

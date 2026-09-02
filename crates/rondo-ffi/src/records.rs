@@ -199,6 +199,12 @@ pub struct Category {
     pub id: Uuid,
     pub name: String,
     pub sort_order: i32,
+    /// Semantic key of the icon, such as `"video"`, for the frontend to map
+    /// to a symbol of its own. `None` leaves the choice to the frontend.
+    pub icon_key: Option<String>,
+    /// Semantic key of the colour, likewise mapped by the frontend rather
+    /// than carried as a hex value that could only suit one theme.
+    pub color_key: Option<String>,
 }
 
 impl From<CoreCategory> for Category {
@@ -207,6 +213,8 @@ impl From<CoreCategory> for Category {
             id: category.id,
             name: category.name,
             sort_order: category.sort_order,
+            icon_key: category.icon_key,
+            color_key: category.color_key,
         }
     }
 }
@@ -217,6 +225,8 @@ impl From<Category> for CoreCategory {
             id: category.id,
             name: category.name,
             sort_order: category.sort_order,
+            icon_key: category.icon_key,
+            color_key: category.color_key,
         }
     }
 }

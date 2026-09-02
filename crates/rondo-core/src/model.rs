@@ -312,6 +312,18 @@ pub struct Category {
     pub name: String,
     /// Manual ordering position in category lists.
     pub sort_order: i32,
+    /// Which icon stands for this category, as a semantic key such as
+    /// `"video"` - never a symbol name.
+    ///
+    /// The core is shared, and an SF Symbol name would reach an Android
+    /// frontend as a string it can do nothing with. `None` leaves the
+    /// choice to the frontend, which is every category made before this
+    /// field existed.
+    pub icon_key: Option<String>,
+    /// Which palette entry colours it, as a semantic key - never a hex
+    /// value, for the same reason as `icon_key`: the two themes a frontend
+    /// carries need two different colours for one key.
+    pub color_key: Option<String>,
 }
 
 /// One price, and the day it took effect.
@@ -383,6 +395,8 @@ impl Category {
             id: Uuid::now_v7(),
             name: name.to_owned(),
             sort_order,
+            icon_key: None,
+            color_key: None,
         })
     }
 }

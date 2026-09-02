@@ -13,7 +13,7 @@ use rust_decimal::Decimal;
 use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
-use crate::records::{Category, SpendingSummary, Subscription};
+use crate::records::{Category, PaymentMethod, Price, SpendingSummary, Subscription};
 
 /// An open Rondo database.
 ///
@@ -223,6 +223,85 @@ impl Rondo {
             .into_iter()
             .map(SpendingSummary::from)
             .collect())
+    }
+
+    /// Every price ever recorded for a subscription, earliest first.
+    ///
+    /// This is what anything summing charges over time must use: the single
+    /// `amount` on a subscription is one day's reading, and a total built
+    /// from it is wrong by every rise that ever happened.
+    pub fn price_history(&self, subscription_id: Uuid) -> Result<Vec<Price>> {
+        Ok(self
+            .store()?
+            .price_history(subscription_id)?
+            .into_iter()
+            .map(Price::from)
+            .collect())
+    }
+
+    /// Records that the price changed from `effective_from`.
+    ///
+    /// The rise, not the correction: charges before that day keep the price
+    /// they were charged at. Fixing a price that was typed wrong is
+    /// [`Self::update_subscription`] or [`Self::correct_price`].
+    pub fn add_price_change(
+        &self,
+        subscription_id: Uuid,
+        amount: Decimal,
+        currency: String,
+        effective_from: Date,
+    ) -> Result<Price> {
+        Ok(self
+            .store()?
+            .add_price_change(
+                subscription_id,
+                Money::new(amount, &currency)?,
+                effective_from,
+            )?
+            .into())
+    }
+
+    /// Overwrites one price entry, for when it was recorded wrong.
+    pub fn correct_price(&self, price: Price) -> Result<Price> {
+        let price = rondo_core::model::Price::try_from(price)?;
+        Ok(self.store()?.correct_price(&price)?.into())
+    }
+
+    /// Removes one price entry; reports whether one was there.
+    ///
+    /// Refuses to remove the last, which would leave a subscription with no
+    /// price at all.
+    pub fn delete_price(&self, id: Uuid) -> Result<bool> {
+        Ok(self.store()?.delete_price(id)?)
+    }
+
+    /// Lists payment methods in the order the person arranged them.
+    pub fn payment_methods(&self) -> Result<Vec<PaymentMethod>> {
+        Ok(self
+            .store()?
+            .payment_methods()?
+            .into_iter()
+            .map(PaymentMethod::from)
+            .collect())
+    }
+
+    /// Records a new payment method and returns it as stored.
+    pub fn add_payment_method(&self, name: String, sort_order: i32) -> Result<PaymentMethod> {
+        let method = rondo_core::model::PaymentMethod::new(&name, sort_order)?;
+        self.store()?.insert_payment_method(&method)?;
+        Ok(method.into())
+    }
+
+    /// Saves an edited payment method, renaming it everywhere it is used.
+    pub fn update_payment_method(&self, method: PaymentMethod) -> Result<PaymentMethod> {
+        let method = rondo_core::model::PaymentMethod::from(method);
+        Ok(self.store()?.update_payment_method(&method)?.into())
+    }
+
+    /// Deletes a payment method; subscriptions paying by it keep existing
+    /// with none. Reports whether one was there to delete.
+    pub fn delete_payment_method(&self, id: Uuid) -> Result<bool> {
+        Ok(self.store()?.delete_payment_method(id)?)
     }
 
     /// Lists categories in the order the person arranged them.

@@ -157,6 +157,61 @@ pub enum SubscriptionStatus {
     Archived,
 }
 
+/// Where a subscription was bought.
+///
+/// It matters because cancelling differs by channel: a store subscription
+/// is cancelled in the store, not on the service's own site. A closed set
+/// rather than free text, so a frontend can say that.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Channel {
+    AppStore,
+    GooglePlay,
+    Web,
+    Other,
+}
+
+/// A way of paying, named by the person: a card, a wallet, an account.
+///
+/// A row rather than free text on the subscription, so that renaming one
+/// renames it everywhere it is used.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PaymentMethod {
+    /// Stable identity; a UUIDv7, like [`Subscription::id`].
+    pub id: Uuid,
+    /// Display name; never empty.
+    pub name: String,
+    /// Manual ordering position in payment-method lists.
+    pub sort_order: i32,
+    /// Creation instant (UTC). Kept accurate for future sync.
+    pub created_at: Timestamp,
+    /// Last modification instant (UTC). Kept accurate for future sync.
+    pub updated_at: Timestamp,
+}
+
+impl PaymentMethod {
+    /// Creates a payment method with a fresh id.
+    ///
+    /// Fails with [`Error::InvalidSubscription`] when `name` is empty or
+    /// whitespace-only.
+    pub fn new(name: &str, sort_order: i32) -> Result<Self> {
+        let name = name.trim();
+        if name.is_empty() {
+            return Err(Error::InvalidSubscription(
+                "payment method name must not be empty".into(),
+            ));
+        }
+        let now = Timestamp::now();
+        Ok(Self {
+            id: Uuid::now_v7(),
+            name: name.to_owned(),
+            sort_order,
+            created_at: now,
+            updated_at: now,
+        })
+    }
+}
+
 /// A recurring subscription the user pays for.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Subscription {
@@ -189,6 +244,18 @@ pub struct Subscription {
     pub reminder_lead_days: u16,
     /// Optional category assignment.
     pub category_id: Option<Uuid>,
+    /// Where it was bought, when that is known.
+    ///
+    /// `None` means nobody has said, which is every subscription recorded
+    /// before this field existed. Deliberately not defaulted to
+    /// [`Channel::Other`], so "unknown" and "known to be something else"
+    /// stay apart.
+    pub channel: Option<Channel>,
+    /// The account it is billed to, as the person writes it: an email
+    /// address, a phone number, whose family plan it is on.
+    pub account: Option<String>,
+    /// Which payment method pays for it, if one is recorded.
+    pub payment_method_id: Option<Uuid>,
     /// Active subscriptions bill and count toward summaries; archived ones do not.
     pub status: SubscriptionStatus,
     /// Creation instant (UTC). Kept accurate for future sync.
@@ -226,6 +293,9 @@ impl Subscription {
             first_billing_date,
             reminder_lead_days: Self::DEFAULT_REMINDER_LEAD_DAYS,
             category_id: None,
+            channel: None,
+            account: None,
+            payment_method_id: None,
             status: SubscriptionStatus::Active,
             created_at: now,
             updated_at: now,

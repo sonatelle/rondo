@@ -75,7 +75,7 @@ final class SubscriptionsModel {
       allRenewals = try rondo.renewals(from: referenceDay, includeArchived: true)
       let everything = allRenewals
       renewals = everything.filter(filter.matches)
-      summaries = try Self.ordered(rondo.spendingSummary())
+      summaries = try Self.ordered(rondo.spendingSummary(on: referenceDay))
       counts = [
         .active: everything.count { $0.subscription.status == .active },
         .archived: everything.count { $0.subscription.status == .archived },
@@ -115,9 +115,15 @@ final class SubscriptionsModel {
   /// Returns whether the core accepted it, so a rejected change leaves the
   /// form open with the offending value rather than closing over an edit
   /// that was never stored.
+  ///
+  /// A changed price corrects the entry in force today rather than
+  /// recording a rise; recording a real change of price is its own action.
+  /// Today is read here rather than taken from `referenceDay`, which is
+  /// only as fresh as the last reload - a write should land on the day it
+  /// actually happens.
   func update(_ subscription: Subscription) -> Bool {
     do {
-      _ = try rondo.updateSubscription(subscription: subscription)
+      _ = try rondo.updateSubscription(subscription: subscription, on: Self.today())
       reload()
       return true
     } catch {
@@ -133,7 +139,7 @@ final class SubscriptionsModel {
   /// it. Deleting is for something entered by mistake.
   func setArchived(_ subscription: Subscription, _ archived: Bool) {
     do {
-      _ = try rondo.setArchived(id: subscription.id, archived: archived)
+      _ = try rondo.setArchived(id: subscription.id, archived: archived, on: Self.today())
       reload()
     } catch {
       report(error)

@@ -41,15 +41,19 @@ final class SubscriptionsModel {
 
   /// How many subscriptions each sidebar entry would show.
   ///
-  /// Shown as counts beside the filters, and it is what lets an empty list
-  /// say whether there is nothing at all or only nothing active.
-  private(set) var counts: [SubscriptionFilter: Int] = [:]
+  /// Shown as counts beside the entries, and it is what lets an empty list
+  /// say whether there is nothing at all or only nothing here.
+  private(set) var counts: [Navigation: Int] = [:]
+
+  /// The categories to file subscriptions under, in the order they are
+  /// arranged. Every database is seeded with a set of them.
+  private(set) var categories: [Category] = []
 
   /// The last failure, for the interface to show and the person to dismiss.
   var failure: String?
 
-  /// Which subscriptions the window is showing.
-  var filter: SubscriptionFilter = .active {
+  /// Which page the window is showing.
+  var navigation: Navigation = .overview {
     didSet { reload() }
   }
 
@@ -74,13 +78,24 @@ final class SubscriptionsModel {
       referenceDay = Self.today()
       allRenewals = try rondo.renewals(from: referenceDay, includeArchived: true)
       let everything = allRenewals
-      renewals = everything.filter(filter.matches)
+      renewals = everything.filter(navigation.matches)
       summaries = try Self.ordered(rondo.spendingSummary(on: referenceDay))
-      counts = [
-        .active: everything.count { $0.subscription.status == .active },
+      categories = try rondo.categories()
+
+      // A count for every sidebar entry, including the categories nothing
+      // is filed under: a category showing zero is how somebody sees there
+      // is a place to file things, and hiding it would make the sidebar
+      // rearrange itself every time a subscription changed hands.
+      var tally: [Navigation: Int] = [
+        .subscriptions: everything.count { $0.subscription.status == .active },
         .archived: everything.count { $0.subscription.status == .archived },
-        .all: everything.count,
       ]
+      for category in categories {
+        tally[.category(category.id)] = everything.count {
+          $0.subscription.status == .active && $0.subscription.categoryId == category.id
+        }
+      }
+      counts = tally
     } catch {
       report(error)
     }

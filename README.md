@@ -38,8 +38,8 @@ What works:
 
 v0.3.0 changes almost nothing you can see. It is the release where the
 data model learned price history, payment methods and category icons, so
-that the screens still to come can be right about what things cost. The
-screens that use it arrive in v0.4.0 and v0.5.0.
+that the screens still to come can be right about what things cost. All of
+those screens arrive together in v0.4.0.
 
 Still to come:
 

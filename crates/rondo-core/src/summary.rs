@@ -5,7 +5,7 @@
 //! cycles divide exactly; day- and week-based cycles are approximations by
 //! nature. Results keep full decimal precision - round only for display.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use jiff::civil::Date;
 use rust_decimal::Decimal;
@@ -129,6 +129,119 @@ pub fn subscription_total(
         first_charge: charges.first().map(|c| c.date),
         last_charge: charges.last().map(|c| c.date),
     })
+}
+
+/// What one month cost, in one currency, read two ways.
+///
+/// Both readings are here because both questions get asked and they have
+/// different answers. A yearly subscription lands its whole price in one
+/// month and nothing in the other eleven; `charged` says so, and `levelled`
+/// spreads it. Neither is more correct - a screen asking "what will my card
+/// be charged" wants the first, and one asking "what do I spend a month"
+/// wants the second.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MonthlySpending {
+    /// First day of the month this covers.
+    pub month: Date,
+    /// Three-letter uppercase currency code.
+    pub currency: String,
+    /// What actually falls due this month, at the prices of the days it
+    /// falls due on.
+    pub charged: Decimal,
+    /// The same subscriptions' cost spread evenly across their cycles, so
+    /// a yearly plan contributes a twelfth each month.
+    pub levelled: Decimal,
+    /// How many charges make up `charged`.
+    pub charge_count: u32,
+}
+
+/// Month-by-month spending across `[from, to)`, one entry per month and
+/// currency, in month then currency order.
+///
+/// Months with nothing in them are present with zeros, so a chart can be
+/// drawn straight from this without filling gaps itself - and so a month
+/// that genuinely cost nothing is visible rather than missing.
+///
+/// **Archived subscriptions are left out entirely.** Rondo does not record
+/// when a subscription was archived, so it cannot say which months it
+/// belonged to; counting it in every month would overstate the past and
+/// counting it in none understates it. Leaving it out is the smaller
+/// error and the one that matches [`summarize`].
+pub fn monthly_series(
+    subscriptions: &[Subscription],
+    histories: &HashMap<Uuid, Vec<Price>>,
+    from: Date,
+    to: Date,
+) -> Result<Vec<MonthlySpending>> {
+    let mut by_month: BTreeMap<(Date, String), MonthlySpending> = BTreeMap::new();
+    let mut month = first_of_month(from);
+    while month < to {
+        for sub in subscriptions {
+            if sub.status != SubscriptionStatus::Active {
+                continue;
+            }
+            by_month
+                .entry((month, sub.price.currency().to_owned()))
+                .or_insert_with(|| MonthlySpending {
+                    month,
+                    currency: sub.price.currency().to_owned(),
+                    charged: Decimal::ZERO,
+                    levelled: Decimal::ZERO,
+                    charge_count: 0,
+                });
+        }
+        month = next_month(month);
+    }
+
+    for sub in subscriptions {
+        if sub.status != SubscriptionStatus::Active {
+            continue;
+        }
+        let history = histories
+            .get(&sub.id)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        for charge in charges(sub, history, from, to)? {
+            let key = (first_of_month(charge.date), sub.price.currency().to_owned());
+            if let Some(entry) = by_month.get_mut(&key) {
+                entry.charged += charge.amount.amount();
+                entry.charge_count += 1;
+            }
+        }
+
+        // Levelled spending starts the month of the first charge: before
+        // that the subscription was not being paid for, and spreading its
+        // cost backwards would invent history.
+        let starts = first_of_month(sub.first_billing_date);
+        let mut month = first_of_month(from).max(starts);
+        while month < to {
+            let price = price_on(history, month)
+                .ok_or_else(|| Error::Corrupt(format!("subscription {} has no price", sub.id)))?;
+            if let Some(entry) = by_month.get_mut(&(month, sub.price.currency().to_owned())) {
+                entry.levelled += monthly_cost(&price.amount, sub.cycle);
+            }
+            month = next_month(month);
+        }
+    }
+
+    Ok(by_month.into_values().collect())
+}
+
+/// The first day of the month `date` falls in.
+fn first_of_month(date: Date) -> Date {
+    Date::new(date.year(), date.month(), 1).expect("the first of a month is always a date")
+}
+
+/// The first day of the month after the one `date` starts.
+///
+/// Only ever called on a first-of-month, so it cannot clamp: no month has
+/// fewer than one day.
+fn next_month(date: Date) -> Date {
+    if date.month() == 12 {
+        Date::new(date.year() + 1, 1, 1).expect("January is always a date")
+    } else {
+        Date::new(date.year(), date.month() + 1, 1).expect("the first of a month is always a date")
+    }
 }
 
 /// Sums active subscriptions into one summary per currency.
@@ -301,6 +414,136 @@ mod tests {
         // The currency is still knowable, so a screen can say "US$0.00"
         // rather than having nothing to say.
         assert_eq!(total.currency, "INR");
+    }
+
+    fn histories_of(subs: &[Subscription]) -> HashMap<Uuid, Vec<Price>> {
+        subs.iter().map(|s| (s.id, one_price(s))).collect()
+    }
+
+    /// The two readings answer different questions, and a yearly plan is
+    /// where they part company: one month holds the whole charge, and every
+    /// month holds a twelfth.
+    #[test]
+    fn a_yearly_plan_lands_in_one_month_and_levels_across_all_of_them() {
+        let mut yearly = sub("Adobe", money("120.00", "USD"), cycle(1, CycleUnit::Year));
+        yearly.first_billing_date = Date::constant(2026, 3, 15);
+        let subs = [yearly];
+
+        let series = monthly_series(
+            &subs,
+            &histories_of(&subs),
+            Date::constant(2026, 1, 1),
+            Date::constant(2027, 1, 1),
+        )
+        .unwrap();
+        assert_eq!(series.len(), 12);
+
+        let march = &series[2];
+        assert_eq!(march.month, Date::constant(2026, 3, 1));
+        assert_eq!(march.charged, Decimal::from_str("120.00").unwrap());
+        assert_eq!(march.charge_count, 1);
+        assert_eq!(march.levelled, Decimal::from_str("10").unwrap());
+
+        let april = &series[3];
+        assert_eq!(april.charged, Decimal::ZERO, "nothing falls due in April");
+        assert_eq!(april.levelled, Decimal::from_str("10").unwrap());
+
+        // Before the first charge there is neither: spreading the cost
+        // backwards would invent months it was never paid for.
+        let january = &series[0];
+        assert_eq!(january.charged, Decimal::ZERO);
+        assert_eq!(january.levelled, Decimal::ZERO);
+
+        // Over a full year the two readings meet.
+        let charged: Decimal = series.iter().map(|m| m.charged).sum();
+        let levelled: Decimal = series.iter().map(|m| m.levelled).sum();
+        assert_eq!(charged, Decimal::from_str("120.00").unwrap());
+        assert_eq!(
+            levelled,
+            Decimal::from_str("100").unwrap(),
+            "ten months of it"
+        );
+    }
+
+    #[test]
+    fn months_with_nothing_in_them_are_present_with_zeros() {
+        let subs = [sub(
+            "Netflix",
+            money("10.00", "USD"),
+            cycle(3, CycleUnit::Month),
+        )];
+        let series = monthly_series(
+            &subs,
+            &histories_of(&subs),
+            Date::constant(2026, 1, 1),
+            Date::constant(2026, 5, 1),
+        )
+        .unwrap();
+        assert_eq!(series.len(), 4, "a quiet month is still a month");
+        assert_eq!(
+            series.iter().map(|m| m.charge_count).collect::<Vec<_>>(),
+            [1, 0, 0, 1]
+        );
+    }
+
+    #[test]
+    fn currencies_stay_apart_and_archived_subscriptions_stay_out() {
+        let mut subs = vec![
+            sub("a", money("10.00", "USD"), cycle(1, CycleUnit::Month)),
+            sub("b", money("70.00", "CNY"), cycle(1, CycleUnit::Month)),
+            sub("c", money("99.00", "USD"), cycle(1, CycleUnit::Month)),
+        ];
+        subs[2].status = SubscriptionStatus::Archived;
+
+        let series = monthly_series(
+            &subs,
+            &histories_of(&subs),
+            Date::constant(2026, 1, 1),
+            Date::constant(2026, 2, 1),
+        )
+        .unwrap();
+        assert_eq!(series.len(), 2, "one month, two currencies, never mixed");
+        assert_eq!(series[0].currency, "CNY");
+        assert_eq!(series[0].charged, Decimal::from_str("70.00").unwrap());
+        assert_eq!(series[1].currency, "USD");
+        assert_eq!(
+            series[1].charged,
+            Decimal::from_str("10.00").unwrap(),
+            "the archived one is left out"
+        );
+    }
+
+    /// A rise has to move both readings, each from the day it took effect.
+    #[test]
+    fn a_rise_moves_both_readings_from_the_month_it_lands() {
+        let s = sub("Netflix", money("10.00", "USD"), cycle(1, CycleUnit::Month));
+        let mut history = one_price(&s);
+        history.push(Price {
+            id: Uuid::now_v7(),
+            subscription_id: s.id,
+            effective_from: Date::constant(2026, 3, 1),
+            amount: money("15.00", "USD"),
+            created_at: s.created_at,
+            updated_at: s.updated_at,
+        });
+        let subs = [s.clone()];
+        let histories = HashMap::from([(s.id, history)]);
+
+        let series = monthly_series(
+            &subs,
+            &histories,
+            Date::constant(2026, 1, 1),
+            Date::constant(2026, 5, 1),
+        )
+        .unwrap();
+        assert_eq!(
+            series.iter().map(|m| m.charged).collect::<Vec<_>>(),
+            ["10.00", "10.00", "15.00", "15.00"].map(|s| Decimal::from_str(s).unwrap())
+        );
+        assert_eq!(
+            series.iter().map(|m| m.levelled).collect::<Vec<_>>(),
+            ["10", "10", "15", "15"].map(|s| Decimal::from_str(s).unwrap())
+        );
     }
 
     /// Month-end anchoring has to survive being counted, not just being

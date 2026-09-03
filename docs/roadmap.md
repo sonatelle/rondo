@@ -60,7 +60,7 @@ that needs a boundary a reader can point at.
 - [x] A provider table, with aliases to search by - v0.3.0
 - [x] Price history, payment methods, category icons - one migration, and
       the backup format to v2 - v0.3.0
-- [ ] The aggregations the analytics screen needs - v0.3.0
+- [x] The aggregations the analytics screen needs - v0.3.0
 - [ ] Sidebar navigation and the overview - v0.4.0
 - [ ] The form, and picking a provider - v0.4.0
 - [ ] Subscription detail - v0.5.0

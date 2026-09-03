@@ -13,7 +13,12 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-v0.2.0 is out. The macOS app runs and keeps real data.
+v0.3.0 is out. The macOS app runs and keeps real data.
+
+**Backups written by v0.3.0 cannot be read by v0.1.0 or v0.2.0.** They
+carry a price history those builds know nothing about, and a build refuses
+a format newer than its own by design. Backups written by the older builds
+restore here as they always did.
 
 What works:
 
@@ -30,6 +35,11 @@ What works:
   inherited from the system. Dates and amounts follow the language picked.
 - Light, dark, or follow the system, the menu bar item included.
 - Local SQLite storage. No cloud, no account, no network.
+
+v0.3.0 changes almost nothing you can see. It is the release where the
+data model learned price history, payment methods and category icons, so
+that the screens still to come can be right about what things cost. The
+screens that use it arrive in v0.4.0 and v0.5.0.
 
 Still to come:
 

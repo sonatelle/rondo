@@ -10,6 +10,21 @@ struct ContentView: View {
   /// to act on instead of every row carrying its own controls.
   @State private var selection: Set<Uuid> = []
 
+  /// What the window calls itself.
+  ///
+  /// A category's title is its own name, which lives on the category and
+  /// not in the navigation case, so it is looked up here rather than being
+  /// something `Navigation` could answer alone. Returned as a `String`
+  /// because a category name is data; the fixed pages go through the
+  /// catalogue on their way here.
+  private var pageTitle: String {
+    if case let .category(id) = model.navigation {
+      guard let category = model.categories.first(where: { $0.id == id }) else { return "" }
+      return Categories.name(category.name, iconKey: category.iconKey)
+    }
+    return model.navigation.title ?? ""
+  }
+
   /// Sorted here rather than by the core: which column someone clicked is
   /// a question about this window, not about billing.
   @State private var sortOrder = [KeyPathComparator(\Renewal.date)]
@@ -132,7 +147,7 @@ struct ContentView: View {
       Divider()
       SpendingFooter(summaries: model.summaries)
     }
-    .navigationTitle(model.filter.title)
+    .navigationTitle(pageTitle)
     .toolbar {
       ToolbarItem {
         Button {
@@ -274,20 +289,112 @@ struct ContentView: View {
 }
 
 /// The sidebar: what to show, and how much of it there is.
+/// The pages, the categories, and what has been put away.
+///
+/// The archive sits at the foot, apart from the rest, because it is not
+/// somewhere to go so much as somewhere things end up. Under it, a line
+/// saying where the data lives - the one claim the app makes about itself
+/// that is worth repeating where it can be seen.
 private struct Sidebar: View {
   @Bindable var model: SubscriptionsModel
 
+  /// Whether the sidebar holds the keyboard focus.
+  ///
+  /// Asked for at launch, because until something is focused macOS draws a
+  /// selected row in its unemphasized grey rather than the accent, and a
+  /// window that opens showing a greyed-out selection looks like it opened
+  /// wrong. Clicking a row would fix it, but nobody should have to.
+  @FocusState private var focused: Bool
+
   var body: some View {
-    List(selection: $model.filter) {
-      Section("Show") {
-        ForEach(SubscriptionFilter.allCases) { filter in
-          Label(filter.title, systemImage: filter.symbol)
-            .badge(model.counts[filter] ?? 0)
-            .tag(filter)
+    List(selection: $model.navigation) {
+      Section {
+        row(.overview)
+        row(.subscriptions, count: model.counts[.subscriptions])
+      }
+
+      if !model.categories.isEmpty {
+        Section("Categories") {
+          ForEach(model.categories, id: \.id) { category in
+            let destination = Navigation.category(category.id)
+            Label {
+              Text(verbatim: Categories.name(category.name, iconKey: category.iconKey))
+            } icon: {
+              Image(systemName: Categories.symbol(for: category.iconKey))
+                .foregroundStyle(
+                  symbolColour(
+                    Categories.tint(for: category.colorKey),
+                    selected: model.navigation == destination
+                  )
+                )
+            }
+            .badge(model.counts[destination] ?? 0)
+            .tag(destination)
+          }
         }
       }
+
+      Section {
+        row(.archived, count: model.counts[.archived])
+      }
     }
-    .navigationSplitViewColumnWidth(min: 160, ideal: 190, max: 260)
+    .navigationSplitViewColumnWidth(min: 180, ideal: 212, max: 280)
+    .focused($focused)
+    // Asked for after the window has settled rather than through
+    // `defaultFocus`, which the split view's detail column takes back:
+    // yielding once lets that happen first and puts the focus here after.
+    .task {
+      await Task.yield()
+      focused = true
+    }
+    // Pinned under the list rather than placed after the last row, so it
+    // stays on the floor of the column however few entries there are and
+    // does not scroll away once there are many.
+    .safeAreaInset(edge: .bottom) {
+      Text("Stored on this Mac · no account")
+        .font(Theme.Font.footnote)
+        .foregroundStyle(Color.textFaint)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, Theme.Space.l)
+        .padding(.bottom, Theme.Space.m)
+    }
+  }
+
+  /// What colour a sidebar symbol is drawn in.
+  ///
+  /// Its own colour on a plain row. On a selected one it is left to the
+  /// list, which is the point: a symbol close to the accent vanishes into
+  /// the fill - the blue overview icon did exactly that - and the system
+  /// already knows what colour its own selected content should be. It also
+  /// knows things a fixed white does not: the fill is grey rather than
+  /// accent-coloured while the window is not focused, and the accent itself
+  /// is the person's to change in System Settings.
+  ///
+  /// `listItemTint` is the modifier that ought to cover this whole job, and
+  /// on a SwiftUI sidebar it does not tint at all - it left every symbol
+  /// black - so the unselected half is said here.
+  private func symbolColour(_ tint: Color, selected: Bool) -> AnyShapeStyle {
+    selected ? AnyShapeStyle(.foreground) : AnyShapeStyle(tint)
+  }
+
+  /// One navigation entry, tinted for what it is.
+  ///
+  /// The icon is coloured rather than the whole row, so the text keeps
+  /// reading as text at any size.
+  private func row(_ destination: Navigation, count: Int? = nil) -> some View {
+    Label {
+      // Verbatim: the title has been through the catalogue already, and a
+      // `LocalizedStringKey` would look it up a second time and find
+      // nothing. A category never comes here - it has its own row.
+      Text(verbatim: destination.title ?? "")
+    } icon: {
+      Image(systemName: destination.symbol)
+        .foregroundStyle(
+          symbolColour(destination.tint, selected: model.navigation == destination)
+        )
+    }
+    .badge(count ?? 0)
+    .tag(destination)
   }
 }
 
@@ -330,16 +437,22 @@ private struct EmptyState: View {
   let add: () -> Void
 
   var body: some View {
-    if model.filter == .active, (model.counts[.archived] ?? 0) > 0 {
+    if model.navigation == .subscriptions, (model.counts[.archived] ?? 0) > 0 {
       ContentUnavailableView {
         Label("Nothing active", systemImage: "archivebox")
       } description: {
         Text("Everything here is archived. Show it to restore or remove it.")
       } actions: {
-        Button("Show Archived") { model.filter = .archived }
+        Button("Show Archived") { model.navigation = .archived }
         Button("Add Subscription", action: add)
       }
-    } else if model.filter == .archived {
+    } else if case .category = model.navigation {
+      ContentUnavailableView(
+        "Nothing filed here",
+        systemImage: "tag",
+        description: Text("A subscription lands here once it is given this category.")
+      )
+    } else if model.navigation == .archived {
       ContentUnavailableView(
         "Nothing archived",
         systemImage: "archivebox",

@@ -64,7 +64,7 @@ that needs a boundary a reader can point at.
 - [x] The aggregations the analytics screen needs - v0.3.0
 - [ ] Sidebar navigation and the overview - v0.4.0
 - [ ] The form, and picking a provider - v0.4.0
-- [ ] Subscription detail - v0.5.0
+- [ ] Subscription detail - v0.4.0
 - [ ] Calendar - v0.5.0
 - [ ] Analytics - v0.6.0
 - [ ] First run - v0.7.0
@@ -73,6 +73,10 @@ that needs a boundary a reader can point at.
 v0.3.0 was the release to be careful with. Its screens barely changed, but
 a backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse
 formats from the future by design.
+
+v0.4.0 carries three rounds rather than two: the fields v0.3.0 added get
+their whole interface at once, so recording a price change and seeing the
+history arrive together rather than a version apart.
 
 ## Later, undated
 

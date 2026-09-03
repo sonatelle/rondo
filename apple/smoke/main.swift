@@ -119,6 +119,29 @@ expect(inApril?.amount == "19.90", "the day of the rise is priced at the new pri
 expect(inApril?.channel == .appStore, "an enum with no core default arrives as itself")
 expect(inApril?.paymentMethodId == card.id, "the payment method it points at survives")
 
+/// The aggregations, and the one property that must hold between them: a
+/// month series and a window total are two views of the same charges, so
+/// they cannot disagree about the sum on either side of the boundary.
+let span = (from: CivilDate("2026-01-01"), to: CivilDate("2026-05-01"))
+let total = try rondo.subscriptionTotal(id: added.id, until: span.to)
+let series = try rondo.monthlySeries(from: span.from, to: span.to)
+let window = try rondo.windowTotals(from: span.from, to: span.to)
+
+// Charges on 31 January, 28 February and 31 March at 15.90, then 30 April
+// at 19.90 - the rise recorded above. Three times 15.90 is 47.70.
+expect(total.chargeCount == 4, "a cumulative counts every charge in the window")
+expect(total.total == "67.60", "and prices each at the price of its own day")
+expect(series.count == 4, "a month series has an entry for every month, empty or not")
+expect(window.first?.total == total.total, "the window total agrees with the cumulative")
+expect(
+  series.reduce(Decimal.zero) { $0 + Decimal(string: $1.charged)! } == Decimal(string: window[0].total)!,
+  "the months add up to the window"
+)
+expect(
+  try rondo.earliestCharge(on: span.to) == "2026-01-31",
+  "an all-time window knows where to start"
+)
+
 expect(!serviceTemplates().isEmpty, "the bundled templates are readable without a database")
 
 /// A nickname sharing no characters with the name it finds: proof the query

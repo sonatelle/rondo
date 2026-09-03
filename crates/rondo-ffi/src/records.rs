@@ -193,6 +193,96 @@ impl From<PaymentMethod> for CorePaymentMethod {
     }
 }
 
+/// What one subscription has cost, as seen from a frontend.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct SubscriptionTotal {
+    pub subscription_id: Uuid,
+    pub currency: String,
+    /// Every charge summed at the price it was charged at, exact.
+    pub total: Decimal,
+    pub charge_count: u32,
+    pub first_charge: Option<Date>,
+    pub last_charge: Option<Date>,
+}
+
+impl From<rondo_core::summary::SubscriptionTotal> for SubscriptionTotal {
+    fn from(total: rondo_core::summary::SubscriptionTotal) -> Self {
+        Self {
+            subscription_id: total.subscription_id,
+            currency: total.currency,
+            total: total.total,
+            charge_count: total.charge_count,
+            first_charge: total.first_charge,
+            last_charge: total.last_charge,
+        }
+    }
+}
+
+/// One month's spending in one currency, read both ways.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct MonthlySpending {
+    /// First day of the month this covers.
+    pub month: Date,
+    pub currency: String,
+    /// What actually falls due this month.
+    pub charged: Decimal,
+    /// The same cost spread evenly, so a yearly plan is a twelfth a month.
+    pub levelled: Decimal,
+    pub charge_count: u32,
+}
+
+impl From<rondo_core::summary::MonthlySpending> for MonthlySpending {
+    fn from(month: rondo_core::summary::MonthlySpending) -> Self {
+        Self {
+            month: month.month,
+            currency: month.currency,
+            charged: month.charged,
+            levelled: month.levelled,
+            charge_count: month.charge_count,
+        }
+    }
+}
+
+/// What one category costs a month, in one currency.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct CategoryShare {
+    /// `None` groups the subscriptions filed under nothing, which are kept
+    /// so a share adds up to the whole.
+    pub category_id: Option<Uuid>,
+    pub currency: String,
+    pub monthly: Decimal,
+    pub subscription_count: u32,
+}
+
+impl From<rondo_core::summary::CategoryShare> for CategoryShare {
+    fn from(share: rondo_core::summary::CategoryShare) -> Self {
+        Self {
+            category_id: share.category_id,
+            currency: share.currency,
+            monthly: share.monthly,
+            subscription_count: share.subscription_count,
+        }
+    }
+}
+
+/// What was spent over some window, in one currency.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct WindowTotal {
+    pub currency: String,
+    pub total: Decimal,
+    pub charge_count: u32,
+}
+
+impl From<rondo_core::summary::WindowTotal> for WindowTotal {
+    fn from(total: rondo_core::summary::WindowTotal) -> Self {
+        Self {
+            currency: total.currency,
+            total: total.total,
+            charge_count: total.charge_count,
+        }
+    }
+}
+
 /// A grouping for subscriptions, as seen from a frontend.
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct Category {

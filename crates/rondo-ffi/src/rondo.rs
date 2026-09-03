@@ -13,7 +13,10 @@ use rust_decimal::Decimal;
 use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
-use crate::records::{Category, PaymentMethod, Price, SpendingSummary, Subscription};
+use crate::records::{
+    Category, CategoryShare, MonthlySpending, PaymentMethod, Price, SpendingSummary, Subscription,
+    SubscriptionTotal, WindowTotal,
+};
 
 /// An open Rondo database.
 ///
@@ -223,6 +226,82 @@ impl Rondo {
             .into_iter()
             .map(SpendingSummary::from)
             .collect())
+    }
+
+    /// What one subscription has cost from its first charge up to but not
+    /// including `until`.
+    ///
+    /// Pass tomorrow for what has actually been charged so far. Every
+    /// charge is counted at the price in force on its own day, so a
+    /// subscription that rose in March is not retold as having always cost
+    /// what it costs now.
+    pub fn subscription_total(&self, id: Uuid, until: Date) -> Result<SubscriptionTotal> {
+        let store = self.store()?;
+        let sub = store
+            .subscription(id, until)?
+            .ok_or_else(|| RondoError::InvalidInput {
+                message: format!("no subscription with id {id}"),
+            })?;
+        let history = store.price_history(id)?;
+        Ok(rondo_core::summary::subscription_total(&sub, &history, until)?.into())
+    }
+
+    /// Month-by-month spending across `[from, to)`, one entry per month and
+    /// currency.
+    ///
+    /// Each entry carries both readings: `charged` is what falls due that
+    /// month, `levelled` spreads each subscription over its cycle. A chart
+    /// of the first shows when money leaves; a chart of the second shows
+    /// what is being spent. Months with nothing in them are present with
+    /// zeros.
+    ///
+    /// Archived subscriptions are left out: Rondo does not record when one
+    /// was archived, so it cannot say which months it belonged to.
+    pub fn monthly_series(&self, from: Date, to: Date) -> Result<Vec<MonthlySpending>> {
+        let store = self.store()?;
+        let subs = store.subscriptions(None, from)?;
+        let histories = store.all_price_histories()?;
+        Ok(
+            rondo_core::summary::monthly_series(&subs, &histories, from, to)?
+                .into_iter()
+                .map(MonthlySpending::from)
+                .collect(),
+        )
+    }
+
+    /// Levelled monthly cost per category and currency, largest first.
+    ///
+    /// Levelled because a share is about proportion: a yearly plan falling
+    /// this month would otherwise swallow the chart.
+    pub fn category_shares(&self, on: Date) -> Result<Vec<CategoryShare>> {
+        let subs = self.store()?.subscriptions(None, on)?;
+        Ok(rondo_core::summary::category_shares(&subs, on)
+            .into_iter()
+            .map(CategoryShare::from)
+            .collect())
+    }
+
+    /// Totals every charge falling in `[from, to)`, per currency.
+    ///
+    /// Year to date is 1 January to tomorrow; all time starts at
+    /// [`Self::earliest_charge`].
+    pub fn window_totals(&self, from: Date, to: Date) -> Result<Vec<WindowTotal>> {
+        let store = self.store()?;
+        let subs = store.subscriptions(None, from)?;
+        let histories = store.all_price_histories()?;
+        Ok(
+            rondo_core::summary::window_totals(&subs, &histories, from, to)?
+                .into_iter()
+                .map(WindowTotal::from)
+                .collect(),
+        )
+    }
+
+    /// The earliest day any active subscription was first charged, or
+    /// nothing when there are none: where an all-time window starts.
+    pub fn earliest_charge(&self, on: Date) -> Result<Option<Date>> {
+        let subs = self.store()?.subscriptions(None, on)?;
+        Ok(rondo_core::summary::earliest_charge(&subs))
     }
 
     /// Every price ever recorded for a subscription, earliest first.
@@ -573,6 +652,57 @@ mod tests {
         assert_eq!(usd.subscription_count, 2, "the archived one is left out");
         // 15.90 a month plus 120 a year is 25.90 a month.
         assert_eq!(usd.monthly.to_string(), "25.90");
+    }
+
+    /// The arithmetic is the core's and tested there. What this holds down
+    /// is that the store's own subscriptions and histories reach it, and
+    /// that a rise recorded through this object is the one the totals use.
+    #[test]
+    fn the_aggregations_see_a_rise_recorded_through_the_bridge() {
+        let rondo = open();
+        let mut monthly = draft("Netflix");
+        monthly.first_billing_date = Date::constant(2026, 1, 1);
+        let added = rondo.add_subscription(monthly).unwrap();
+        rondo
+            .add_price_change(
+                added.id,
+                Decimal::from_str("15.00").unwrap(),
+                "USD".into(),
+                Date::constant(2026, 3, 1),
+            )
+            .unwrap();
+
+        // Two charges at 15.90 and two at 15.00 across January to April.
+        let total = rondo
+            .subscription_total(added.id, Date::constant(2026, 5, 1))
+            .unwrap();
+        assert_eq!(total.charge_count, 4);
+        assert_eq!(total.total, Decimal::from_str("61.80").unwrap());
+        assert_eq!(total.first_charge, Some(Date::constant(2026, 1, 1)));
+
+        let series = rondo
+            .monthly_series(Date::constant(2026, 1, 1), Date::constant(2026, 5, 1))
+            .unwrap();
+        assert_eq!(series.len(), 4);
+        assert_eq!(series[2].charged, Decimal::from_str("15.00").unwrap());
+
+        // The two views must agree, across the boundary as well as inside.
+        let window = rondo
+            .window_totals(Date::constant(2026, 1, 1), Date::constant(2026, 5, 1))
+            .unwrap();
+        assert_eq!(window[0].total, total.total);
+        assert_eq!(
+            series.iter().map(|m| m.charged).sum::<Decimal>(),
+            window[0].total
+        );
+
+        let shares = rondo.category_shares(Date::constant(2026, 5, 1)).unwrap();
+        assert_eq!(shares.len(), 1);
+        assert_eq!(shares[0].category_id, None, "uncategorized is a share");
+        assert_eq!(
+            rondo.earliest_charge(Date::constant(2026, 5, 1)).unwrap(),
+            Some(Date::constant(2026, 1, 1))
+        );
     }
 
     #[test]

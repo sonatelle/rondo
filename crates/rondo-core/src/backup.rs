@@ -251,11 +251,24 @@ mod tests {
 
         let target = Store::open_in_memory().unwrap();
         let report = import_json(&target, &json).unwrap();
+        // One category is new to the target; the built-in ones it already
+        // had are overwritten with the same values rather than added again.
         assert_eq!(report.categories_added, 1);
+        assert_eq!(
+            report.categories_updated,
+            crate::store::BUILT_IN_CATEGORIES.len()
+        );
         assert_eq!(report.subscriptions_added, 2);
         assert_eq!(report.subscriptions_updated, 0);
 
-        assert_eq!(target.categories().unwrap(), vec![category]);
+        // Both stores start with the built-in categories, so what travelled
+        // is the one the test made; the seeded ones are already on both
+        // sides and are updated rather than added.
+        assert!(target.categories().unwrap().contains(&category));
+        assert_eq!(
+            target.categories().unwrap().len(),
+            source.categories().unwrap().len()
+        );
         // Archived entries travel too, with every field intact.
         assert_eq!(
             target
@@ -283,7 +296,10 @@ mod tests {
         import_json(&target, &json).unwrap();
         let second = import_json(&target, &json).unwrap();
         assert_eq!(second.categories_added, 0);
-        assert_eq!(second.categories_updated, 1);
+        assert_eq!(
+            second.categories_updated,
+            1 + crate::store::BUILT_IN_CATEGORIES.len()
+        );
         assert_eq!(second.subscriptions_added, 0);
         assert_eq!(second.subscriptions_updated, 1);
         assert_eq!(target.subscriptions(None, TODAY).unwrap().len(), 1);

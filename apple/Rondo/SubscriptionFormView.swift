@@ -25,6 +25,14 @@ struct SubscriptionFormView: View {
   @State private var firstBillingDate: Date
   @State private var notes: String
   @State private var templateID: String?
+
+  /// Which category this is filed under, or none.
+  ///
+  /// `nil` is a real answer and stays available: a subscription that fits
+  /// nowhere should not have to be forced into a category, and the sidebar
+  /// counts what is filed rather than demanding everything be.
+  @State private var categoryID: Uuid?
+
   @State private var rejection: String?
 
   private let templates = serviceTemplates()
@@ -45,13 +53,20 @@ struct SubscriptionFormView: View {
     )
     _notes = State(initialValue: editing?.notes ?? "")
     _templateID = State(initialValue: editing?.templateId)
+    _categoryID = State(initialValue: editing?.categoryId)
   }
 
   var body: some View {
     VStack(spacing: 0) {
       Form {
         Section {
-          TemplatePicker(templates: templates, selection: $templateID, name: $name)
+          TemplatePicker(
+            templates: templates,
+            categories: model.categories,
+            selection: $templateID,
+            name: $name,
+            categoryID: $categoryID
+          )
           TextField("Name", text: $name)
         }
 
@@ -98,6 +113,22 @@ struct SubscriptionFormView: View {
           )
         }
 
+        Section {
+          Picker("Category", selection: $categoryID) {
+            Text("None").tag(Uuid?.none)
+            Divider()
+            ForEach(model.categories, id: \.id) { category in
+              Label {
+                Text(verbatim: Categories.name(category.name, iconKey: category.iconKey))
+              } icon: {
+                Image(systemName: Categories.symbol(for: category.iconKey))
+                  .foregroundStyle(Categories.tint(for: category.colorKey))
+              }
+              .tag(Uuid?.some(category.id))
+            }
+          }
+        }
+
         Section("Notes") {
           TextField("Optional", text: $notes, axis: .vertical)
             .lineLimit(2 ... 4)
@@ -138,6 +169,7 @@ struct SubscriptionFormView: View {
       subscription.firstBillingDate = Formatting.civilDate(from: firstBillingDate)
       subscription.notes = notes.isEmpty ? nil : notes
       subscription.templateId = templateID
+      subscription.categoryId = categoryID
       accepted = model.update(subscription)
     } else {
       accepted = model.add(
@@ -150,7 +182,7 @@ struct SubscriptionFormView: View {
           firstBillingDate: Formatting.civilDate(from: firstBillingDate),
           notes: notes.isEmpty ? nil : notes,
           templateId: templateID,
-          categoryId: nil,
+          categoryId: categoryID,
           reminderLeadDays: nil
         )
       )
@@ -166,11 +198,14 @@ struct SubscriptionFormView: View {
   }
 }
 
-/// Picks a bundled service, filling in the name so the person need not.
+/// Picks a bundled service, filling in what it can so the person need not.
 private struct TemplatePicker: View {
   let templates: [ServiceTemplate]
+  /// The categories to match a template's own against.
+  let categories: [Category]
   @Binding var selection: String?
   @Binding var name: String
+  @Binding var categoryID: Uuid?
 
   var body: some View {
     Picker("Service", selection: $selection) {
@@ -181,11 +216,18 @@ private struct TemplatePicker: View {
       }
     }
     .onChange(of: selection) { _, new in
-      // Only fill an untouched field: a chosen template should never
-      // overwrite a name the person already typed.
+      // Only fill untouched fields: a chosen template should never
+      // overwrite something the person already decided.
       guard let new, let template = templates.first(where: { $0.id == new }) else { return }
       if name.isEmpty {
         name = template.name
+      }
+      if categoryID == nil {
+        // The template names a category by the same key its icon carries,
+        // which is how picking Netflix knows to file it under Video. A
+        // category the person has since deleted simply does not match, and
+        // the field is left for them to answer.
+        categoryID = categories.first { $0.iconKey == template.defaultCategory }?.id
       }
     }
   }

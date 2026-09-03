@@ -227,6 +227,117 @@ pub fn monthly_series(
     Ok(by_month.into_values().collect())
 }
 
+/// What one category costs a month, in one currency.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CategoryShare {
+    /// The category, or `None` for subscriptions filed under nothing.
+    pub category_id: Option<Uuid>,
+    /// Three-letter uppercase currency code.
+    pub currency: String,
+    /// Levelled monthly cost of the subscriptions in this category, so a
+    /// yearly plan counts as a twelfth rather than as a spike.
+    pub monthly: Decimal,
+    /// How many active subscriptions are in it.
+    pub subscription_count: u32,
+}
+
+/// Levelled monthly cost per category and currency, largest share first
+/// within each currency.
+///
+/// Levelled rather than charged, because a share is a question about
+/// proportion - "how much of my spending is streaming" - and a yearly plan
+/// that happens to fall this month would otherwise swallow the chart.
+///
+/// Uncategorized subscriptions are one group with no id rather than being
+/// dropped: a share that does not add up to the whole is worse than one
+/// with an "everything else" slice in it. Archived subscriptions are left
+/// out, as everywhere else.
+pub fn category_shares(subscriptions: &[Subscription], on: Date) -> Vec<CategoryShare> {
+    let mut by_key: BTreeMap<(String, Option<Uuid>), CategoryShare> = BTreeMap::new();
+    for sub in subscriptions {
+        if sub.status != SubscriptionStatus::Active || sub.first_billing_date > on {
+            continue;
+        }
+        let entry = by_key
+            .entry((sub.price.currency().to_owned(), sub.category_id))
+            .or_insert_with(|| CategoryShare {
+                category_id: sub.category_id,
+                currency: sub.price.currency().to_owned(),
+                monthly: Decimal::ZERO,
+                subscription_count: 0,
+            });
+        entry.monthly += monthly_cost(&sub.price, sub.cycle);
+        entry.subscription_count += 1;
+    }
+    let mut shares: Vec<CategoryShare> = by_key.into_values().collect();
+    // Currency first so the groups stay together, then largest share, then
+    // by id so two equal shares keep a stable order between refreshes.
+    shares.sort_by(|a, b| {
+        a.currency
+            .cmp(&b.currency)
+            .then(b.monthly.cmp(&a.monthly))
+            .then(a.category_id.cmp(&b.category_id))
+    });
+    shares
+}
+
+/// What has been spent over a window, per currency.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WindowTotal {
+    pub currency: String,
+    /// Sum of every charge in the window, at the prices they were charged
+    /// at.
+    pub total: Decimal,
+    pub charge_count: u32,
+}
+
+/// Totals every charge falling in `[from, to)`, per currency.
+///
+/// Year to date is this from 1 January to tomorrow; all time is this from
+/// the earliest first charge to tomorrow. Both are the same question over
+/// different windows, so they are the same function.
+pub fn window_totals(
+    subscriptions: &[Subscription],
+    histories: &HashMap<Uuid, Vec<Price>>,
+    from: Date,
+    to: Date,
+) -> Result<Vec<WindowTotal>> {
+    let mut by_currency: BTreeMap<String, WindowTotal> = BTreeMap::new();
+    for sub in subscriptions {
+        if sub.status != SubscriptionStatus::Active {
+            continue;
+        }
+        let history = histories
+            .get(&sub.id)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        for charge in charges(sub, history, from, to)? {
+            let entry = by_currency
+                .entry(sub.price.currency().to_owned())
+                .or_insert_with(|| WindowTotal {
+                    currency: sub.price.currency().to_owned(),
+                    total: Decimal::ZERO,
+                    charge_count: 0,
+                });
+            entry.total += charge.amount.amount();
+            entry.charge_count += 1;
+        }
+    }
+    Ok(by_currency.into_values().collect())
+}
+
+/// The earliest day any of these subscriptions was first charged.
+///
+/// The natural start of an all-time window; `None` when there is nothing
+/// to total.
+pub fn earliest_charge(subscriptions: &[Subscription]) -> Option<Date> {
+    subscriptions
+        .iter()
+        .filter(|s| s.status == SubscriptionStatus::Active)
+        .map(|s| s.first_billing_date)
+        .min()
+}
+
 /// The first day of the month `date` falls in.
 fn first_of_month(date: Date) -> Date {
     Date::new(date.year(), date.month(), 1).expect("the first of a month is always a date")
@@ -544,6 +655,118 @@ mod tests {
             series.iter().map(|m| m.levelled).collect::<Vec<_>>(),
             ["10", "10", "15", "15"].map(|s| Decimal::from_str(s).unwrap())
         );
+    }
+
+    #[test]
+    fn shares_are_largest_first_and_keep_the_uncategorized_visible() {
+        let filed = Uuid::now_v7();
+        let mut subs = vec![
+            sub("small", money("5.00", "USD"), cycle(1, CycleUnit::Month)),
+            sub("big", money("120.00", "USD"), cycle(1, CycleUnit::Year)),
+            sub("loose", money("30.00", "USD"), cycle(1, CycleUnit::Month)),
+            sub("gone", money("99.00", "USD"), cycle(1, CycleUnit::Month)),
+        ];
+        subs[0].category_id = Some(filed);
+        subs[1].category_id = Some(filed);
+        subs[3].status = SubscriptionStatus::Archived;
+
+        let shares = category_shares(&subs, Date::constant(2026, 6, 1));
+        assert_eq!(shares.len(), 2);
+        // "loose" at 30 a month beats the filed pair at 5 + 10.
+        assert_eq!(shares[0].category_id, None);
+        assert_eq!(shares[0].monthly, Decimal::from_str("30.00").unwrap());
+        assert_eq!(shares[1].category_id, Some(filed));
+        assert_eq!(shares[1].monthly, Decimal::from_str("15.00").unwrap());
+        assert_eq!(shares[1].subscription_count, 2);
+    }
+
+    /// A share is a question about proportion, so a yearly plan must not
+    /// swallow the chart in the month it happens to fall.
+    #[test]
+    fn a_share_levels_a_yearly_plan_rather_than_spiking_it() {
+        let subs = [sub(
+            "Adobe",
+            money("120.00", "USD"),
+            cycle(1, CycleUnit::Year),
+        )];
+        let shares = category_shares(&subs, Date::constant(2026, 6, 1));
+        assert_eq!(shares[0].monthly, Decimal::from_str("10").unwrap());
+    }
+
+    #[test]
+    fn a_subscription_that_has_not_started_is_not_a_share_yet() {
+        let mut s = sub("Grok", money("700", "INR"), cycle(1, CycleUnit::Month));
+        s.first_billing_date = Date::constant(2026, 9, 18);
+        assert!(category_shares(&[s], Date::constant(2026, 9, 3)).is_empty());
+    }
+
+    #[test]
+    fn window_totals_price_each_charge_and_keep_currencies_apart() {
+        let usd = sub("a", money("10.00", "USD"), cycle(1, CycleUnit::Month));
+        let cny = sub("b", money("25.00", "CNY"), cycle(1, CycleUnit::Month));
+        let subs = [usd.clone(), cny];
+        let mut histories = histories_of(&subs);
+        histories.get_mut(&usd.id).unwrap().push(Price {
+            id: Uuid::now_v7(),
+            subscription_id: usd.id,
+            effective_from: Date::constant(2026, 3, 1),
+            amount: money("15.00", "USD"),
+            created_at: usd.created_at,
+            updated_at: usd.updated_at,
+        });
+
+        // January through April: USD is 10 + 10 + 15 + 15, CNY is 4 × 25.
+        let totals = window_totals(
+            &subs,
+            &histories,
+            Date::constant(2026, 1, 1),
+            Date::constant(2026, 5, 1),
+        )
+        .unwrap();
+        assert_eq!(totals.len(), 2);
+        assert_eq!(totals[0].currency, "CNY");
+        assert_eq!(totals[0].total, Decimal::from_str("100.00").unwrap());
+        assert_eq!(totals[1].currency, "USD");
+        assert_eq!(totals[1].total, Decimal::from_str("50.00").unwrap());
+        assert_eq!(totals[1].charge_count, 4);
+    }
+
+    /// The month series and the window total are two views of the same
+    /// charges, so they must never disagree about the sum.
+    #[test]
+    fn a_window_total_matches_the_months_it_spans() {
+        let subs = [
+            sub("a", money("10.00", "USD"), cycle(1, CycleUnit::Month)),
+            sub("b", money("120.00", "USD"), cycle(1, CycleUnit::Year)),
+        ];
+        let histories = histories_of(&subs);
+        let (from, to) = (Date::constant(2026, 1, 1), Date::constant(2027, 1, 1));
+
+        let series = monthly_series(&subs, &histories, from, to).unwrap();
+        let totals = window_totals(&subs, &histories, from, to).unwrap();
+        assert_eq!(
+            series.iter().map(|m| m.charged).sum::<Decimal>(),
+            totals[0].total
+        );
+        assert_eq!(
+            series.iter().map(|m| m.charge_count).sum::<u32>(),
+            totals[0].charge_count
+        );
+    }
+
+    #[test]
+    fn the_earliest_charge_ignores_archived_subscriptions() {
+        let mut old = sub("old", money("1.00", "USD"), cycle(1, CycleUnit::Month));
+        old.first_billing_date = Date::constant(2020, 1, 1);
+        old.status = SubscriptionStatus::Archived;
+        let mut newer = sub("new", money("1.00", "USD"), cycle(1, CycleUnit::Month));
+        newer.first_billing_date = Date::constant(2026, 5, 5);
+
+        assert_eq!(
+            earliest_charge(&[old, newer]),
+            Some(Date::constant(2026, 5, 5))
+        );
+        assert_eq!(earliest_charge(&[]), None);
     }
 
     /// Month-end anchoring has to survive being counted, not just being

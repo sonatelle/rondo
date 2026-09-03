@@ -225,7 +225,7 @@ private struct AboutSettings: View {
         AboutLink(
           "Report an issue",
           systemImage: "ladybug",
-          tint: .categoryStorage,
+          tint: .categoryCyan,
           to: "https://github.com/sonatelle/rondo/issues"
         )
       }

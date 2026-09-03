@@ -179,7 +179,16 @@ extension Color {
   static let navCalendar = Color("navCalendar")
   static let navAnalytics = Color("navAnalytics")
   static let navArchived = Color("navArchived")
-  static let categoryVideo = Color("categoryVideo")
-  static let categoryTools = Color("categoryTools")
-  static let categoryStorage = Color("categoryStorage")
+  /// The palette a category is coloured from.
+  ///
+  /// Named for the colour rather than for a category, because the core
+  /// stores a colour key and a person can point any category at any slot.
+  static let categoryPink = Color("categoryPink")
+  static let categoryViolet = Color("categoryViolet")
+  static let categoryGreen = Color("categoryGreen")
+  static let categoryRed = Color("categoryRed")
+  static let categoryAmber = Color("categoryAmber")
+  static let categoryTeal = Color("categoryTeal")
+  static let categoryBlue = Color("categoryBlue")
+  static let categoryCyan = Color("categoryCyan")
 }

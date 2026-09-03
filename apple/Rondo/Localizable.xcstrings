@@ -144,6 +144,17 @@
         }
       }
     },
+    "AI": {
+      "comment": "Built-in category for AI assistants",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI"
+          }
+        }
+      }
+    },
     "About": {
       "localizations": {
         "zh-Hans": {
@@ -414,6 +425,17 @@
         }
       }
     },
+    "Dev": {
+      "comment": "Built-in category for developer tools",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发"
+          }
+        }
+      }
+    },
     "Edit Subscription…": {
       "localizations": {
         "zh-Hans": {
@@ -544,6 +566,17 @@
         }
       }
     },
+    "Games": {
+      "comment": "Built-in category",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "游戏"
+          }
+        }
+      }
+    },
     "General": {
       "localizations": {
         "zh-Hans": {
@@ -610,6 +643,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "每月"
+          }
+        }
+      }
+    },
+    "Music": {
+      "comment": "Built-in category",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音乐"
           }
         }
       }
@@ -790,6 +834,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "关闭窗口时退出"
+          }
+        }
+      }
+    },
+    "Reading": {
+      "comment": "Built-in category for books and articles",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阅读"
           }
         }
       }
@@ -1004,6 +1059,17 @@
         }
       }
     },
+    "Storage": {
+      "comment": "Built-in category for cloud storage",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存储"
+          }
+        }
+      }
+    },
     "Subscription": {
       "localizations": {
         "zh-Hans": {
@@ -1054,6 +1120,17 @@
         }
       }
     },
+    "Tools": {
+      "comment": "Built-in category for utilities and productivity",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具"
+          }
+        }
+      }
+    },
     "Up next": {
       "localizations": {
         "zh-Hans": {
@@ -1070,6 +1147,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "版本 %@（%@）"
+          }
+        }
+      }
+    },
+    "Video": {
+      "comment": "Built-in category for streaming and film",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "影音"
           }
         }
       }

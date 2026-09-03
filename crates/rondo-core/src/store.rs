@@ -653,8 +653,18 @@ static MIGRATIONS: LazyLock<Migrations<'static>> = LazyLock::new(|| {
     Migrations::new(vec![
         M::up(include_str!("../migrations/001-initial.sql")),
         M::up(include_str!("../migrations/002-price-history.sql")),
+        M::up(include_str!("../migrations/003-seed-categories.sql")),
     ])
 });
+
+/// The categories every database is seeded with, by `icon_key`.
+///
+/// Named here as well as in the migration so that a frontend can ask which
+/// categories are built in without reading SQL, and so a test can hold the
+/// two lists to each other.
+pub const BUILT_IN_CATEGORIES: [&str; 8] = [
+    "video", "music", "reading", "games", "tools", "ai", "dev", "storage",
+];
 
 /// Rebuilds a [`Subscription`] from a row, re-validating every invariant.
 ///
@@ -821,6 +831,21 @@ mod tests {
     /// first charge, so the price in force is the one that was stored.
     const TODAY: Date = Date::constant(2026, 6, 1);
 
+    /// The categories a test made, without the ones every database is
+    /// seeded with.
+    ///
+    /// Recognised by the fixed prefix the migration gives a built-in id, so
+    /// a test can go on saying what it means - "the category I just added"
+    /// - without counting eight it did not.
+    fn made_categories(store: &Store) -> Vec<Category> {
+        store
+            .categories()
+            .unwrap()
+            .into_iter()
+            .filter(|c| !c.id.to_string().starts_with("00000000-0000-7000-8000-"))
+            .collect()
+    }
+
     fn sample() -> Subscription {
         Subscription::new(
             "Netflix",
@@ -839,7 +864,7 @@ mod tests {
         let store = Store::open_in_memory().unwrap();
         assert_eq!(
             MIGRATIONS.current_version(&store.conn).unwrap(),
-            SchemaVersion::Inside(NonZeroUsize::new(2).unwrap())
+            SchemaVersion::Inside(NonZeroUsize::new(3).unwrap())
         );
     }
 
@@ -1024,6 +1049,51 @@ mod tests {
     }
 
     #[test]
+    fn a_new_database_starts_with_the_built_in_categories() {
+        let store = Store::open_in_memory().unwrap();
+        let categories = store.categories().unwrap();
+        assert_eq!(categories.len(), BUILT_IN_CATEGORIES.len());
+
+        // In the order the migration gives them, which is the order a
+        // sidebar shows them in.
+        assert_eq!(
+            categories
+                .iter()
+                .map(|c| c.icon_key.as_deref().unwrap())
+                .collect::<Vec<_>>(),
+            BUILT_IN_CATEGORIES
+        );
+        assert_eq!(categories[0].name, "Video");
+        assert!(
+            categories.iter().all(|c| c.color_key.is_some()),
+            "a seeded category carries a colour for a frontend to map"
+        );
+    }
+
+    /// Every category a bundled template files into has to exist, or
+    /// picking that service would point at nothing.
+    #[test]
+    fn every_template_category_is_one_of_the_built_in_ones() {
+        for template in crate::templates::service_templates() {
+            assert!(
+                BUILT_IN_CATEGORIES.contains(&template.default_category.as_str()),
+                "template {} files into {:?}, which no category has",
+                template.id,
+                template.default_category
+            );
+        }
+    }
+
+    /// Built-in ids are fixed so two devices agree they are one category,
+    /// and so restoring a backup does not double them.
+    #[test]
+    fn the_built_in_categories_have_the_same_ids_everywhere() {
+        let first = Store::open_in_memory().unwrap().categories().unwrap();
+        let second = Store::open_in_memory().unwrap().categories().unwrap();
+        assert_eq!(first, second);
+    }
+
+    #[test]
     fn a_category_keeps_its_icon_and_colour_keys() {
         let store = Store::open_in_memory().unwrap();
         let mut category = Category::new("影音", 0).unwrap();
@@ -1036,13 +1106,13 @@ mod tests {
         category.icon_key = Some("video".into());
         category.color_key = Some("pink".into());
         store.update_category(&category).unwrap();
-        assert_eq!(store.categories().unwrap(), vec![category.clone()]);
+        assert_eq!(made_categories(&store), vec![category.clone()]);
 
         // And through an upsert, the path a restore takes.
         category.icon_key = Some("music".into());
         assert!(!store.upsert_category(&category).unwrap());
         assert_eq!(
-            store.categories().unwrap()[0].icon_key.as_deref(),
+            made_categories(&store)[0].icon_key.as_deref(),
             Some("music")
         );
     }
@@ -1200,7 +1270,7 @@ mod tests {
         // ON DELETE SET NULL, silently detaching this subscription.
         let reloaded = store.subscription(sub.id, TODAY).unwrap().unwrap();
         assert_eq!(reloaded.category_id, Some(category.id));
-        assert_eq!(store.categories().unwrap(), vec![category]);
+        assert_eq!(made_categories(&store), vec![category]);
     }
 
     #[test]
@@ -1260,9 +1330,7 @@ mod tests {
         }
         first.name = "b-renamed".into();
         store.update_category(&first).unwrap();
-        let names: Vec<String> = store
-            .categories()
-            .unwrap()
+        let names: Vec<String> = made_categories(&store)
             .into_iter()
             .map(|c| c.name)
             .collect();

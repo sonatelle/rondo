@@ -590,15 +590,19 @@ mod tests {
         let mut streaming = rondo.add_category("Streaming".into(), 0).unwrap();
         rondo.add_category("Tools".into(), 1).unwrap();
 
-        streaming.name = "Video".into();
+        streaming.name = "Screens".into();
         rondo.update_category(streaming.clone()).unwrap();
+        // Only the two this test made: every database is seeded with the
+        // built-in categories, which sort after these and are not the
+        // subject here.
         let names: Vec<String> = rondo
             .categories()
             .unwrap()
             .into_iter()
+            .filter(|c| !c.id.to_string().starts_with("00000000-0000-7000-8000-"))
             .map(|c| c.name)
             .collect();
-        assert_eq!(names, vec!["Video", "Tools"]);
+        assert_eq!(names, vec!["Screens", "Tools"]);
 
         assert!(rondo.delete_category(streaming.id).unwrap());
         assert!(!rondo.delete_category(streaming.id).unwrap());

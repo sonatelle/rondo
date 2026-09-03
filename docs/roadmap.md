@@ -44,6 +44,7 @@ its own before the next begins.
       needs right-click -> Open past Gatekeeper
 - [x] v0.1.0 published, 2026-08-28
 - [x] v0.2.0 published, 2026-09-01
+- [x] v0.3.0 published, 2026-09-03 - the release the backup format moved in
 
 ## M6 - The design handoff (in progress)
 
@@ -69,8 +70,8 @@ that needs a boundary a reader can point at.
 - [ ] First run - v0.7.0
 - [ ] Local notifications - which also closes M4 - v0.7.0
 
-v0.3.0 is the release to be careful with. Its screens barely change, but a
-backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse
+v0.3.0 was the release to be careful with. Its screens barely changed, but
+a backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse
 formats from the future by design.
 
 ## Later, undated

@@ -49,6 +49,20 @@ final class SubscriptionsModel {
   /// arranged. Every database is seeded with a set of them.
   private(set) var categories: [Category] = []
 
+  /// What actually falls due in the next thirty days, per currency.
+  ///
+  /// Charged rather than levelled: this card answers "what will leave my
+  /// account", and a yearly plan that renews next week is the whole of it
+  /// rather than a twelfth.
+  private(set) var next30Days: [WindowTotal] = []
+
+  /// What each subscription has cost since its first charge, most first.
+  ///
+  /// Cumulative, at the prices each charge was made at - which is what the
+  /// price history exists for. A subscription that has not been charged yet
+  /// is left out: nothing has been spent on it to rank.
+  private(set) var topSpending: [(subscription: Subscription, total: SubscriptionTotal)] = []
+
   /// The last failure, for the interface to show and the person to dismiss.
   var failure: String?
 
@@ -96,6 +110,35 @@ final class SubscriptionsModel {
         }
       }
       counts = tally
+
+      // Tomorrow, not today: the window is half-open, so a charge falling
+      // today has to be inside it.
+      next30Days = try rondo.windowTotals(
+        from: Self.day(after: referenceDay, days: 1),
+        to: Self.day(after: referenceDay, days: 31)
+      )
+
+      // One call per subscription rather than one for all of them: there
+      // are tens of these, and a call each keeps the core's answer per
+      // subscription rather than assembling a ranking here.
+      var spending: [(Subscription, SubscriptionTotal)] = []
+      for renewal in everything where renewal.subscription.status == .active {
+        let total = try rondo.subscriptionTotal(
+          id: renewal.subscription.id,
+          until: Self.day(after: referenceDay, days: 1)
+        )
+        if total.chargeCount > 0 {
+          spending.append((renewal.subscription, total))
+        }
+      }
+      // Sorted by the amount as a number, not as text: "9" is more than
+      // "10" to a string comparison. Currencies are never converted, so a
+      // ranking across them is a rough one and the amount beside each name
+      // is what says so.
+      spending.sort {
+        (Formatting.decimal($0.1.total) ?? 0) > (Formatting.decimal($1.1.total) ?? 0)
+      }
+      topSpending = spending.map { (subscription: $0.0, total: $0.1) }
     } catch {
       report(error)
     }
@@ -219,6 +262,18 @@ final class SubscriptionsModel {
   /// Today in the person's own calendar, as `YYYY-MM-DD`.
   static func today() -> CivilDate {
     Formatting.civilDate(from: Date())
+  }
+
+  /// A civil date `days` after another, in the person's own calendar.
+  ///
+  /// Through `Calendar` rather than by adding seconds, so a day that is not
+  /// 24 hours long - the ones daylight saving shortens and lengthens -
+  /// still counts as one day.
+  static func day(after date: CivilDate, days: Int) -> CivilDate {
+    guard let start = Formatting.parseCivilDate(date),
+          let moved = Calendar.current.date(byAdding: .day, value: days, to: start)
+    else { return date }
+    return Formatting.civilDate(from: moved)
   }
 
   /// Records a failure in the words the core used.

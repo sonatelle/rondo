@@ -139,13 +139,19 @@ struct ContentView: View {
 
   private var detail: some View {
     VStack(spacing: 0) {
-      if model.renewals.isEmpty {
+      if model.navigation == .overview {
+        // The overview carries its own totals in its cards, so the footer
+        // below would be the same numbers a second time.
+        OverviewView(model: model)
+      } else if model.renewals.isEmpty {
         EmptyState(model: model, add: { isAdding = true })
+        Divider()
+        SpendingFooter(summaries: model.summaries)
       } else {
         table
+        Divider()
+        SpendingFooter(summaries: model.summaries)
       }
-      Divider()
-      SpendingFooter(summaries: model.summaries)
     }
     .navigationTitle(pageTitle)
     .toolbar {

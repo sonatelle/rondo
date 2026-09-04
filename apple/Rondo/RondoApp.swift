@@ -79,6 +79,13 @@ struct RondoApp: App {
       // views. Moving that state into the model would make the rebuild
       // free, and the overview rewrite is going to move it there anyway.
       .id(appLanguage)
+      // A floor, so the layouts have one narrow case to be right about
+      // rather than every width there is. See `RondoWindow` for where the
+      // number comes from.
+      .frame(
+        minWidth: RondoWindow.minimumWidth,
+        minHeight: RondoWindow.minimumHeight
+      )
     }
     .defaultSize(width: 1080, height: 760)
     .commands { SubscriptionCommands() }

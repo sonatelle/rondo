@@ -376,3 +376,25 @@ private struct UrgencyBadge: View {
     }
   }
 }
+
+// MARK: - Previews
+
+// Pinned to the widths that matter rather than to one comfortable size.
+// The narrow one is the window's own floor: whatever it shows is the worst
+// this page is allowed to look, and if that is not good enough the floor is
+// wrong rather than the layout.
+
+#Preview("Overview · wide") {
+  OverviewView(model: PreviewData.populated())
+    .frame(width: 900, height: 700)
+}
+
+#Preview("Overview · at the window's floor") {
+  OverviewView(model: PreviewData.populated())
+    .frame(width: RondoWindow.minimumWidth - RondoWindow.minimumSidebarWidth, height: 520)
+}
+
+#Preview("Overview · nothing yet") {
+  OverviewView(model: PreviewData.empty())
+    .frame(width: 900, height: 400)
+}

@@ -80,7 +80,7 @@ paths to this machine, and is not in version control.
 The app icon is drawn by a script rather than kept as artwork:
 
 ```sh
-scripts/make-app-icon.swift apple/Rondo/Assets.xcassets/AppIcon.appiconset
+scripts/make-app-icon.swift apple/Rondo/Resources/Assets.xcassets/AppIcon.appiconset
 ```
 
 Its PNGs are committed. Nothing regenerates them during a build - there
@@ -100,7 +100,7 @@ merging both slices, and lifting `ARCHS` in `apple/project.yml` together.
 
 ## Words on screen
 
-Every string the interface shows lives in `apple/Rondo/Localizable.xcstrings`,
+Every string the interface shows lives in `apple/Rondo/Resources/Localizable.xcstrings`,
 in English and Simplified Chinese. Adding a language is a matter of adding
 it to that catalogue: the picker in Settings is built from whatever the
 bundle carries, so no Swift changes.

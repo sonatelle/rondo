@@ -62,7 +62,7 @@ that needs a boundary a reader can point at.
 - [x] Price history, payment methods, category icons - one migration, and
       the backup format to v2 - v0.3.0
 - [x] The aggregations the analytics screen needs - v0.3.0
-- [ ] Sidebar navigation and the overview - v0.4.0
+- [x] Sidebar navigation and the overview - v0.4.0
 - [ ] The form, and picking a provider - v0.4.0
 - [ ] Subscription detail - v0.4.0
 - [ ] Calendar - v0.5.0

@@ -42,6 +42,9 @@ enum PreviewData {
         notes: nil,
         templateId: template,
         categoryId: model.categories.first { $0.iconKey == "ai" }?.id,
+        channel: .web,
+        account: nil,
+        paymentMethodId: nil,
         reminderLeadDays: nil
       )
     }

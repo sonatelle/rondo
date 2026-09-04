@@ -42,4 +42,47 @@ enum Currencies {
     }
     return Locale.current.currency?.identifier ?? "USD"
   }
+
+  /// Symbols taken from the places that spend a currency, for the codes
+  /// this person's own locale has no symbol for.
+  ///
+  /// Their locale is left in charge wherever it has an answer, because its
+  /// answers are deliberately told apart: a Chinese reader is shown "JP¥"
+  /// and "¥" for yen and yuan, and replacing the first with the "¥" Japan
+  /// writes would make two currencies identical in one list. It names only
+  /// about twenty codes, though, and the rest arrived as bare "TRY" and
+  /// "PLN"; borrowing covers all but fourteen of the remainder.
+  ///
+  /// Built once, on first use, at a cost of about seventeen milliseconds -
+  /// finding these means walking every locale the system knows.
+  static let borrowedSymbols: [String: String] = {
+    var spenders: [String: [Locale]] = [:]
+    for identifier in Locale.availableIdentifiers {
+      let locale = Locale(identifier: identifier)
+      guard let code = locale.currency?.identifier else { continue }
+      spenders[code, default: []].append(locale)
+    }
+
+    var borrowed: [String: String] = [:]
+    let reader = Localization.locale
+    for code in Locale.commonISOCurrencyCodes where symbol(for: code, in: reader) == nil {
+      for locale in spenders[code] ?? [] {
+        if let theirs = symbol(for: code, in: locale) {
+          borrowed[code] = theirs
+          break
+        }
+      }
+    }
+    return borrowed
+  }()
+
+  /// One locale's symbol for a code, or nothing when it just echoes it.
+  private static func symbol(for code: String, in locale: Locale) -> String? {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.locale = locale
+    formatter.currencyCode = code
+    guard let symbol = formatter.currencySymbol, symbol != code else { return nil }
+    return symbol
+  }
 }

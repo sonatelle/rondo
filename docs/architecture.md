@@ -185,7 +185,7 @@ not about duplication but about what a mistake costs:
   `.xcodeproj` is generated from it and is not in version control, so
   settings are edited here rather than in Xcode's inspector, where they
   would be lost on the next generate.
-- `apple/Rondo/Assets.xcassets/` - the app icon, written by
+- `apple/Rondo/Resources/Assets.xcassets/` - the app icon, written by
   `make-app-icon.swift` and committed as PNGs. A ring that deepens as it
   travels and returns to where it began, with a card at the centre. The
   card is not a currency symbol on purpose: Rondo holds several currencies
@@ -194,6 +194,28 @@ not about duplication but about what a mistake costs:
 - `apple/Rondo/` - the macOS app. `SubscriptionsModel` holds the open
   database and the last-read values; the views read from it and call back
   into it, and none of them compute anything about money or dates.
+
+  Sources are grouped by the screen they build, because what this app grows
+  is whole screens: a calendar, a detail view, an analytics page. Grouping
+  by kind instead would put every one of them in the same `Views` folder.
+
+  - `App/` - the scene, the window's floor, opening the database, the menu
+    commands.
+  - `Model/` - `SubscriptionsModel`, what the sidebar is showing, the
+    preference keys, and the conveniences on the core's own records.
+  - `Design/` - what things look like: the tokens, the letter block, and
+    turning a category's keys into a symbol and a colour.
+  - `Formatting/` - how values read: amounts, dates, currency symbols, and
+    which language the interface is in.
+  - `Overview/`, `Subscriptions/`, `MenuBar/`, `Settings/` - one per screen.
+  - `Resources/` - the asset catalogue and the string catalogue.
+
+  The line between `Design/` and `Formatting/` is a question with an
+  answer: what changes when the reader picks another language belongs in
+  the second, and what changes between light and dark belongs in the first.
+  `Backup` and `PreviewData` sit at the top level because they are neither,
+  and inventing a folder to hold two unrelated files would only name a
+  place for the next homeless one to go.
   `Formatting` is where the core's plain strings become words for a
   locale, and `CoreTypes` carries the conformances SwiftUI needs but the
   generated bindings cannot keep. `Currencies` is the list of codes a

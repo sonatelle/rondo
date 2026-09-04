@@ -17,7 +17,7 @@ struct CatalogueTests {
     let url = URL(fileURLWithPath: #filePath)
       .deletingLastPathComponent()
       .deletingLastPathComponent()
-      .appendingPathComponent("Rondo/Localizable.xcstrings")
+      .appendingPathComponent("Rondo/Resources/Localizable.xcstrings")
     try #require(
       FileManager.default.fileExists(atPath: url.path),
       "no catalogue at \(url.path)"

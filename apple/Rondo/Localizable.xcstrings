@@ -12,6 +12,47 @@
         }
       }
     },
+    "%lld charges": {
+      "comment": "Overview: how many charges a figure covers",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld charge"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld charges"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 笔扣款"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 笔扣款"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld days ago": {
       "comment": "How long ago a charge fell",
       "localizations": {
@@ -393,12 +434,34 @@
         }
       }
     },
+    "Coming up": {
+      "comment": "Overview section: the next few charges",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即将扣款"
+          }
+        }
+      }
+    },
     "Core %@": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "核心 %@"
+          }
+        }
+      }
+    },
+    "Currencies are never converted": {
+      "comment": "Overview card footnote",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "币种不换算"
           }
         }
       }
@@ -735,6 +798,17 @@
         }
       }
     },
+    "Monthly, levelled": {
+      "comment": "Overview card: spending spread evenly across each cycle",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每月均摊"
+          }
+        }
+      }
+    },
     "Music": {
       "comment": "Built-in category",
       "localizations": {
@@ -762,6 +836,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "新增订阅"
+          }
+        }
+      }
+    },
+    "Next 30 days": {
+      "comment": "Overview card: what actually falls due in the next month",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未来 30 天"
           }
         }
       }
@@ -844,6 +929,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "这个分类还是空的"
+          }
+        }
+      }
+    },
+    "Nothing is scheduled yet.": {
+      "comment": "Overview empty state",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有任何扣款安排。"
           }
         }
       }
@@ -1100,6 +1196,17 @@
         }
       }
     },
+    "See all": {
+      "comment": "Overview link to the full subscription list",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看全部"
+          }
+        }
+      }
+    },
     "Service": {
       "localizations": {
         "zh-Hans": {
@@ -1177,6 +1284,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "源代码"
+          }
+        }
+      }
+    },
+    "Spent most on": {
+      "comment": "Overview section: the biggest cumulative spends",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "花得最多"
           }
         }
       }
@@ -1387,6 +1505,17 @@
         }
       }
     },
+    "by date": {
+      "comment": "Overview section subtitle",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按日期排序"
+          }
+        }
+      }
+    },
     "day": {
       "localizations": {
         "zh-Hans": {
@@ -1464,6 +1593,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "月"
+          }
+        }
+      }
+    },
+    "since the first charge": {
+      "comment": "Overview section subtitle: totals since each first charge",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "累计"
           }
         }
       }

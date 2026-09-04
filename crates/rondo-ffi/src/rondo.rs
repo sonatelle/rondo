@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use jiff::civil::Date;
 use rondo_core::Store;
 use rondo_core::model::{
-    BillingCycle, Category as CoreCategory, Money, Subscription as CoreSubscription,
+    BillingCycle, Category as CoreCategory, Channel, Money, Subscription as CoreSubscription,
     SubscriptionStatus,
 };
 use rust_decimal::Decimal;
@@ -43,6 +43,11 @@ pub struct NewSubscription {
     pub notes: Option<String>,
     pub template_id: Option<String>,
     pub category_id: Option<Uuid>,
+    /// Where it was bought, when the person says.
+    pub channel: Option<Channel>,
+    /// The account it bills to, as they write it.
+    pub account: Option<String>,
+    pub payment_method_id: Option<Uuid>,
     /// Days of warning before a renewal; the core's default when absent.
     pub reminder_lead_days: Option<u16>,
 }
@@ -135,6 +140,9 @@ impl Rondo {
         sub.notes = draft.notes;
         sub.template_id = draft.template_id;
         sub.category_id = draft.category_id;
+        sub.channel = draft.channel;
+        sub.account = draft.account;
+        sub.payment_method_id = draft.payment_method_id;
         if let Some(days) = draft.reminder_lead_days {
             sub.reminder_lead_days = days;
         }
@@ -467,6 +475,9 @@ mod tests {
             notes: None,
             template_id: None,
             category_id: None,
+            channel: None,
+            account: None,
+            payment_method_id: None,
             reminder_lead_days: None,
         }
     }

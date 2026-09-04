@@ -73,7 +73,29 @@ struct FormattingTests {
     // Showing the raw value makes a broken row obvious; an empty cell
     // would look like missing data instead of a bug.
     #expect(Formatting.date("nonsense") == "nonsense")
-    #expect(Formatting.relative("nonsense").isEmpty)
+    #expect(Formatting.relative("nonsense", from: "2026-09-04").isEmpty)
+    #expect(Formatting.relative("2026-09-04", from: "nonsense").isEmpty)
+  }
+
+  /// Always days, never the largest unit that fits. Foundation's own
+  /// relative style calls fourteen days "in 2 weeks", which is the same
+  /// phrase it gives sixteen - and which day money leaves is the question
+  /// this app exists to answer.
+  @Test("How soon a charge falls is counted in days, however many")
+  func relativeDaysNeverRoundToWeeks() {
+    // Which language these come back in depends on the machine, so what is
+    // checked is that the day itself is named rather than counted: neither
+    // may read as "in 0 days".
+    let today: CivilDate = "2026-09-04"
+    #expect(["Today", "今天"].contains(Formatting.relative("2026-09-04", from: today)))
+    #expect(["Tomorrow", "明天"].contains(Formatting.relative("2026-09-05", from: today)))
+
+    let fortnight = Formatting.relative("2026-09-18", from: today)
+    #expect(fortnight.contains("14"), "got \(fortnight)")
+    #expect(!fortnight.lowercased().contains("week"), "got \(fortnight)")
+
+    let past = Formatting.relative("2026-09-01", from: today)
+    #expect(past.contains("3"), "got \(past)")
   }
 
   @Test("A civil date renders as a day on a calendar")

@@ -102,10 +102,63 @@ enum Formatting {
     )
   }
 
-  /// Says how far off a date is from now: "today", "tomorrow", "in 10 days".
-  static func relative(_ text: CivilDate) -> String {
-    guard let date = parse(text) else { return "" }
-    return date.formatted(.relative(presentation: .named).locale(Localization.locale))
+  /// Says how far off a date is, counted in days: "today", "tomorrow",
+  /// "in 14 days".
+  ///
+  /// Always days, never the largest unit that fits. Foundation's relative
+  /// style rounds 14 days up to "in 2 weeks", and a subscription tracker is
+  /// a thing people read to know which day money leaves: a fortnight and
+  /// sixteen days are the same phrase to it, and they are not the same
+  /// answer. The counted phrase is asked for whole so each language carries
+  /// its own plural rule.
+  ///
+  /// `reference` is the day to reckon from - the same day the core was
+  /// asked about, so a window left open overnight cannot measure one row
+  /// against yesterday and the next against today.
+  static func relative(_ text: CivilDate, from reference: CivilDate) -> String {
+    guard let date = parse(text), let from = parse(reference) else { return "" }
+    let calendar = Calendar.current
+    guard let days = calendar.dateComponents(
+      [.day],
+      from: calendar.startOfDay(for: from),
+      to: calendar.startOfDay(for: date)
+    ).day else { return "" }
+
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return switch days {
+    case 0: String(localized: "Today", bundle: bundle, locale: locale,
+                   comment: "How soon a charge falls")
+    case 1: String(localized: "Tomorrow", bundle: bundle, locale: locale,
+                   comment: "How soon a charge falls")
+    case ..<0: String(localized: "\(-days) days ago", bundle: bundle, locale: locale,
+                      comment: "How long ago a charge fell")
+    default: String(localized: "in \(days) days", bundle: bundle, locale: locale,
+                    comment: "How soon a charge falls")
+    }
+  }
+
+  /// A subscription's cycle and category on one line: "Monthly · Storage".
+  ///
+  /// Assembled from whole phrases joined by a separator rather than from a
+  /// sentence, because a sentence would carry English word order into every
+  /// language. The separator is the same in both, which is why it can be
+  /// written here.
+  static func cycleAndCategory(_ renewal: Renewal, categories: [Category]) -> String {
+    let cycle = renewal.cycleDescription
+    guard let id = renewal.subscription.categoryId,
+          let category = categories.first(where: { $0.id == id })
+    else { return cycle }
+    return "\(cycle) · \(Categories.name(category.name, iconKey: category.iconKey))"
+  }
+
+  /// How the next charge reads under a name: "3 Sep · Monthly".
+  ///
+  /// The date in full rather than as "in 3 days", because the badge beside
+  /// it already says how soon; saying it twice in different words would
+  /// invite the reader to look for a difference.
+  static func chargeSummary(_ renewal: Renewal, reference _: CivilDate) -> String {
+    "\(date(renewal.date)) · \(renewal.cycleDescription)"
   }
 
   /// What restoring a backup changed, in a sentence.

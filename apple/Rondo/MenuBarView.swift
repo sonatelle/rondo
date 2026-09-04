@@ -136,7 +136,7 @@ private struct UpcomingRow: View {
         .monospacedDigit()
 
         // The one place a glance carries colour: how soon this lands.
-        Text(Formatting.relative(renewal.date))
+        Text(Formatting.relative(renewal.date, from: today))
           .font(.system(size: 11.5, weight: urgency == .distant ? .regular : .semibold))
           .foregroundStyle(urgency.foreground)
       }

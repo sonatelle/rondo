@@ -30,11 +30,16 @@ enum Appearance: String, CaseIterable, Identifiable {
   }
 
   /// A key, for the same reason as `Navigation.title`.
-  var title: LocalizedStringKey {
-    switch self {
-    case .light: "Light"
-    case .dark: "Dark"
-    case .system: "System"
+  var title: String {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return switch self {
+    case .light: String(localized: "Light", bundle: bundle, locale: locale,
+                        comment: "Appearance setting")
+    case .dark: String(localized: "Dark", bundle: bundle, locale: locale,
+                       comment: "Appearance setting")
+    case .system: String(localized: "System", bundle: bundle, locale: locale,
+                         comment: "Appearance setting: whichever the Mac is in")
     }
   }
 

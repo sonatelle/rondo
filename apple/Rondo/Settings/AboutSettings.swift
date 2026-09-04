@@ -2,28 +2,35 @@ import SwiftUI
 
 struct AboutSettings: View {
   var body: some View {
-    Form {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return Form {
       Section {
         identity
           .frame(maxWidth: .infinity)
           .padding(.vertical, Theme.Space.m)
       }
 
-      Section("Links") {
+      Section(String(localized: "Links", bundle: bundle, locale: locale,
+                     comment: "Settings section: where the project lives"))
+      {
         AboutLink(
-          "Source",
+          String(localized: "Source", bundle: bundle, locale: locale,
+                 comment: "Link to the repository"),
           systemImage: "curlybraces",
           tint: .navAll,
           to: "https://github.com/sonatelle/rondo"
         )
         AboutLink(
-          "Releases",
+          String(localized: "Releases", bundle: bundle, locale: locale,
+                 comment: "Link to the published versions"),
           systemImage: "shippingbox",
           tint: .navAnalytics,
           to: "https://github.com/sonatelle/rondo/releases"
         )
         AboutLink(
-          "Report an issue",
+          String(localized: "Report an issue", bundle: bundle, locale: locale,
+                 comment: "Link to the issue tracker"),
           systemImage: "ladybug",
           tint: .categoryCyan,
           to: "https://github.com/sonatelle/rondo/issues"
@@ -31,7 +38,9 @@ struct AboutSettings: View {
       }
 
       Section {
-        Text("© 2026 Sonatelle · aliaxy · MIT License")
+        Text(verbatim: String(localized: "© 2026 Sonatelle · aliaxy · MIT License",
+                              bundle: bundle, locale: locale,
+                              comment: "Foot of the about tab"))
           .font(Theme.Font.caption)
           .foregroundStyle(Color.textFaint)
           .frame(maxWidth: .infinity)
@@ -41,7 +50,9 @@ struct AboutSettings: View {
   }
 
   private var identity: some View {
-    VStack(spacing: Theme.Space.xs) {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return VStack(spacing: Theme.Space.xs) {
       // The app's own icon, read from the bundle rather than drawn again,
       // so it cannot drift from what the Dock shows.
       if let icon = NSImage(named: "AppIcon") {
@@ -50,7 +61,7 @@ struct AboutSettings: View {
           .frame(width: 72, height: 72)
           .padding(.bottom, Theme.Space.xs)
       }
-      Text("Rondo")
+      Text(verbatim: "Rondo")
         .font(.system(size: 17, weight: .semibold))
       Text(Self.version)
         .font(Theme.Font.caption)
@@ -60,19 +71,26 @@ struct AboutSettings: View {
       // so the two differing is normal. What it catches is a bundle built
       // against a stale XCFramework: an app several releases along still
       // reporting the core it shipped with on day one.
-      Text("Core \(Self.coreVersion)")
+      Text(verbatim: String(localized: "Core \(Self.coreVersion)", bundle: bundle, locale: locale,
+                            comment: "The version the Rust core reports"))
         .font(Theme.Font.footnote)
         .foregroundStyle(Color.textFaint)
         .monospacedDigit()
-      Text("A theme that keeps returning — and so does every subscription.")
-        .font(Theme.Font.caption)
-        .foregroundStyle(Color.textMuted)
-        .multilineTextAlignment(.center)
-        .padding(.top, Theme.Space.s)
-      Text("Everything stays in one file on this Mac. No cloud, no account, no network.")
-        .font(Theme.Font.footnote)
-        .foregroundStyle(Color.textFaint)
-        .multilineTextAlignment(.center)
+      Text(verbatim: String(
+        localized: "A theme that keeps returning — and so does every subscription.",
+        bundle: bundle, locale: locale, comment: "What the name means"
+      ))
+      .font(Theme.Font.caption)
+      .foregroundStyle(Color.textMuted)
+      .multilineTextAlignment(.center)
+      .padding(.top, Theme.Space.s)
+      Text(verbatim: String(
+        localized: "Everything stays in one file on this Mac. No cloud, no account, no network.",
+        bundle: bundle, locale: locale, comment: "The promise about data, in the about tab"
+      ))
+      .font(Theme.Font.footnote)
+      .foregroundStyle(Color.textFaint)
+      .multilineTextAlignment(.center)
     }
   }
 
@@ -107,14 +125,15 @@ struct AboutSettings: View {
 /// red and amber mean "this is charged soon" everywhere else in Rondo and
 /// spending them on a link would make that quieter.
 private struct AboutLink: View {
-  /// A key, not a `String`: `Text(someString)` shows the text as written
-  /// and never looks it up, so these rows stayed English.
-  let title: LocalizedStringKey
+  /// Already through the catalogue, like every other word in the app: a
+  /// key would be resolved against the system's language rather than the
+  /// chosen one.
+  let title: String
   let systemImage: String
   let tint: Color
   let destination: URL
 
-  init(_ title: LocalizedStringKey, systemImage: String, tint: Color, to address: String) {
+  init(_ title: String, systemImage: String, tint: Color, to address: String) {
     self.title = title
     self.systemImage = systemImage
     self.tint = tint
@@ -132,7 +151,7 @@ private struct AboutLink: View {
         Image(systemName: systemImage)
           .foregroundStyle(tint)
           .frame(width: 18)
-        Text(title)
+        Text(verbatim: title)
         Spacer()
         Image(systemName: "arrow.up.right")
           .font(.caption)

@@ -25,7 +25,10 @@ struct Sidebar: View {
       }
 
       if !model.categories.isEmpty {
-        Section("Categories") {
+        Section(String(localized: "Categories", bundle: Localization.bundle,
+                       locale: Localization.locale,
+                       comment: "Sidebar section holding the categories"))
+        {
           ForEach(model.categories, id: \.id) { category in
             let destination = Navigation.category(category.id)
             Label {
@@ -62,7 +65,9 @@ struct Sidebar: View {
     // stays on the floor of the column however few entries there are and
     // does not scroll away once there are many.
     .safeAreaInset(edge: .bottom) {
-      Text("Stored on this Mac · no account")
+      Text(verbatim: String(localized: "Stored on this Mac · no account",
+                            bundle: Localization.bundle, locale: Localization.locale,
+                            comment: "Foot of the sidebar: where the data lives"))
         .font(Theme.Font.footnote)
         .foregroundStyle(Color.textFaint)
         .frame(maxWidth: .infinity, alignment: .leading)

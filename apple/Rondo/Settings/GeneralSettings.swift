@@ -16,29 +16,43 @@ struct GeneralSettings: View {
   @State private var launchFailure: String?
 
   var body: some View {
-    Form {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return Form {
       Section {
-        Toggle("Open Rondo at login", isOn: launchBinding)
+        Toggle(String(localized: "Open Rondo at login", bundle: bundle, locale: locale,
+                      comment: "Setting: start the app when the Mac is logged into"),
+               isOn: launchBinding)
         if let launchFailure {
           Text(launchFailure)
             .font(.caption)
             .foregroundStyle(Color.danger)
         }
 
-        Toggle("Show Rondo in the menu bar", isOn: $showsMenuBarItem)
-        Text("Glance at the next charges without opening a window.")
+        Toggle(String(localized: "Show Rondo in the menu bar", bundle: bundle, locale: locale,
+                      comment: "Setting: keep the status item"),
+               isOn: $showsMenuBarItem)
+        Text(verbatim: String(localized: "Glance at the next charges without opening a window.",
+                              bundle: bundle, locale: locale,
+                              comment: "Under the menu bar setting"))
           .font(.caption)
           .foregroundStyle(.secondary)
 
-        Toggle("Quit when the window closes", isOn: $quitsOnWindowClose)
-        Text(closingExplanation)
+        Toggle(String(localized: "Quit when the window closes", bundle: bundle, locale: locale,
+                      comment: "Setting: what closing the last window means"),
+               isOn: $quitsOnWindowClose)
+        Text(verbatim: closingExplanation)
           .font(.caption)
           .foregroundStyle(.secondary)
       }
 
       Section {
-        Picker("Language", selection: $appLanguage) {
-          Text("Follow the system").tag("")
+        Picker(String(localized: "Language", bundle: bundle, locale: locale,
+                      comment: "Setting: which language the interface is in"),
+               selection: $appLanguage)
+        {
+          Text(verbatim: String(localized: "Follow the system", bundle: bundle, locale: locale,
+                                comment: "Take this setting from the Mac's own")).tag("")
           Divider()
           // Offered from the bundle rather than from a list here, so a
           // language added to the catalogue turns up without any Swift
@@ -48,9 +62,12 @@ struct GeneralSettings: View {
           }
         }
 
-        Picker("Appearance", selection: $appearance) {
+        Picker(String(localized: "Appearance", bundle: bundle, locale: locale,
+                      comment: "Setting: light, dark, or the Mac's own"),
+               selection: $appearance)
+        {
           ForEach(Appearance.allCases) { choice in
-            Text(choice.title).tag(choice)
+            Text(verbatim: choice.title).tag(choice)
           }
         }
         .pickerStyle(.segmented)
@@ -58,23 +75,38 @@ struct GeneralSettings: View {
           chosen.apply()
         }
 
-        Picker("Primary currency", selection: $primaryCurrency) {
-          Text("Follow the system").tag("")
+        Picker(String(localized: "Primary currency", bundle: bundle, locale: locale,
+                      comment: "Setting: the currency a new subscription starts in"),
+               selection: $primaryCurrency)
+        {
+          Text(verbatim: String(localized: "Follow the system", bundle: bundle, locale: locale,
+                                comment: "Take this setting from the Mac's own")).tag("")
           Divider()
           ForEach(Currencies.all, id: \.self) { code in
-            Text(code).tag(code)
+            Text(verbatim: code).tag(code)
           }
         }
-        Text("Where a new subscription starts, and which total is listed first. Rondo never converts between currencies.")
-          .font(.caption)
-          .foregroundStyle(.secondary)
+        Text(verbatim: String(
+          localized: "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies.",
+          bundle: bundle, locale: locale, comment: "Under the primary currency setting"
+        ))
+        .font(.caption)
+        .foregroundStyle(.secondary)
 
-        Picker("Weeks start on", selection: $firstWeekday) {
-          Text("Monday").tag(2)
-          Text("Sunday").tag(1)
-          Text("Saturday").tag(7)
+        Picker(String(localized: "Weeks start on", bundle: bundle, locale: locale,
+                      comment: "Setting: which day a calendar week begins on"),
+               selection: $firstWeekday)
+        {
+          Text(verbatim: String(localized: "Monday", bundle: bundle, locale: locale,
+                                comment: "Day a week starts on")).tag(2)
+          Text(verbatim: String(localized: "Sunday", bundle: bundle, locale: locale,
+                                comment: "Day a week starts on")).tag(1)
+          Text(verbatim: String(localized: "Saturday", bundle: bundle, locale: locale,
+                                comment: "Day a week starts on")).tag(7)
         }
-        Text("Sets how the calendar is laid out.")
+        Text(verbatim: String(localized: "Sets how the calendar is laid out.",
+                              bundle: bundle, locale: locale,
+                              comment: "Under the week start setting"))
           .font(.caption)
           .foregroundStyle(.secondary)
       }

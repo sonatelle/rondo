@@ -64,14 +64,21 @@ struct ContentView: View {
         }
       )
     ) {
-      Button("Delete", role: .destructive) {
+      Button(String(localized: "Delete", bundle: Localization.bundle,
+                    locale: Localization.locale,
+                    comment: "Confirms deleting subscriptions"), role: .destructive)
+      {
         for subscription in pendingDeletion {
           model.delete(subscription)
         }
         pendingDeletion = []
       }
     } message: {
-      Text("This cannot be undone. To stop counting it but keep the record, archive it instead.")
+      Text(verbatim: String(
+        localized: "This cannot be undone. To stop counting it but keep the record, archive it instead.",
+        bundle: Localization.bundle, locale: Localization.locale,
+        comment: "Under the delete confirmation"
+      ))
     }
     .fileExporter(
       isPresented: Binding(
@@ -105,7 +112,8 @@ struct ContentView: View {
       }
     }
     .alert(
-      "Backup restored",
+      String(localized: "Backup restored", bundle: Localization.bundle,
+             locale: Localization.locale, comment: "Title of the alert after an import"),
       isPresented: Binding(
         get: { restored != nil },
         set: {
@@ -116,12 +124,14 @@ struct ContentView: View {
       ),
       presenting: restored
     ) { _ in
-      Button("OK") { restored = nil }
+      Button(String(localized: "OK", bundle: Localization.bundle, locale: Localization.locale,
+                    comment: "Dismisses a message")) { restored = nil }
     } message: { summary in
-      Text(Formatting.restored(summary))
+      Text(verbatim: Formatting.restored(summary))
     }
     .alert(
-      "Something went wrong",
+      String(localized: "Something went wrong", bundle: Localization.bundle,
+             locale: Localization.locale, comment: "Title of the failure alert"),
       isPresented: Binding(
         get: { model.failure != nil },
         set: {
@@ -131,9 +141,10 @@ struct ContentView: View {
         }
       )
     ) {
-      Button("OK") { model.failure = nil }
+      Button(String(localized: "OK", bundle: Localization.bundle, locale: Localization.locale,
+                    comment: "Dismisses a message")) { model.failure = nil }
     } message: {
-      Text(model.failure ?? "")
+      Text(verbatim: model.failure ?? "")
     }
   }
 
@@ -159,9 +170,16 @@ struct ContentView: View {
         Button {
           isAdding = true
         } label: {
-          Label("Add Subscription", systemImage: "plus")
+          Label {
+            Text(verbatim: String(localized: "Add Subscription", bundle: Localization.bundle,
+                                  locale: Localization.locale,
+                                  comment: "Toolbar button that opens the form"))
+          } icon: {
+            Image(systemName: "plus")
+          }
         }
-        .help("Add a subscription")
+        .help(String(localized: "Add a subscription", bundle: Localization.bundle,
+                     locale: Localization.locale, comment: "Tooltip on the toolbar button"))
       }
     }
     // What the menu bar acts on: whatever this window has selected.
@@ -208,11 +226,16 @@ struct ContentView: View {
 
   private var table: some View {
     Table(model.renewals, selection: $selection, sortOrder: $sortOrder) {
-      TableColumn("Name", value: \.subscription.name) { renewal in
+      TableColumn(String(localized: "Name", bundle: Localization.bundle,
+                         locale: Localization.locale, comment: "Table column"),
+                  value: \.subscription.name)
+      { renewal in
         HStack(spacing: 6) {
-          Text(renewal.subscription.name)
+          Text(verbatim: renewal.subscription.name)
           if renewal.subscription.status == .archived {
-            Text("Archived")
+            Text(verbatim: String(localized: "Archived", bundle: Localization.bundle,
+                                  locale: Localization.locale,
+                                  comment: "Marks a row that is no longer counted"))
               .font(.caption2)
               .foregroundStyle(.secondary)
               .padding(.horizontal, 5)
@@ -221,9 +244,12 @@ struct ContentView: View {
           }
         }
       }
-      TableColumn("Price", value: \.amountValue) { renewal in
+      TableColumn(String(localized: "Price", bundle: Localization.bundle,
+                         locale: Localization.locale, comment: "Table column"),
+                  value: \.amountValue)
+      { renewal in
         Text(
-          Formatting.amount(
+          verbatim: Formatting.amount(
             renewal.subscription.amount,
             currency: renewal.subscription.currency
           )
@@ -235,15 +261,21 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, alignment: .trailing)
       }
       .width(min: 90, ideal: 110)
-      TableColumn("Cycle", value: \.cycleDays) { renewal in
-        Text(renewal.cycleDescription).foregroundStyle(.secondary)
+      TableColumn(String(localized: "Cycle", bundle: Localization.bundle,
+                         locale: Localization.locale, comment: "Table column"),
+                  value: \.cycleDays)
+      { renewal in
+        Text(verbatim: renewal.cycleDescription).foregroundStyle(.secondary)
       }
       .width(min: 90, ideal: 120)
-      TableColumn("Next charge", value: \.date) { renewal in
+      TableColumn(String(localized: "Next charge", bundle: Localization.bundle,
+                         locale: Localization.locale, comment: "Table column"),
+                  value: \.date)
+      { renewal in
         HStack {
-          Text(Formatting.date(renewal.date))
+          Text(verbatim: Formatting.date(renewal.date))
           Spacer()
-          Text(Formatting.relative(renewal.date, from: model.referenceDay))
+          Text(verbatim: Formatting.relative(renewal.date, from: model.referenceDay))
             .foregroundStyle(.secondary)
         }
       }
@@ -266,17 +298,24 @@ struct ContentView: View {
   @ViewBuilder
   private func menuItems(for ids: Set<Uuid>) -> some View {
     let acting = actions(for: ids)
+    let bundle = Localization.bundle
+    let locale = Localization.locale
     if let edit = acting.edit {
-      Button("Edit…", action: edit)
+      Button(String(localized: "Edit…", bundle: bundle, locale: locale,
+                    comment: "Context menu command"), action: edit)
     }
     if let archive = acting.archive {
-      Button("Archive", action: archive)
+      Button(String(localized: "Archive", bundle: bundle, locale: locale,
+                    comment: "Context menu command"), action: archive)
     }
     if let restore = acting.restore {
-      Button("Restore", action: restore)
+      Button(String(localized: "Restore", bundle: bundle, locale: locale,
+                    comment: "Context menu command: un-archive"), action: restore)
     }
     if let delete = acting.delete {
-      Button("Delete…", role: .destructive, action: delete)
+      Button(String(localized: "Delete…", bundle: bundle, locale: locale,
+                    comment: "Context menu command"),
+             role: .destructive, action: delete)
     }
   }
 
@@ -288,9 +327,12 @@ struct ContentView: View {
   /// `Text`, so nothing extracts it into the catalogue on its own.
   private var deletionTitle: String {
     guard pendingDeletion.count == 1, let only = pendingDeletion.first else {
-      return String(localized: "Delete \(pendingDeletion.count) subscriptions?")
+      return String(localized: "Delete \(pendingDeletion.count) subscriptions?",
+                    bundle: Localization.bundle, locale: Localization.locale,
+                    comment: "Confirmation title for several at once")
     }
-    return String(localized: "Delete \(only.name)?")
+    return String(localized: "Delete \(only.name)?", bundle: Localization.bundle,
+                  locale: Localization.locale, comment: "Confirmation title for one")
   }
 }
 
@@ -305,13 +347,19 @@ private struct SpendingFooter: View {
   var body: some View {
     HStack(spacing: 12) {
       if summaries.isEmpty {
-        Text("Nothing scheduled").foregroundStyle(.secondary)
+        Text(verbatim: String(localized: "Nothing scheduled", bundle: Localization.bundle,
+                              locale: Localization.locale,
+                              comment: "Nothing is charged in the period being shown"))
+          .foregroundStyle(.secondary)
       } else {
         ForEach(summaries, id: \.currency) { summary in
           HStack(spacing: 4) {
-            Text(Formatting.amount(summary.monthly, currency: summary.currency))
+            Text(verbatim: Formatting.amount(summary.monthly, currency: summary.currency))
               .monospacedDigit()
-            Text("a month").foregroundStyle(.secondary)
+            Text(verbatim: String(localized: "a month", bundle: Localization.bundle,
+                                  locale: Localization.locale,
+                                  comment: "After an amount, in the table's footer"))
+              .foregroundStyle(.secondary)
           }
         }
       }
@@ -333,35 +381,68 @@ private struct EmptyState: View {
   let add: () -> Void
 
   var body: some View {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
     if model.navigation == .subscriptions, (model.counts[.archived] ?? 0) > 0 {
       ContentUnavailableView {
-        Label("Nothing active", systemImage: "archivebox")
+        label(String(localized: "Nothing active", bundle: bundle, locale: locale,
+                     comment: "Empty state: everything is archived"),
+              symbol: "archivebox")
       } description: {
-        Text("Everything here is archived. Show it to restore or remove it.")
+        Text(verbatim: String(localized: "Everything here is archived. Show it to restore or remove it.",
+                              bundle: bundle, locale: locale,
+                              comment: "Under the empty active list"))
       } actions: {
-        Button("Show Archived") { model.navigation = .archived }
-        Button("Add Subscription", action: add)
+        Button(String(localized: "Show Archived", bundle: bundle, locale: locale,
+                      comment: "Switches to the archived page"))
+        {
+          model.navigation = .archived
+        }
+        Button(String(localized: "Add Subscription", bundle: bundle, locale: locale,
+                      comment: "Opens the form"), action: add)
       }
     } else if case .category = model.navigation {
-      ContentUnavailableView(
-        "Nothing filed here",
-        systemImage: "tag",
-        description: Text("A subscription lands here once it is given this category.")
-      )
+      ContentUnavailableView {
+        label(String(localized: "Nothing filed here", bundle: bundle, locale: locale,
+                     comment: "Empty state: this category has nothing in it"),
+              symbol: "tag")
+      } description: {
+        Text(verbatim: String(localized: "A subscription lands here once it is given this category.",
+                              bundle: bundle, locale: locale,
+                              comment: "Under an empty category"))
+      }
     } else if model.navigation == .archived {
-      ContentUnavailableView(
-        "Nothing archived",
-        systemImage: "archivebox",
-        description: Text("Archiving keeps a subscription's record but stops counting it.")
-      )
+      ContentUnavailableView {
+        label(String(localized: "Nothing archived", bundle: bundle, locale: locale,
+                     comment: "Empty state: nothing has been archived"),
+              symbol: "archivebox")
+      } description: {
+        Text(verbatim: String(localized: "Archiving keeps a subscription's record but stops counting it.",
+                              bundle: bundle, locale: locale,
+                              comment: "Under the empty archive"))
+      }
     } else {
       ContentUnavailableView {
-        Label("No subscriptions yet", systemImage: "repeat")
+        label(String(localized: "No subscriptions yet", bundle: bundle, locale: locale,
+                     comment: "Empty state: the database is new"),
+              symbol: "repeat")
       } description: {
-        Text("Add one to start tracking what renews and when.")
+        Text(verbatim: String(localized: "Add one to start tracking what renews and when.",
+                              bundle: bundle, locale: locale,
+                              comment: "Under the empty first-run list"))
       } actions: {
-        Button("Add Subscription", action: add)
+        Button(String(localized: "Add Subscription", bundle: bundle, locale: locale,
+                      comment: "Opens the form"), action: add)
       }
+    }
+  }
+
+  /// An empty state's heading, from words already looked up.
+  private func label(_ title: String, symbol: String) -> some View {
+    Label {
+      Text(verbatim: title)
+    } icon: {
+      Image(systemName: symbol)
     }
   }
 }

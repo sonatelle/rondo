@@ -29,15 +29,19 @@ struct MenuBarView: View {
   }
 
   private var upcomingSection: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      Text("Up next")
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return VStack(alignment: .leading, spacing: 0) {
+      Text(verbatim: String(localized: "Up next", bundle: bundle, locale: locale,
+                            comment: "Menu bar heading over the next few charges"))
         .font(Theme.Font.footnote)
         .kerning(0.46)
         .foregroundStyle(Color.textMuted)
         .padding(.bottom, Theme.Space.m)
 
       if upcoming.isEmpty {
-        Text("Nothing scheduled")
+        Text(verbatim: String(localized: "Nothing scheduled", bundle: bundle, locale: locale,
+                              comment: "Nothing is charged in the period being shown"))
           .font(Theme.Font.body)
           .foregroundStyle(Color.textMuted)
           .padding(.vertical, Theme.Space.s)
@@ -46,7 +50,9 @@ struct MenuBarView: View {
           UpcomingRow(renewal: renewal, today: model.referenceDay)
         }
         if remaining > 0 {
-          Text("and \(remaining) more")
+          Text(verbatim: String(localized: "and \(remaining) more", bundle: bundle,
+                                locale: locale,
+                                comment: "How many charges the menu bar did not list"))
             .font(Theme.Font.footnote)
             .foregroundStyle(Color.textFaint)
             .padding(.top, Theme.Space.s)
@@ -60,7 +66,9 @@ struct MenuBarView: View {
 
   private var totalsSection: some View {
     HStack(alignment: .firstTextBaseline) {
-      Text("A month")
+      Text(verbatim: String(localized: "A month", bundle: Localization.bundle,
+                            locale: Localization.locale,
+                            comment: "Menu bar: what everything comes to monthly"))
         .font(Theme.Font.caption)
         .foregroundStyle(Color.textMuted)
       Spacer(minLength: Theme.Space.m)
@@ -71,7 +79,7 @@ struct MenuBarView: View {
           Text(verbatim: "—").foregroundStyle(Color.textFaint)
         } else {
           ForEach(model.summaries, id: \.currency) { summary in
-            Text(Formatting.amount(summary.monthly, currency: summary.currency))
+            Text(verbatim: Formatting.amount(summary.monthly, currency: summary.currency))
               .monospacedDigit()
           }
         }
@@ -84,8 +92,12 @@ struct MenuBarView: View {
   }
 
   private var actions: some View {
-    VStack(alignment: .leading, spacing: 1) {
-      MenuBarButton("Open Rondo") {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return VStack(alignment: .leading, spacing: 1) {
+      MenuBarButton(String(localized: "Open Rondo", bundle: bundle, locale: locale,
+                           comment: "Menu bar: brings the main window back"))
+      {
         // Back into the Dock before the window appears: the delegate drops
         // Rondo out of it when the last window closes, and coming back
         // without this leaves a window belonging to an app with no icon.
@@ -93,7 +105,10 @@ struct MenuBarView: View {
         openWindow(id: RondoApp.mainWindowID)
         NSApp.activate(ignoringOtherApps: true)
       }
-      MenuBarButton("Quit Rondo", tint: Color.textTertiary) {
+      MenuBarButton(String(localized: "Quit Rondo", bundle: bundle, locale: locale,
+                           comment: "Menu bar: quits the app"),
+                    tint: Color.textTertiary)
+      {
         NSApp.terminate(nil)
       }
     }
@@ -152,15 +167,16 @@ private struct UpcomingRow: View {
 /// A row in the bottom group, which behaves like a menu item without being
 /// one - `MenuBarExtra(.window)` gives a window, so these are buttons.
 private struct MenuBarButton: View {
-  /// A key, not a `String`: `Text(someString)` is the verbatim initialiser,
-  /// which shows the text as written and never looks it up.
-  let title: LocalizedStringKey
+  /// Already through the catalogue, like every other word in the app: a
+  /// key would be resolved against the system's language rather than the
+  /// chosen one.
+  let title: String
   var tint: Color = .textPrimary
   let action: () -> Void
 
   @State private var isHovering = false
 
-  init(_ title: LocalizedStringKey, tint: Color = .textPrimary, action: @escaping () -> Void) {
+  init(_ title: String, tint: Color = .textPrimary, action: @escaping () -> Void) {
     self.title = title
     self.tint = tint
     self.action = action
@@ -168,7 +184,7 @@ private struct MenuBarButton: View {
 
   var body: some View {
     Button(action: action) {
-      Text(title)
+      Text(verbatim: title)
         .font(Theme.Font.body)
         .foregroundStyle(tint)
         .frame(maxWidth: .infinity, alignment: .leading)

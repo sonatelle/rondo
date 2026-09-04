@@ -7,17 +7,47 @@ import SwiftUI
 /// lead time is the app's, a reminder is the subscription's.
 struct SettingsView: View {
   var body: some View {
-    TabView {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return TabView {
       GeneralSettings()
-        .tabItem { Label("General", systemImage: "gearshape") }
+        .tabItem {
+          tab(String(localized: "General", bundle: bundle, locale: locale,
+                     comment: "Settings tab: appearance, language, and the like"),
+              symbol: "gearshape")
+        }
       ReminderSettings()
-        .tabItem { Label("Reminders", systemImage: "bell") }
+        .tabItem {
+          tab(String(localized: "Reminders", bundle: bundle, locale: locale,
+                     comment: "Settings tab: being told before a charge"),
+              symbol: "bell")
+        }
       DataSettings()
-        .tabItem { Label("Data", systemImage: "externaldrive") }
+        .tabItem {
+          tab(String(localized: "Data", bundle: bundle, locale: locale,
+                     comment: "Settings tab: where the database is, and backups"),
+              symbol: "externaldrive")
+        }
       AboutSettings()
-        .tabItem { Label("About", systemImage: "info.circle") }
+        .tabItem {
+          tab(String(localized: "About", bundle: bundle, locale: locale,
+                     comment: "Settings tab: what this app is"),
+              symbol: "info.circle")
+        }
     }
     .frame(width: 600)
     .scenePadding()
+  }
+
+  /// One tab's label, built from words already looked up.
+  ///
+  /// `Label(_:systemImage:)` takes a key, and a key is resolved against the
+  /// system's language rather than the chosen one.
+  private func tab(_ title: String, symbol: String) -> some View {
+    Label {
+      Text(verbatim: title)
+    } icon: {
+      Image(systemName: symbol)
+    }
   }
 }

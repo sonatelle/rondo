@@ -9,9 +9,19 @@ struct ReminderSettings: View {
   var body: some View {
     Form {
       ContentUnavailableView {
-        Label("No reminders yet", systemImage: "bell.slash")
+        Label {
+          Text(verbatim: String(localized: "No reminders yet", bundle: Localization.bundle,
+                                locale: Localization.locale,
+                                comment: "The reminders tab, which is empty until they exist"))
+        } icon: {
+          Image(systemName: "bell.slash")
+        }
       } description: {
-        Text("Rondo will be able to tell you before a charge lands. It cannot yet.")
+        Text(verbatim: String(
+          localized: "Rondo will be able to tell you before a charge lands. It cannot yet.",
+          bundle: Localization.bundle, locale: Localization.locale,
+          comment: "Under the empty reminders tab"
+        ))
       }
     }
     .formStyle(.grouped)

@@ -353,8 +353,13 @@ private struct UrgencyBadge: View {
       .font(Theme.Font.caption)
       .fontWeight(urgency == .distant ? .regular : .semibold)
       .foregroundStyle(foreground(urgency))
-      .padding(.horizontal, urgency == .distant ? 0 : 9)
-      .padding(.vertical, urgency == .distant ? 0 : 2)
+      // The same padding whatever the urgency, so only the fill changes.
+      // Giving the pill its padding and the plain text none pushed the
+      // words in a badged row nine points left of the words above it, and
+      // a column of dates that does not line up reads as a mistake even
+      // when every date in it is right.
+      .padding(.horizontal, 9)
+      .padding(.vertical, 2)
       .background(background(urgency), in: Capsule())
   }
 

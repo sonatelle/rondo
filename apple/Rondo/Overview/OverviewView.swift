@@ -64,11 +64,13 @@ private struct Card<Content: View>: View {
 
 /// A card's small heading.
 private struct CardTitle: View {
-  let text: LocalizedStringKey
+  /// Already through the catalogue; a key would follow the system's
+  /// language rather than the chosen one.
+  let text: String
   var tint: Color = .textSecondary
 
   var body: some View {
-    Text(text)
+    Text(verbatim: text)
       .font(Theme.Font.cardTitle)
       .foregroundStyle(tint)
   }
@@ -84,7 +86,10 @@ private struct NextChargeCard: View {
   var body: some View {
     Card {
       VStack(alignment: .leading, spacing: Theme.Space.xxl) {
-        CardTitle(text: "Next charge", tint: .urgentForeground)
+        CardTitle(text: String(localized: "Next charge", bundle: Localization.bundle,
+                               locale: Localization.locale,
+                               comment: "Overview card: the soonest charge"),
+                  tint: .urgentForeground)
         if let next = model.upcoming.first {
           // Side by side while there is room, stacked when there is not.
           // This card carries five things where its neighbours carry two,
@@ -109,7 +114,9 @@ private struct NextChargeCard: View {
             }
           }
         } else {
-          Text("Nothing scheduled")
+          Text(verbatim: String(localized: "Nothing scheduled", bundle: Localization.bundle,
+                                locale: Localization.locale,
+                                comment: "Nothing is charged in the period being shown"))
             .font(Theme.Font.body)
             .foregroundStyle(Color.textMuted)
         }
@@ -122,10 +129,10 @@ private struct NextChargeCard: View {
     HStack(spacing: Theme.Space.xxl) {
       ServiceMark(name: next.subscription.name, side: 46)
       VStack(alignment: .leading, spacing: 2) {
-        Text(next.subscription.name)
+        Text(verbatim: next.subscription.name)
           .font(.system(size: 16, weight: .semibold))
           .lineLimit(1)
-        Text(Formatting.chargeSummary(next, reference: model.referenceDay))
+        Text(verbatim: Formatting.chargeSummary(next, reference: model.referenceDay))
           .font(Theme.Font.body)
           .foregroundStyle(Color.textMuted)
           .lineLimit(1)
@@ -134,7 +141,8 @@ private struct NextChargeCard: View {
   }
 
   private func amount(_ next: Renewal) -> some View {
-    Text(Formatting.amount(next.subscription.amount, currency: next.subscription.currency))
+    Text(verbatim: Formatting.amount(next.subscription.amount,
+                                     currency: next.subscription.currency))
       .font(Theme.Font.statFigure)
       .monospacedDigit()
       // An amount never wraps. Broken across lines it stops being a
@@ -150,9 +158,13 @@ private struct LevelledCard: View {
   var body: some View {
     Card {
       VStack(alignment: .leading, spacing: Theme.Space.l) {
-        CardTitle(text: "Monthly, levelled")
+        CardTitle(text: String(localized: "Monthly, levelled", bundle: Localization.bundle,
+                               locale: Localization.locale,
+                               comment: "Overview card: every cycle spread over months"))
         Amounts(pairs: summaries.map { ($0.currency, $0.monthly) })
-        Text("Currencies are never converted")
+        Text(verbatim: String(localized: "Currencies are never converted",
+                              bundle: Localization.bundle, locale: Localization.locale,
+                              comment: "Under a total that sums each currency apart"))
           .font(Theme.Font.footnote)
           .foregroundStyle(Color.textFaint)
       }
@@ -167,9 +179,13 @@ private struct NextThirtyDaysCard: View {
   var body: some View {
     Card {
       VStack(alignment: .leading, spacing: Theme.Space.l) {
-        CardTitle(text: "Next 30 days")
+        CardTitle(text: String(localized: "Next 30 days", bundle: Localization.bundle,
+                               locale: Localization.locale,
+                               comment: "Overview card: what actually falls due soon"))
         Amounts(pairs: totals.map { ($0.currency, $0.total) })
-        Text("\(totals.reduce(0) { $0 + Int($1.chargeCount) }) charges")
+        Text(verbatim: String(localized: "\(totals.reduce(0) { $0 + Int($1.chargeCount) }) charges",
+                              bundle: Localization.bundle, locale: Localization.locale,
+                              comment: "How many charges make up a total"))
           .font(Theme.Font.footnote)
           .foregroundStyle(Color.textFaint)
       }
@@ -216,16 +232,25 @@ private struct UpcomingCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .firstTextBaseline, spacing: Theme.Space.l) {
-        Text("Coming up")
+        Text(verbatim: String(localized: "Coming up", bundle: Localization.bundle,
+                              locale: Localization.locale,
+                              comment: "Overview section: the next few charges"))
           .font(Theme.Font.sectionTitle)
-        Text("by date")
+        Text(verbatim: String(localized: "by date", bundle: Localization.bundle,
+                              locale: Localization.locale,
+                              comment: "How the coming charges are ordered"))
           .font(Theme.Font.caption)
           .foregroundStyle(Color.textFaint)
         Spacer()
         if model.upcoming.count > limit {
-          Button("See all") { model.navigation = .subscriptions }
-            .buttonStyle(.link)
-            .font(Theme.Font.caption)
+          Button(String(localized: "See all", bundle: Localization.bundle,
+                        locale: Localization.locale,
+                        comment: "Opens the full list from the overview"))
+          {
+            model.navigation = .subscriptions
+          }
+          .buttonStyle(.link)
+          .font(Theme.Font.caption)
         }
       }
       .padding(.horizontal, Theme.Space.section)
@@ -233,7 +258,9 @@ private struct UpcomingCard: View {
       .padding(.bottom, Theme.Space.xl)
 
       if shown.isEmpty {
-        Text("Nothing is scheduled yet.")
+        Text(verbatim: String(localized: "Nothing is scheduled yet.",
+                              bundle: Localization.bundle, locale: Localization.locale,
+                              comment: "The overview has no charges to list"))
           .font(Theme.Font.body)
           .foregroundStyle(Color.textMuted)
           .padding(.horizontal, Theme.Space.section)
@@ -293,9 +320,13 @@ private struct TopSpendingSection: View {
   var body: some View {
     VStack(alignment: .leading, spacing: Theme.Space.xl) {
       HStack(alignment: .firstTextBaseline, spacing: Theme.Space.l) {
-        Text("Spent most on")
+        Text(verbatim: String(localized: "Spent most on", bundle: Localization.bundle,
+                              locale: Localization.locale,
+                              comment: "Overview section: the costliest subscriptions"))
           .font(Theme.Font.sectionTitle)
-        Text("since the first charge")
+        Text(verbatim: String(localized: "since the first charge", bundle: Localization.bundle,
+                              locale: Localization.locale,
+                              comment: "What period the ranking covers"))
           .font(Theme.Font.caption)
           .foregroundStyle(Color.textFaint)
       }
@@ -319,15 +350,17 @@ private struct TopSpendingCard: View {
     HStack(spacing: Theme.Space.xl) {
       ServiceMark(name: subscription.name, side: 32)
       VStack(alignment: .leading, spacing: 0) {
-        Text(subscription.name)
+        Text(verbatim: subscription.name)
           .font(Theme.Font.body)
           .lineLimit(1)
-        Text("\(Int(total.chargeCount)) charges")
+        Text(verbatim: String(localized: "\(Int(total.chargeCount)) charges",
+                              bundle: Localization.bundle, locale: Localization.locale,
+                              comment: "How many charges make up a total"))
           .font(Theme.Font.footnote)
           .foregroundStyle(Color.textMuted)
       }
       Spacer(minLength: Theme.Space.s)
-      Text(Formatting.amount(total.total, currency: total.currency))
+      Text(verbatim: Formatting.amount(total.total, currency: total.currency))
         .font(Theme.Font.rowTitle)
         .monospacedDigit()
         .lineLimit(1)

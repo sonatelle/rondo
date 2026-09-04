@@ -104,7 +104,12 @@ struct RondoApp: App {
       // surrounds it there: a circling arrow in a menu bar reads as a
       // refresh control, and this item refreshes nothing - it lists what
       // is charged next.
-      Label("Rondo", systemImage: "creditcard")
+      // The app's own name, which is not translated.
+      Label {
+        Text(verbatim: "Rondo")
+      } icon: {
+        Image(systemName: "creditcard")
+      }
     }
     .menuBarExtraStyle(.window)
 
@@ -125,13 +130,22 @@ private struct UnavailableView: View {
   let error: Error
 
   var body: some View {
-    ContentUnavailableView {
-      Label("Rondo cannot open its database", systemImage: "exclamationmark.triangle")
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return ContentUnavailableView {
+      Label {
+        Text(verbatim: String(localized: "Rondo cannot open its database", bundle: bundle,
+                              locale: locale, comment: "Shown instead of the window"))
+      } icon: {
+        Image(systemName: "exclamationmark.triangle")
+      }
     } description: {
-      Text(error.localizedDescription)
+      Text(verbatim: error.localizedDescription)
     } actions: {
       if let url = try? Database.fileURL() {
-        Button("Show in Finder") {
+        Button(String(localized: "Show in Finder", bundle: bundle, locale: locale,
+                      comment: "Reveals the database file"))
+        {
           NSWorkspace.shared.activateFileViewerSelecting([url])
         }
       }

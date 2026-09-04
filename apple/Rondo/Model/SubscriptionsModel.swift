@@ -49,6 +49,26 @@ final class SubscriptionsModel {
   /// arranged. Every database is seeded with a set of them.
   private(set) var categories: [Category] = []
 
+  /// The ways of paying that have been recorded, in the order arranged.
+  private(set) var paymentMethods: [PaymentMethod] = []
+
+  /// The bundled services this database already uses, most recently added
+  /// first.
+  ///
+  /// What the provider picker offers above the rest. Derived from the
+  /// subscriptions rather than remembered separately: a list of what you
+  /// have picked before is already written down, and a second copy of it
+  /// would be one more thing to keep true.
+  var recentProviders: [ServiceTemplate] {
+    let catalogue = searchServiceTemplates(query: "")
+    var seen: Set<String> = []
+    return allRenewals
+      .sorted { $0.subscription.createdAt > $1.subscription.createdAt }
+      .compactMap { $0.subscription.templateId }
+      .filter { seen.insert($0).inserted }
+      .compactMap { id in catalogue.first { $0.id == id } }
+  }
+
   /// What actually falls due in the next thirty days, per currency.
   ///
   /// Charged rather than levelled: this card answers "what will leave my
@@ -95,6 +115,7 @@ final class SubscriptionsModel {
       renewals = everything.filter(navigation.matches)
       summaries = try Self.ordered(rondo.spendingSummary(on: referenceDay))
       categories = try rondo.categories()
+      paymentMethods = try rondo.paymentMethods()
 
       // A count for every sidebar entry, including the categories nothing
       // is filed under: a category showing zero is how somebody sees there
@@ -274,6 +295,66 @@ final class SubscriptionsModel {
           let moved = Calendar.current.date(byAdding: .day, value: days, to: start)
     else { return date }
     return Formatting.civilDate(from: moved)
+  }
+
+  /// What a price on a cycle comes to in a month, or nothing when the
+  /// amount is not yet a number.
+  ///
+  /// Asked while somebody is still typing, so a rejection here is ordinary
+  /// rather than a failure worth reporting: an amount half entered is not
+  /// an error, it is a person mid-sentence.
+  ///
+  /// Not called `levelledMonthly` after the core function it forwards to.
+  /// The generated bindings compile into this same module, so a method of
+  /// that name shadows the function it means to call and calls itself
+  /// instead - which is a stack overflow, not a compile error, and the app
+  /// dies the moment the form asks.
+  func monthlyEquivalent(
+    amount: String,
+    currency: String,
+    cycleCount: UInt32,
+    cycleUnit: CycleUnit
+  ) -> DecimalString? {
+    try? levelledMonthly(
+      amount: amount,
+      currency: currency,
+      cycleCount: cycleCount,
+      cycleUnit: cycleUnit
+    )
+  }
+
+  /// Every price a subscription has been charged at, earliest first.
+  ///
+  /// Read on demand rather than kept: only the form and the detail screen
+  /// want it, and holding every subscription's history would be a copy to
+  /// keep true for the sake of two screens.
+  func priceHistory(of id: Uuid) -> [Price] {
+    do {
+      return try rondo.priceHistory(subscriptionId: id)
+    } catch {
+      report(error)
+      return []
+    }
+  }
+
+  /// Records that a subscription's price changed from a given day.
+  ///
+  /// A rise, not a correction: charges before that day keep what they cost.
+  /// Correcting a price that was typed wrong is an ordinary edit.
+  func recordPriceChange(of subscription: Subscription, amount: String, from: CivilDate) -> Bool {
+    do {
+      _ = try rondo.addPriceChange(
+        subscriptionId: subscription.id,
+        amount: amount,
+        currency: subscription.currency,
+        effectiveFrom: from
+      )
+      reload()
+      return true
+    } catch {
+      report(error)
+      return false
+    }
   }
 
   /// Records a failure in the words the core used.

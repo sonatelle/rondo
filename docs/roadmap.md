@@ -48,13 +48,13 @@ its own before the next begins.
 
 ## M6 - The design handoff (in progress)
 
-Eleven screens, delivered as a hifi design in August 2026. It is named a
-milestone of its own because it is not a coat of paint: six of the screens
-do not exist, the overview is a rewrite rather than a restyle, and the
-handoff asks the core for price history, payment methods and a provider
-table. One round per pull request, in dependency order; the version each
-round ships in is named, because one of them changes the backup format and
-that needs a boundary a reader can point at.
+Sixteen screens, delivered as a hifi design in August 2026 and widened in
+September. It is named a milestone of its own because it is not a coat of
+paint: most of the screens did not exist, the overview was a rewrite rather
+than a restyle, and the handoff asked the core for price history, payment
+methods and a provider table. One round per pull request, in dependency
+order; the version each round ships in is named, because one of them
+changes the backup format and that needs a boundary a reader can point at.
 
 - [x] Design tokens, the menu bar window, the settings shell - v0.2.0
 - [x] A bilingual interface with a language of its own to pick - v0.2.0
@@ -63,12 +63,14 @@ that needs a boundary a reader can point at.
       the backup format to v2 - v0.3.0
 - [x] The aggregations the analytics screen needs - v0.3.0
 - [x] Sidebar navigation and the overview - v0.4.0
-- [ ] The form, and picking a provider - v0.4.0
+- [ ] The form, picking a provider, and the full table - v0.4.0
 - [ ] Subscription detail - v0.4.0
-- [ ] Calendar - v0.5.0
+- [ ] Calendar, the archive, and the empty states - v0.5.0
 - [ ] Analytics - v0.6.0
-- [ ] First run - v0.7.0
-- [ ] Local notifications - which also closes M4 - v0.7.0
+- [ ] Spending grouped by payment method - v0.7.0
+- [ ] Where to cancel, by channel - v0.8.0
+- [ ] First run - v0.8.0
+- [ ] Local notifications - which also closes M4 - v0.8.0
 
 v0.3.0 was the release to be careful with. Its screens barely changed, but
 a backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse
@@ -77,6 +79,18 @@ formats from the future by design.
 v0.4.0 carries three rounds rather than two: the fields v0.3.0 added get
 their whole interface at once, so recording a price change and seeing the
 history arrive together rather than a version apart.
+
+The design gained five screens in September, and the plan two rounds. Three
+of them - the full subscription table, the archive, the empty states - are
+completions of pages already being built and were folded into the rounds
+that build them. The other two earn a round each: grouping spending by
+payment method needs an aggregation the core does not have, and telling
+somebody where to cancel is the reason the channel field exists at all.
+
+Grouping by payment method reverses a decision made in round 4, which was
+not to aggregate them. That rested on the analytics design having no such
+view; the September design has one, so the aggregation now has a screen
+that can show it is wrong.
 
 ## Later, undated
 

@@ -1,51 +1,51 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "%@.": {
-      "comment": "A restore's clauses, made into a sentence",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@。"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@." : {
+      "comment" : "A restore's clauses, made into a sentence",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@。"
           }
         }
       }
     },
-    "%lld charges": {
-      "comment": "How many charges make up a total",
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld charge"
+    "%lld charges" : {
+      "comment" : "How many charges make up a total",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld charge"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld charges"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld charges"
                 }
               }
             }
           }
         },
-        "zh-Hans": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 笔扣款"
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 笔扣款"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 笔扣款"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 笔扣款"
                 }
               }
             }
@@ -53,81 +53,40 @@
         }
       }
     },
-    "%lld days ago": {
-      "comment": "How long ago a charge fell",
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld day ago"
+    "%lld days ago" : {
+      "comment" : "How long ago a charge fell",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day ago"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld days ago"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 天前"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 天前"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld days before the charge": {
-      "comment": "How far ahead the reminder comes",
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld day before the charge"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld days before the charge"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days ago"
                 }
               }
             }
           }
         },
-        "zh-Hans": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "扣款前 %lld 天通知我"
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 天前"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "扣款前 %lld 天通知我"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 天前"
                 }
               }
             }
@@ -135,2001 +94,1004 @@
         }
       }
     },
-    "%u categories added": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%u category added"
+    "%lld days before the charge" : {
+      "comment" : "How far ahead the reminder comes",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day before the charge"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%u categories added"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新增 %u 个分类"
-          }
-        }
-      }
-    },
-    "%u categories updated": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%u category updated"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%u categories updated"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days before the charge"
                 }
               }
             }
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更新 %u 个分类"
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "扣款前 %lld 天通知我"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "扣款前 %lld 天通知我"
+                }
+              }
+            }
           }
         }
       }
     },
-    "%u subscriptions added": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%u subscription added"
+    "%u categories added" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u category added"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%u subscriptions added"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u categories added"
                 }
               }
             }
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新增 %u 项订阅"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增 %u 个分类"
           }
         }
       }
     },
-    "%u subscriptions updated": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%u subscription updated"
+    "%u categories updated" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u category updated"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%u subscriptions updated"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u categories updated"
                 }
               }
             }
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更新 %u 项订阅"
-          }
-        }
-      }
-    },
-    "A month": {
-      "comment": "Menu bar: what everything comes to monthly",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每月均摊"
-          }
-        }
-      }
-    },
-    "A service the list does not carry; write the name yourself": {
-      "comment": "Under the custom row, in the provider picker",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "列表里没有的服务，名称自己填"
-          }
-        }
-      }
-    },
-    "A subscription lands here once it is given this category.": {
-      "comment": "Under an empty category",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "把某条订阅归到这个分类，它就会出现在这里。"
-          }
-        }
-      }
-    },
-    "A theme that keeps returning — and so does every subscription.": {
-      "comment": "What the name means",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一个不断回归的主题 —— 每一笔订阅也是。"
-          }
-        }
-      }
-    },
-    "AI": {
-      "comment": "Built-in category for AI assistants",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AI"
-          }
-        }
-      }
-    },
-    "About": {
-      "comment": "Settings tab: what this app is",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "关于"
-          }
-        }
-      }
-    },
-    "About %@ a month": {
-      "comment": "What the price comes to a month, beside the buttons",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "相当于每月 %@"
-          }
-        }
-      }
-    },
-    "Account": {
-      "comment": "Form row: the account it bills to",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "订阅账号"
-          }
-        }
-      }
-    },
-    "Active": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在用"
-          }
-        }
-      }
-    },
-    "Add": {
-      "comment": "Saves a new subscription",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "添加"
-          }
-        }
-      }
-    },
-    "Add Subscription": {
-      "comment": "Opens the form\nToolbar button that opens the form",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "添加订阅"
-          }
-        }
-      }
-    },
-    "Add a subscription": {
-      "comment": "Tooltip on the toolbar button",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "添加一项订阅"
-          }
-        }
-      }
-    },
-    "Add one to start tracking what renews and when.": {
-      "comment": "Under the empty first-run list",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "添加一项，开始记录什么时候扣、扣多少。"
-          }
-        }
-      }
-    },
-    "All": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全部"
-          }
-        }
-      }
-    },
-    "All Subscriptions": {
-      "comment": "Sidebar page listing everything still being paid for",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全部订阅"
-          }
-        }
-      }
-    },
-    "All services": {
-      "comment": "Provider picker: the whole bundled catalogue",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全部服务商"
-          }
-        }
-      }
-    },
-    "Amount": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "金额"
-          }
-        }
-      }
-    },
-    "App Store": {
-      "comment": "A place a subscription is bought",
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "App Store"
-          }
-        }
-      }
-    },
-    "Appearance": {
-      "comment": "Setting: light, dark, or the Mac's own",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "外观"
-          }
-        }
-      }
-    },
-    "Archive": {
-      "comment": "Context menu command\nSubscription menu command",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "归档"
-          }
-        }
-      }
-    },
-    "Archived": {
-      "comment": "Marks a row that is no longer counted\nSidebar page for subscriptions that have been stopped",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已归档"
-          }
-        }
-      }
-    },
-    "Archiving keeps a subscription's record but stops counting it.": {
-      "comment": "Under the empty archive",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "归档会保留记录，但不再计入总额。"
-          }
-        }
-      }
-    },
-    "Backup restored": {
-      "comment": "Title of the alert after an import",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已恢复备份"
-          }
-        }
-      }
-    },
-    "Billing cycle unit": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "计费周期单位"
-          }
-        }
-      }
-    },
-    "Bought through": {
-      "comment": "Form row: where the subscription was bought",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "订阅渠道"
-          }
-        }
-      }
-    },
-    "Cancel": {
-      "comment": "Closes the form without saving\nCloses the sheet without saving",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "取消"
-          }
-        }
-      }
-    },
-    "Categories": {
-      "comment": "Sidebar section holding the categories",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "分类"
-          }
-        }
-      }
-    },
-    "Category": {
-      "comment": "Form row: what the subscription is filed under",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "分类"
-          }
-        }
-      }
-    },
-    "Charges before this day keep the price they were charged at.": {
-      "comment": "Subtitle of the price change sheet",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这一天之前的扣款，仍按原来的价格计算。"
-          }
-        }
-      }
-    },
-    "Coming up": {
-      "comment": "Overview section: the next few charges",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "即将扣款"
-          }
-        }
-      }
-    },
-    "Core %@": {
-      "comment": "The version the Rust core reports",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "核心 %@"
-          }
-        }
-      }
-    },
-    "Currencies are never converted": {
-      "comment": "Beside the currency, in the form\nUnder a total that sums each currency apart",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "币种不换算"
-          }
-        }
-      }
-    },
-    "Current price": {
-      "comment": "Price history: the entry in force",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "当前价格"
-          }
-        }
-      }
-    },
-    "Current price · down %@": {
-      "comment": "Price history: the current entry, after a fall",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "当前价格 · 降价 %@"
-          }
-        }
-      }
-    },
-    "Current price · up %@": {
-      "comment": "Price history: the current entry, and the rise that produced it",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "当前价格 · 涨价 %@"
-          }
-        }
-      }
-    },
-    "Custom": {
-      "comment": "Provider picker: a service the bundled list does not carry",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "自定义"
-          }
-        }
-      }
-    },
-    "Custom…": {
-      "comment": "The row for a service the list does not carry",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "自定义…"
-          }
-        }
-      }
-    },
-    "Cycle": {
-      "comment": "Table column",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "周期"
-          }
-        }
-      }
-    },
-    "Daily": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每天"
-          }
-        }
-      }
-    },
-    "Dark": {
-      "comment": "Appearance setting",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "深色"
-          }
-        }
-      }
-    },
-    "Data": {
-      "comment": "Settings tab: where the database is, and backups",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "数据"
-          }
-        }
-      }
-    },
-    "Database": {
-      "comment": "Settings row: where the one file lives",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "数据文件"
-          }
-        }
-      }
-    },
-    "Days": {
-      "comment": "Billing cycle unit",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "日"
-          }
-        }
-      }
-    },
-    "Decides where you cancel it": {
-      "comment": "Beside the channel, in the form",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "决定去哪里退订"
-          }
-        }
-      }
-    },
-    "Delete": {
-      "comment": "Confirms deleting subscriptions",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "删除"
-          }
-        }
-      }
-    },
-    "Delete %@?": {
-      "comment": "Confirmation title for one",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "删除「%@」？"
-          }
-        }
-      }
-    },
-    "Delete %lld subscriptions?": {
-      "comment": "Confirmation title for several at once",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "删除这 %lld 项订阅？"
-          }
-        }
-      }
-    },
-    "Delete…": {
-      "comment": "Context menu command\nSubscription menu command",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "删除…"
-          }
-        }
-      }
-    },
-    "Dev": {
-      "comment": "Built-in category for developer tools",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开发"
-          }
-        }
-      }
-    },
-    "Edit Subscription…": {
-      "comment": "File menu command",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "编辑订阅…"
-          }
-        }
-      }
-    },
-    "Edit subscription": {
-      "comment": "Title of the form when changing one",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "编辑订阅"
-          }
-        }
-      }
-    },
-    "Edit…": {
-      "comment": "Context menu command",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "编辑…"
-          }
-        }
-      }
-    },
-    "Elsewhere": {
-      "comment": "Bought somewhere none of the other choices name",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "其他"
-          }
-        }
-      }
-    },
-    "Every": {
-      "comment": "Reads as 'every 3 months'; the count follows",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每"
-          }
-        }
-      }
-    },
-    "Every %lld days": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每 %lld 天"
-          }
-        }
-      }
-    },
-    "Every %lld months": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每 %lld 个月"
-          }
-        }
-      }
-    },
-    "Every %lld weeks": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每 %lld 周"
-          }
-        }
-      }
-    },
-    "Every %lld years": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每 %lld 年"
-          }
-        }
-      }
-    },
-    "Everything here is archived. Show it to restore or remove it.": {
-      "comment": "Under the empty active list",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "现有的都已归档。切到「已归档」可以恢复或删除。"
-          }
-        }
-      }
-    },
-    "Everything stays in one file on this Mac. No cloud, no account, no network.": {
-      "comment": "The promise about data, in the about tab",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所有数据都留在这台 Mac 的一个文件里。无云端、无账号、无网络请求。"
-          }
-        }
-      }
-    },
-    "Export Backup…": {
-      "comment": "File menu command",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "导出备份…"
-          }
-        }
-      }
-    },
-    "Export a backup or restore one from the File menu.": {
-      "comment": "Where the backup commands are",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在「文件」菜单里导出备份或从备份恢复。"
-          }
-        }
-      }
-    },
-    "First charge": {
-      "comment": "Form row: the day the schedule is anchored to",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "首次扣款"
-          }
-        }
-      }
-    },
-    "Follow the system": {
-      "comment": "Take this setting from the Mac's own",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "跟随系统"
-          }
-        }
-      }
-    },
-    "Games": {
-      "comment": "Built-in category",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "游戏"
-          }
-        }
-      }
-    },
-    "General": {
-      "comment": "Settings tab: appearance, language, and the like",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "通用"
-          }
-        }
-      }
-    },
-    "Glance at the next charges without opening a window.": {
-      "comment": "Under the menu bar setting",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不打开窗口也能看到接下来的扣款。"
-          }
-        }
-      }
-    },
-    "Google Play": {
-      "comment": "A place a subscription is bought",
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Google Play"
-          }
-        }
-      }
-    },
-    "In force from": {
-      "comment": "Form row: the day the new price starts",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "生效日期"
-          }
-        }
-      }
-    },
-    "Its own site": {
-      "comment": "Bought from the service's own site or app",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "官网/App"
-          }
-        }
-      }
-    },
-    "Language": {
-      "comment": "Setting: which language the interface is in",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "语言"
-          }
-        }
-      }
-    },
-    "Light": {
-      "comment": "Appearance setting",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "浅色"
-          }
-        }
-      }
-    },
-    "Links": {
-      "comment": "Settings section: where the project lives",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "链接"
-          }
-        }
-      }
-    },
-    "Monday": {
-      "comment": "Day a week starts on",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "星期一"
-          }
-        }
-      }
-    },
-    "Monthly": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每月"
-          }
-        }
-      }
-    },
-    "Monthly, levelled": {
-      "comment": "Overview card: every cycle spread over months",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每月均摊"
-          }
-        }
-      }
-    },
-    "Months": {
-      "comment": "Billing cycle unit",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "月"
-          }
-        }
-      }
-    },
-    "Music": {
-      "comment": "Built-in category",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "音乐"
-          }
-        }
-      }
-    },
-    "Name": {
-      "comment": "Form row: what this subscription is called\nTable column",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "名称"
-          }
-        }
-      }
-    },
-    "New Subscription": {
-      "comment": "File menu command",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新增订阅"
-          }
-        }
-      }
-    },
-    "New price": {
-      "comment": "Form row: the price from the new day on",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新价格"
-          }
-        }
-      }
-    },
-    "New subscription": {
-      "comment": "Title of the form when adding",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新增订阅"
-          }
-        }
-      }
-    },
-    "Next 30 days": {
-      "comment": "Overview card: what actually falls due soon",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未来 30 天"
-          }
-        }
-      }
-    },
-    "Next charge": {
-      "comment": "Overview card: the soonest charge\nTable column",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "下次扣款"
-          }
-        }
-      }
-    },
-    "No reminders yet": {
-      "comment": "The reminders tab, which is empty until they exist",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "还没有提醒"
-          }
-        }
-      }
-    },
-    "No service by that name": {
-      "comment": "The search matched nothing",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没有匹配的服务商"
-          }
-        }
-      }
-    },
-    "No subscriptions yet": {
-      "comment": "Empty state: the database is new",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "还没有订阅"
-          }
-        }
-      }
-    },
-    "None": {
-      "comment": "Form: the category picker's entry for filing under nothing",
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不分类"
-          }
-        }
-      }
-    },
-    "Not before this one": {
-      "comment": "Shown when reminders are off for this subscription",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这条不提醒"
-          }
-        }
-      }
-    },
-    "Not recorded": {
-      "comment": "No payment method was said",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未记录"
-          }
-        }
-      }
-    },
-    "Notes": {
-      "comment": "Form row: anything the person wants to remember",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "备注"
-          }
-        }
-      }
-    },
-    "Nothing active": {
-      "comment": "Empty state: everything is archived",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没有在用的订阅"
-          }
-        }
-      }
-    },
-    "Nothing archived": {
-      "comment": "Empty state: nothing has been archived",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没有归档的订阅"
-          }
-        }
-      }
-    },
-    "Nothing filed here": {
-      "comment": "Empty state: this category has nothing in it",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这个分类还是空的"
-          }
-        }
-      }
-    },
-    "Nothing is scheduled yet.": {
-      "comment": "The overview has no charges to list",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "还没有任何扣款安排。"
-          }
-        }
-      }
-    },
-    "Nothing scheduled": {
-      "comment": "Nothing is charged in the period being shown",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没有待扣款项"
-          }
-        }
-      }
-    },
-    "OK": {
-      "comment": "Dismisses a message",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "好"
-          }
-        }
-      }
-    },
-    "Off, closing the window leaves Rondo in the menu bar and out of the Dock.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "关闭时，关窗后 Rondo 留在菜单栏，并从 Dock 中隐藏。"
-          }
-        }
-      }
-    },
-    "Open Rondo": {
-      "comment": "Menu bar: brings the main window back",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打开 Rondo"
-          }
-        }
-      }
-    },
-    "Open Rondo at login": {
-      "comment": "Setting: start the app when the Mac is logged into",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开机时启动"
-          }
-        }
-      }
-    },
-    "Optional": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "选填"
-          }
-        }
-      }
-    },
-    "Overview": {
-      "comment": "Sidebar page showing the cards and what is charged next",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "概览"
-          }
-        }
-      }
-    },
-    "Paid with": {
-      "comment": "Form row: which card or account pays for it",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "付款方式"
-          }
-        }
-      }
-    },
-    "Past charges keep the price they were charged at": {
-      "comment": "Beside the button that records a price change",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "历史扣款按当时价格计算，累计不会算错"
-          }
-        }
-      }
-    },
-    "Pick a service first; the name and price stay yours to change.": {
-      "comment": "Form subtitle",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "先选服务商，名称和价格仍然可以改"
-          }
-        }
-      }
-    },
-    "Price": {
-      "comment": "Form row: what it costs each cycle\nTable column",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "价格"
-          }
-        }
-      }
-    },
-    "Price history": {
-      "comment": "Heading of the card listing past prices",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "价格历史"
-          }
-        }
-      }
-    },
-    "Primary currency": {
-      "comment": "Setting: the currency a new subscription starts in",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "主要币种"
-          }
-        }
-      }
-    },
-    "Quit Rondo": {
-      "comment": "Menu bar: quits the app",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "退出 Rondo"
-          }
-        }
-      }
-    },
-    "Quit when the window closes": {
-      "comment": "Setting: what closing the last window means",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "关闭窗口时退出"
-          }
-        }
-      }
-    },
-    "Reading": {
-      "comment": "Built-in category for books and articles",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "阅读"
-          }
-        }
-      }
-    },
-    "Recently used": {
-      "comment": "Provider picker: the services already in use",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最近使用"
-          }
-        }
-      }
-    },
-    "Record": {
-      "comment": "Saves the price change",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "记录"
-          }
-        }
-      }
-    },
-    "Record a price change": {
-      "comment": "Title of the price change sheet",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "记录一次调价"
-          }
-        }
-      }
-    },
-    "Record a price change…": {
-      "comment": "Opens the sheet for a price rise",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "记录一次调价…"
-          }
-        }
-      }
-    },
-    "Releases": {
-      "comment": "Link to the published versions",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "发布版本"
-          }
-        }
-      }
-    },
-    "Remind me": {
-      "comment": "Form row: whether to be told before a charge",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "提醒"
-          }
-        }
-      }
-    },
-    "Reminders": {
-      "comment": "Settings tab: being told before a charge",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "提醒"
-          }
-        }
-      }
-    },
-    "Renews": {
-      "comment": "Form row: how often it is charged",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "计费周期"
-          }
-        }
-      }
-    },
-    "Report an issue": {
-      "comment": "Link to the issue tracker",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "反馈问题"
-          }
-        }
-      }
-    },
-    "Restore": {
-      "comment": "Context menu command: un-archive\nSubscription menu command: un-archive",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "恢复"
-          }
-        }
-      }
-    },
-    "Restore from Backup…": {
-      "comment": "File menu command",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "从备份恢复…"
-          }
-        }
-      }
-    },
-    "Restoring merges and never deletes, so opening the wrong file cannot cost you data.": {
-      "comment": "What restoring a backup does",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "恢复只合并、不删除，打开错文件也不会丢数据。"
-          }
-        }
-      }
-    },
-    "Rondo": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rondo"
-          }
-        }
-      }
-    },
-    "Rondo cannot open its database": {
-      "comment": "Shown instead of the window",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rondo 打不开它的数据文件"
-          }
-        }
-      }
-    },
-    "Rondo keeps everything in this one file and never sends it anywhere. Copy it, and its -wal and -shm companions, to keep a backup.": {
-      "comment": "Under the database path",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rondo 的全部数据都在这一个文件里，不会发送到任何地方。连同 -wal 和 -shm 一起复制即可留存备份。"
-          }
-        }
-      }
-    },
-    "Rondo will be able to tell you before a charge lands. It cannot yet.": {
-      "comment": "Under the empty reminders tab",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "以后 Rondo 会在扣款前提醒你，目前还不能。"
-          }
-        }
-      }
-    },
-    "Saturday": {
-      "comment": "Day a week starts on",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "星期六"
-          }
-        }
-      }
-    },
-    "Save": {
-      "comment": "Saves a changed subscription",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保存"
-          }
-        }
-      }
-    },
-    "Search services": {
-      "comment": "Provider picker's search field",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "搜索服务商"
-          }
-        }
-      }
-    },
-    "See all": {
-      "comment": "Opens the full list from the overview",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "查看全部"
-          }
-        }
-      }
-    },
-    "Service": {
-      "comment": "Form row: which service this subscription is",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "服务商"
-          }
-        }
-      }
-    },
-    "Sets how the calendar is laid out.": {
-      "comment": "Under the week start setting",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "影响日历的排列方式。"
-          }
-        }
-      }
-    },
-    "Short months fall back to their last day": {
-      "comment": "Under the first charge date, when the day is 29 or later",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "月末自动收敛到当月最后一天"
-          }
-        }
-      }
-    },
-    "Show": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "显示"
-          }
-        }
-      }
-    },
-    "Show Archived": {
-      "comment": "Switches to the archived page",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "查看已归档"
-          }
-        }
-      }
-    },
-    "Show Rondo in the menu bar": {
-      "comment": "Setting: keep the status item",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在菜单栏显示"
-          }
-        }
-      }
-    },
-    "Show in Finder": {
-      "comment": "Reveals the database file",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在 Finder 中显示"
-          }
-        }
-      }
-    },
-    "Something went wrong": {
-      "comment": "Title of the failure alert",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "出错了"
-          }
-        }
-      }
-    },
-    "Source": {
-      "comment": "Link to the repository",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "源代码"
-          }
-        }
-      }
-    },
-    "Spent most on": {
-      "comment": "Overview section: the costliest subscriptions",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "花得最多"
-          }
-        }
-      }
-    },
-    "Storage": {
-      "comment": "Built-in category for cloud storage",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "存储"
-          }
-        }
-      }
-    },
-    "Stored on this Mac · no account": {
-      "comment": "Foot of the sidebar: where the data lives",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "本地存储 · 无账号"
-          }
-        }
-      }
-    },
-    "Subscription": {
-      "comment": "Name of the app's own menu",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "订阅"
-          }
-        }
-      }
-    },
-    "Subscriptions on one card are grouped together": {
-      "comment": "Beside the payment method, in the form",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "同一张卡上的订阅会归到一起"
-          }
-        }
-      }
-    },
-    "Sunday": {
-      "comment": "Day a week starts on",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "星期日"
-          }
-        }
-      }
-    },
-    "System": {
-      "comment": "Appearance setting: whichever the Mac is in",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "跟随系统"
-          }
-        }
-      }
-    },
-    "The file held nothing to restore.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文件里没有可恢复的内容。"
-          }
-        }
-      }
-    },
-    "The price it started at": {
-      "comment": "Price history: the earliest entry",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "首次订阅价"
-          }
-        }
-      }
-    },
-    "This cannot be undone. To stop counting it but keep the record, archive it instead.": {
-      "comment": "Under the delete confirmation",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此操作不可撤销。只是想不再计入总额、但保留记录的话，请改用归档。"
-          }
-        }
-      }
-    },
-    "Today": {
-      "comment": "How soon a charge falls",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今天"
-          }
-        }
-      }
-    },
-    "Tomorrow": {
-      "comment": "How soon a charge falls",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "明天"
-          }
-        }
-      }
-    },
-    "Tools": {
-      "comment": "Built-in category for utilities and productivity",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "工具"
-          }
-        }
-      }
-    },
-    "Up next": {
-      "comment": "Menu bar heading over the next few charges",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "接下来"
-          }
-        }
-      }
-    },
-    "Version %@ (%@)": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "版本 %@（%@）"
-          }
-        }
-      }
-    },
-    "Video": {
-      "comment": "Built-in category for streaming and film",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "影音"
-          }
-        }
-      }
-    },
-    "Was charged at this": {
-      "comment": "Price history: a price that is no longer current",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "当时的价格"
-          }
-        }
-      }
-    },
-    "Weekly": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每周"
-          }
-        }
-      }
-    },
-    "Weeks": {
-      "comment": "Billing cycle unit",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "周"
-          }
-        }
-      }
-    },
-    "Weeks start on": {
-      "comment": "Setting: which day a calendar week begins on",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每周起始日"
-          }
-        }
-      }
-    },
-    "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies.": {
-      "comment": "Under the primary currency setting",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新建订阅的默认币种，也决定哪个合计排在最前。Rondo 从不在币种之间换算。"
-          }
-        }
-      }
-    },
-    "With no menu bar item, closing the window quits either way.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没有菜单栏图标时，关窗一律退出。"
-          }
-        }
-      }
-    },
-    "Yearly": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每年"
-          }
-        }
-      }
-    },
-    "Years": {
-      "comment": "Billing cycle unit",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "年"
-          }
-        }
-      }
-    },
-    "a month": {
-      "comment": "After an amount, in the table's footer",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每月"
-          }
-        }
-      }
-    },
-    "and %lld more": {
-      "comment": "How many charges the menu bar did not list",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "另有 %lld 项"
-          }
-        }
-      }
-    },
-    "by date": {
-      "comment": "How the coming charges are ordered",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "按日期排序"
-          }
-        }
-      }
-    },
-    "day": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "天"
-          }
-        }
-      }
-    },
-    "days": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "天"
-          }
-        }
-      }
-    },
-    "in %lld days": {
-      "comment": "How soon a charge falls",
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "in %lld day"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 %u 个分类"
+          }
+        }
+      }
+    },
+    "%u subscriptions added" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u subscription added"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "in %lld days"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u subscriptions added"
                 }
               }
             }
           }
         },
-        "zh-Hans": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 天后"
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增 %u 项订阅"
+          }
+        }
+      }
+    },
+    "%u subscriptions updated" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u subscription updated"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 天后"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%u subscriptions updated"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 %u 项订阅"
+          }
+        }
+      }
+    },
+    "© 2026 Sonatelle · aliaxy · MIT License" : {
+      "comment" : "Foot of the about tab",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "© 2026 Sonatelle · aliaxy · MIT 许可证"
+          }
+        }
+      }
+    },
+    "a month" : {
+      "comment" : "After an amount, in the table's footer",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月"
+          }
+        }
+      }
+    },
+    "A month" : {
+      "comment" : "Menu bar: what everything comes to monthly",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月均摊"
+          }
+        }
+      }
+    },
+    "A service the list does not carry; write the name yourself" : {
+      "comment" : "Under the custom row, in the provider picker",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列表里没有的服务，名称自己填"
+          }
+        }
+      }
+    },
+    "A subscription lands here once it is given this category." : {
+      "comment" : "Under an empty category",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把某条订阅归到这个分类，它就会出现在这里。"
+          }
+        }
+      }
+    },
+    "A theme that keeps returning — and so does every subscription." : {
+      "comment" : "What the name means",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一个不断回归的主题 —— 每一笔订阅也是。"
+          }
+        }
+      }
+    },
+    "About" : {
+      "comment" : "Settings tab: what this app is",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
+          }
+        }
+      }
+    },
+    "About %@ a month" : {
+      "comment" : "What the price comes to a month, beside the buttons",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相当于每月 %@"
+          }
+        }
+      }
+    },
+    "Account" : {
+      "comment" : "Form row: the account it bills to",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "订阅账号"
+          }
+        }
+      }
+    },
+    "Active" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在用"
+          }
+        }
+      }
+    },
+    "Add" : {
+      "comment" : "Saves a new subscription",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加"
+          }
+        }
+      }
+    },
+    "Add a subscription" : {
+      "comment" : "Tooltip on the toolbar button",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加一项订阅"
+          }
+        }
+      }
+    },
+    "Add one to start tracking what renews and when." : {
+      "comment" : "Under the empty first-run list",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加一项，开始记录什么时候扣、扣多少。"
+          }
+        }
+      }
+    },
+    "Add Subscription" : {
+      "comment" : "Opens the form\nToolbar button that opens the form",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加订阅"
+          }
+        }
+      }
+    },
+    "AI" : {
+      "comment" : "Built-in category for AI assistants",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI"
+          }
+        }
+      }
+    },
+    "All" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        }
+      }
+    },
+    "All services" : {
+      "comment" : "Provider picker: the whole bundled catalogue",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部服务商"
+          }
+        }
+      }
+    },
+    "All Subscriptions" : {
+      "comment" : "Sidebar page listing everything still being paid for",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部订阅"
+          }
+        }
+      }
+    },
+    "Amount" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "金额"
+          }
+        }
+      }
+    },
+    "and %lld more" : {
+      "comment" : "How many charges the menu bar did not list",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另有 %lld 项"
+          }
+        }
+      }
+    },
+    "App Store" : {
+      "comment" : "A place a subscription is bought",
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "comment" : "Setting: light, dark, or the Mac's own",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        }
+      }
+    },
+    "Archive" : {
+      "comment" : "Context menu command\nSubscription menu command",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "归档"
+          }
+        }
+      }
+    },
+    "Archived" : {
+      "comment" : "Marks a row that is no longer counted\nSidebar page for subscriptions that have been stopped",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已归档"
+          }
+        }
+      }
+    },
+    "Archiving keeps a subscription's record but stops counting it." : {
+      "comment" : "Under the empty archive",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "归档会保留记录，但不再计入总额。"
+          }
+        }
+      }
+    },
+    "Backup restored" : {
+      "comment" : "Title of the alert after an import",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已恢复备份"
+          }
+        }
+      }
+    },
+    "Billing cycle unit" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计费周期单位"
+          }
+        }
+      }
+    },
+    "Bought through" : {
+      "comment" : "Form row: where the subscription was bought",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "订阅渠道"
+          }
+        }
+      }
+    },
+    "by date" : {
+      "comment" : "How the coming charges are ordered",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按日期排序"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "comment" : "Closes the form without saving\nCloses the sheet without saving",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Categories" : {
+      "comment" : "Sidebar section holding the categories",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分类"
+          }
+        }
+      }
+    },
+    "Category" : {
+      "comment" : "Form row: what the subscription is filed under",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分类"
+          }
+        }
+      }
+    },
+    "Charges before this day keep the price they were charged at." : {
+      "comment" : "Subtitle of the price change sheet",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这一天之前的扣款，仍按原来的价格计算。"
+          }
+        }
+      }
+    },
+    "Coming up" : {
+      "comment" : "Overview section: the next few charges",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即将扣款"
+          }
+        }
+      }
+    },
+    "Core %@" : {
+      "comment" : "The version the Rust core reports",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "核心 %@"
+          }
+        }
+      }
+    },
+    "Currencies are never converted" : {
+      "comment" : "Beside the currency, in the form\nUnder a total that sums each currency apart",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "币种不换算"
+          }
+        }
+      }
+    },
+    "Current price" : {
+      "comment" : "Price history: the entry in force",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前价格"
+          }
+        }
+      }
+    },
+    "Current price · down %@" : {
+      "comment" : "Price history: the current entry, after a fall",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前价格 · 降价 %@"
+          }
+        }
+      }
+    },
+    "Current price · up %@" : {
+      "comment" : "Price history: the current entry, and the rise that produced it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前价格 · 涨价 %@"
+          }
+        }
+      }
+    },
+    "Custom" : {
+      "comment" : "Provider picker: a service the bundled list does not carry",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义"
+          }
+        }
+      }
+    },
+    "Custom…" : {
+      "comment" : "The row for a service the list does not carry",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义…"
+          }
+        }
+      }
+    },
+    "Cycle" : {
+      "comment" : "Table column",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周期"
+          }
+        }
+      }
+    },
+    "Daily" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每天"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "comment" : "Appearance setting",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        }
+      }
+    },
+    "Data" : {
+      "comment" : "Settings tab: where the database is, and backups",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据"
+          }
+        }
+      }
+    },
+    "Database" : {
+      "comment" : "Settings row: where the one file lives",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据文件"
+          }
+        }
+      }
+    },
+    "day" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "天"
+          }
+        }
+      }
+    },
+    "days" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "天"
+          }
+        }
+      }
+    },
+    "Days" : {
+      "comment" : "Billing cycle unit",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日"
+          }
+        }
+      }
+    },
+    "Decides where you cancel it" : {
+      "comment" : "Beside the channel, in the form",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "决定去哪里退订"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "comment" : "Confirms deleting subscriptions",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
+          }
+        }
+      }
+    },
+    "Delete %@?" : {
+      "comment" : "Confirmation title for one",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除「%@」？"
+          }
+        }
+      }
+    },
+    "Delete %lld subscriptions?" : {
+      "comment" : "Confirmation title for several at once",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除这 %lld 项订阅？"
+          }
+        }
+      }
+    },
+    "Delete…" : {
+      "comment" : "Context menu command\nSubscription menu command",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除…"
+          }
+        }
+      }
+    },
+    "Dev" : {
+      "comment" : "Built-in category for developer tools",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开发"
+          }
+        }
+      }
+    },
+    "Edit subscription" : {
+      "comment" : "Title of the form when changing one",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑订阅"
+          }
+        }
+      }
+    },
+    "Edit Subscription…" : {
+      "comment" : "File menu command",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑订阅…"
+          }
+        }
+      }
+    },
+    "Edit…" : {
+      "comment" : "Context menu command",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑…"
+          }
+        }
+      }
+    },
+    "Elsewhere" : {
+      "comment" : "Bought somewhere none of the other choices name",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他"
+          }
+        }
+      }
+    },
+    "Every" : {
+      "comment" : "Reads as 'every 3 months'; the count follows",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每"
+          }
+        }
+      }
+    },
+    "Every %lld days" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每 %lld 天"
+          }
+        }
+      }
+    },
+    "Every %lld months" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每 %lld 个月"
+          }
+        }
+      }
+    },
+    "Every %lld weeks" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每 %lld 周"
+          }
+        }
+      }
+    },
+    "Every %lld years" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每 %lld 年"
+          }
+        }
+      }
+    },
+    "Everything here is archived. Show it to restore or remove it." : {
+      "comment" : "Under the empty active list",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现有的都已归档。切到「已归档」可以恢复或删除。"
+          }
+        }
+      }
+    },
+    "Everything stays in one file on this Mac. No cloud, no account, no network." : {
+      "comment" : "The promise about data, in the about tab",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有数据都留在这台 Mac 的一个文件里。无云端、无账号、无网络请求。"
+          }
+        }
+      }
+    },
+    "Export a backup or restore one from the File menu." : {
+      "comment" : "Where the backup commands are",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在「文件」菜单里导出备份或从备份恢复。"
+          }
+        }
+      }
+    },
+    "Export Backup…" : {
+      "comment" : "File menu command",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出备份…"
+          }
+        }
+      }
+    },
+    "First charge" : {
+      "comment" : "Form row: the day the schedule is anchored to",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首次扣款"
+          }
+        }
+      }
+    },
+    "Follow the system" : {
+      "comment" : "Take this setting from the Mac's own",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "Games" : {
+      "comment" : "Built-in category",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "游戏"
+          }
+        }
+      }
+    },
+    "General" : {
+      "comment" : "Settings tab: appearance, language, and the like",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通用"
+          }
+        }
+      }
+    },
+    "Glance at the next charges without opening a window." : {
+      "comment" : "Under the menu bar setting",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不打开窗口也能看到接下来的扣款。"
+          }
+        }
+      }
+    },
+    "Google Play" : {
+      "comment" : "A place a subscription is bought",
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google Play"
+          }
+        }
+      }
+    },
+    "in %lld days" : {
+      "comment" : "How soon a charge falls",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "in %lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "in %lld days"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 天后"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 天后"
                 }
               }
             }
@@ -2137,116 +1099,1176 @@
         }
       }
     },
-    "month": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "月"
+    "In force from" : {
+      "comment" : "Form row: the day the new price starts",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生效日期"
           }
         }
       }
     },
-    "months": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "月"
+    "Its own site" : {
+      "comment" : "Bought from the service's own site or app",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "官网/App"
           }
         }
       }
     },
-    "optional": {
-      "comment": "Beside a field that may be left empty",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "选填"
+    "Language" : {
+      "comment" : "Setting: which language the interface is in",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语言"
           }
         }
       }
     },
-    "required": {
-      "comment": "Beside a field that must be filled in",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "必填"
+    "Light" : {
+      "comment" : "Appearance setting",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色"
           }
         }
       }
     },
-    "since the first charge": {
-      "comment": "What period the ranking covers",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "累计"
+    "Links" : {
+      "comment" : "Settings section: where the project lives",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "链接"
           }
         }
       }
     },
-    "week": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "周"
+    "Monday" : {
+      "comment" : "Day a week starts on",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "星期一"
           }
         }
       }
     },
-    "weeks": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "周"
+    "month" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月"
           }
         }
       }
     },
-    "year": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "年"
+    "Monthly" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月"
           }
         }
       }
     },
-    "years": {
-      "extractionState": "stale",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "年"
+    "Monthly, levelled" : {
+      "comment" : "Overview card: every cycle spread over months",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月均摊"
           }
         }
       }
     },
-    "© 2026 Sonatelle · aliaxy · MIT License": {
-      "comment": "Foot of the about tab",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "© 2026 Sonatelle · aliaxy · MIT 许可证"
+    "months" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月"
+          }
+        }
+      }
+    },
+    "Months" : {
+      "comment" : "Billing cycle unit",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月"
+          }
+        }
+      }
+    },
+    "Music" : {
+      "comment" : "Built-in category",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音乐"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "comment" : "Form row: what this subscription is called\nTable column",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称"
+          }
+        }
+      }
+    },
+    "New price" : {
+      "comment" : "Form row: the price from the new day on",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新价格"
+          }
+        }
+      }
+    },
+    "New subscription" : {
+      "comment" : "Title of the form when adding",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增订阅"
+          }
+        }
+      }
+    },
+    "New Subscription" : {
+      "comment" : "File menu command",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增订阅"
+          }
+        }
+      }
+    },
+    "Next 30 days" : {
+      "comment" : "Overview card: what actually falls due soon",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未来 30 天"
+          }
+        }
+      }
+    },
+    "Next charge" : {
+      "comment" : "Overview card: the soonest charge\nTable column",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下次扣款"
+          }
+        }
+      }
+    },
+    "Next month" : {
+      "comment" : "Pages the calendar forward",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下个月"
+          }
+        }
+      }
+    },
+    "No reminders yet" : {
+      "comment" : "The reminders tab, which is empty until they exist",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有提醒"
+          }
+        }
+      }
+    },
+    "No service by that name" : {
+      "comment" : "The search matched nothing",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有匹配的服务商"
+          }
+        }
+      }
+    },
+    "No subscriptions yet" : {
+      "comment" : "Empty state: the database is new",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有订阅"
+          }
+        }
+      }
+    },
+    "None" : {
+      "comment" : "Form: the category picker's entry for filing under nothing",
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不分类"
+          }
+        }
+      }
+    },
+    "Not before this one" : {
+      "comment" : "Shown when reminders are off for this subscription",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这条不提醒"
+          }
+        }
+      }
+    },
+    "Not recorded" : {
+      "comment" : "No payment method was said",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未记录"
+          }
+        }
+      }
+    },
+    "Notes" : {
+      "comment" : "Form row: anything the person wants to remember",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "备注"
+          }
+        }
+      }
+    },
+    "Nothing active" : {
+      "comment" : "Empty state: everything is archived",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有在用的订阅"
+          }
+        }
+      }
+    },
+    "Nothing archived" : {
+      "comment" : "Empty state: nothing has been archived",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有归档的订阅"
+          }
+        }
+      }
+    },
+    "Nothing filed here" : {
+      "comment" : "Empty state: this category has nothing in it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个分类还是空的"
+          }
+        }
+      }
+    },
+    "Nothing is scheduled yet." : {
+      "comment" : "The overview has no charges to list",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有任何扣款安排。"
+          }
+        }
+      }
+    },
+    "Nothing scheduled" : {
+      "comment" : "Nothing is charged in the period being shown",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有待扣款项"
+          }
+        }
+      }
+    },
+    "Off, closing the window leaves Rondo in the menu bar and out of the Dock." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭时，关窗后 Rondo 留在菜单栏，并从 Dock 中隐藏。"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "comment" : "Dismisses a message",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
+    },
+    "Open Rondo" : {
+      "comment" : "Menu bar: brings the main window back",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 Rondo"
+          }
+        }
+      }
+    },
+    "Open Rondo at login" : {
+      "comment" : "Setting: start the app when the Mac is logged into",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开机时启动"
+          }
+        }
+      }
+    },
+    "optional" : {
+      "comment" : "Beside a field that may be left empty",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选填"
+          }
+        }
+      }
+    },
+    "Optional" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选填"
+          }
+        }
+      }
+    },
+    "Overview" : {
+      "comment" : "Sidebar page showing the cards and what is charged next",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "概览"
+          }
+        }
+      }
+    },
+    "Paid with" : {
+      "comment" : "Form row: which card or account pays for it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "付款方式"
+          }
+        }
+      }
+    },
+    "Past charges keep the price they were charged at" : {
+      "comment" : "Beside the button that records a price change",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史扣款按当时价格计算，累计不会算错"
+          }
+        }
+      }
+    },
+    "Pick a service first; the name and price stay yours to change." : {
+      "comment" : "Form subtitle",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先选服务商，名称和价格仍然可以改"
+          }
+        }
+      }
+    },
+    "Previous month" : {
+      "comment" : "Pages the calendar back",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上个月"
+          }
+        }
+      }
+    },
+    "Price" : {
+      "comment" : "Form row: what it costs each cycle\nTable column",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "价格"
+          }
+        }
+      }
+    },
+    "Price history" : {
+      "comment" : "Heading of the card listing past prices",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "价格历史"
+          }
+        }
+      }
+    },
+    "Primary currency" : {
+      "comment" : "Setting: the currency a new subscription starts in",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主要币种"
+          }
+        }
+      }
+    },
+    "Quit Rondo" : {
+      "comment" : "Menu bar: quits the app",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 Rondo"
+          }
+        }
+      }
+    },
+    "Quit when the window closes" : {
+      "comment" : "Setting: what closing the last window means",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭窗口时退出"
+          }
+        }
+      }
+    },
+    "Reading" : {
+      "comment" : "Built-in category for books and articles",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读"
+          }
+        }
+      }
+    },
+    "Recently used" : {
+      "comment" : "Provider picker: the services already in use",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近使用"
+          }
+        }
+      }
+    },
+    "Record" : {
+      "comment" : "Saves the price change",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录"
+          }
+        }
+      }
+    },
+    "Record a price change" : {
+      "comment" : "Title of the price change sheet",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录一次调价"
+          }
+        }
+      }
+    },
+    "Record a price change…" : {
+      "comment" : "Opens the sheet for a price rise",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录一次调价…"
+          }
+        }
+      }
+    },
+    "Releases" : {
+      "comment" : "Link to the published versions",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发布版本"
+          }
+        }
+      }
+    },
+    "Remind me" : {
+      "comment" : "Form row: whether to be told before a charge",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提醒"
+          }
+        }
+      }
+    },
+    "Reminders" : {
+      "comment" : "Settings tab: being told before a charge",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提醒"
+          }
+        }
+      }
+    },
+    "Renews" : {
+      "comment" : "Form row: how often it is charged",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计费周期"
+          }
+        }
+      }
+    },
+    "Report an issue" : {
+      "comment" : "Link to the issue tracker",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反馈问题"
+          }
+        }
+      }
+    },
+    "required" : {
+      "comment" : "Beside a field that must be filled in",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "必填"
+          }
+        }
+      }
+    },
+    "Restore" : {
+      "comment" : "Context menu command: un-archive\nSubscription menu command: un-archive",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复"
+          }
+        }
+      }
+    },
+    "Restore from Backup…" : {
+      "comment" : "File menu command",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从备份恢复…"
+          }
+        }
+      }
+    },
+    "Restoring merges and never deletes, so opening the wrong file cannot cost you data." : {
+      "comment" : "What restoring a backup does",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复只合并、不删除，打开错文件也不会丢数据。"
+          }
+        }
+      }
+    },
+    "Rondo" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rondo"
+          }
+        }
+      }
+    },
+    "Rondo cannot open its database" : {
+      "comment" : "Shown instead of the window",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rondo 打不开它的数据文件"
+          }
+        }
+      }
+    },
+    "Rondo keeps everything in this one file and never sends it anywhere. Copy it, and its -wal and -shm companions, to keep a backup." : {
+      "comment" : "Under the database path",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rondo 的全部数据都在这一个文件里，不会发送到任何地方。连同 -wal 和 -shm 一起复制即可留存备份。"
+          }
+        }
+      }
+    },
+    "Rondo will be able to tell you before a charge lands. It cannot yet." : {
+      "comment" : "Under the empty reminders tab",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以后 Rondo 会在扣款前提醒你，目前还不能。"
+          }
+        }
+      }
+    },
+    "Saturday" : {
+      "comment" : "Day a week starts on",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "星期六"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "comment" : "Saves a changed subscription",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "Search services" : {
+      "comment" : "Provider picker's search field",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索服务商"
+          }
+        }
+      }
+    },
+    "See all" : {
+      "comment" : "Opens the full list from the overview",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看全部"
+          }
+        }
+      }
+    },
+    "Service" : {
+      "comment" : "Form row: which service this subscription is",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务商"
+          }
+        }
+      }
+    },
+    "Sets how the calendar is laid out." : {
+      "comment" : "Under the week start setting",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影响日历的排列方式。"
+          }
+        }
+      }
+    },
+    "Short months fall back to their last day" : {
+      "comment" : "Under the first charge date, when the day is 29 or later",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月末自动收敛到当月最后一天"
+          }
+        }
+      }
+    },
+    "Show" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示"
+          }
+        }
+      }
+    },
+    "Show Archived" : {
+      "comment" : "Switches to the archived page",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看已归档"
+          }
+        }
+      }
+    },
+    "Show in Finder" : {
+      "comment" : "Reveals the database file",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Finder 中显示"
+          }
+        }
+      }
+    },
+    "Show Rondo in the menu bar" : {
+      "comment" : "Setting: keep the status item",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在菜单栏显示"
+          }
+        }
+      }
+    },
+    "since the first charge" : {
+      "comment" : "What period the ranking covers",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "累计"
+          }
+        }
+      }
+    },
+    "Something went wrong" : {
+      "comment" : "Title of the failure alert",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出错了"
+          }
+        }
+      }
+    },
+    "Source" : {
+      "comment" : "Link to the repository",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "源代码"
+          }
+        }
+      }
+    },
+    "Spent most on" : {
+      "comment" : "Overview section: the costliest subscriptions",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "花得最多"
+          }
+        }
+      }
+    },
+    "Storage" : {
+      "comment" : "Built-in category for cloud storage",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储"
+          }
+        }
+      }
+    },
+    "Stored on this Mac · no account" : {
+      "comment" : "Foot of the sidebar: where the data lives",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地存储 · 无账号"
+          }
+        }
+      }
+    },
+    "Subscription" : {
+      "comment" : "Name of the app's own menu",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "订阅"
+          }
+        }
+      }
+    },
+    "Subscriptions on one card are grouped together" : {
+      "comment" : "Beside the payment method, in the form",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同一张卡上的订阅会归到一起"
+          }
+        }
+      }
+    },
+    "Sunday" : {
+      "comment" : "Day a week starts on",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "星期日"
+          }
+        }
+      }
+    },
+    "System" : {
+      "comment" : "Appearance setting: whichever the Mac is in",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "The file held nothing to restore." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件里没有可恢复的内容。"
+          }
+        }
+      }
+    },
+    "The price it started at" : {
+      "comment" : "Price history: the earliest entry",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首次订阅价"
+          }
+        }
+      }
+    },
+    "This cannot be undone. To stop counting it but keep the record, archive it instead." : {
+      "comment" : "Under the delete confirmation",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此操作不可撤销。只是想不再计入总额、但保留记录的话，请改用归档。"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "comment" : "Brings the calendar back to this month\nHow soon a charge falls",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天"
+          }
+        }
+      }
+    },
+    "Tomorrow" : {
+      "comment" : "How soon a charge falls",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明天"
+          }
+        }
+      }
+    },
+    "Tools" : {
+      "comment" : "Built-in category for utilities and productivity",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工具"
+          }
+        }
+      }
+    },
+    "Up next" : {
+      "comment" : "Menu bar heading over the next few charges",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接下来"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本 %@（%@）"
+          }
+        }
+      }
+    },
+    "Video" : {
+      "comment" : "Built-in category for streaming and film",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影音"
+          }
+        }
+      }
+    },
+    "Was charged at this" : {
+      "comment" : "Price history: a price that is no longer current",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当时的价格"
+          }
+        }
+      }
+    },
+    "week" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周"
+          }
+        }
+      }
+    },
+    "Weekly" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每周"
+          }
+        }
+      }
+    },
+    "weeks" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周"
+          }
+        }
+      }
+    },
+    "Weeks" : {
+      "comment" : "Billing cycle unit",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "周"
+          }
+        }
+      }
+    },
+    "Weeks start on" : {
+      "comment" : "Setting: which day a calendar week begins on",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每周起始日"
+          }
+        }
+      }
+    },
+    "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies." : {
+      "comment" : "Under the primary currency setting",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建订阅的默认币种，也决定哪个合计排在最前。Rondo 从不在币种之间换算。"
+          }
+        }
+      }
+    },
+    "With no menu bar item, closing the window quits either way." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有菜单栏图标时，关窗一律退出。"
+          }
+        }
+      }
+    },
+    "year" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年"
+          }
+        }
+      }
+    },
+    "Yearly" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每年"
+          }
+        }
+      }
+    },
+    "years" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年"
+          }
+        }
+      }
+    },
+    "Years" : {
+      "comment" : "Billing cycle unit",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

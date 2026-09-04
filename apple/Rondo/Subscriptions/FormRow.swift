@@ -106,52 +106,6 @@ struct FormField: View {
   }
 }
 
-/// A date, shown the way the rest of the form shows a value, with a
-/// calendar behind it.
-///
-/// macOS's own date control is a stepper beside three little number fields.
-/// It is fine for setting an alarm and wrong here: the design draws this as
-/// one more field in a column of fields, and a first charge is a day
-/// somebody picks off a calendar rather than a number they nudge.
-///
-/// The popover closes as soon as a day is chosen, since choosing one is the
-/// whole reason it opened. Moving between months leaves the date alone, so
-/// somebody looking for next March can go on looking.
-struct DateField: View {
-  @Binding var date: Date
-
-  @State private var isPresented = false
-
-  var body: some View {
-    Button {
-      isPresented = true
-    } label: {
-      HStack(spacing: Theme.Space.s) {
-        Text(Formatting.date(Formatting.civilDate(from: date)))
-          .font(Theme.Font.body)
-          .monospacedDigit()
-          .foregroundStyle(Color.textPrimary)
-          .lineLimit(1)
-        Image(systemName: "calendar")
-          .font(.system(size: 11))
-          .foregroundStyle(Color.textFaint)
-      }
-      .padding(.horizontal, Theme.Space.m)
-      .frame(height: 27)
-      .background(Color.fieldBackground, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
-      .contentShape(Rectangle())
-    }
-    .buttonStyle(.plain)
-    .popover(isPresented: $isPresented, arrowEdge: .bottom) {
-      DatePicker(selection: $date, displayedComponents: .date) { EmptyView() }
-        .datePickerStyle(.graphical)
-        .labelsHidden()
-        .padding(Theme.Space.l)
-        .onChange(of: date) { isPresented = false }
-    }
-  }
-}
-
 /// The currency an amount is recorded in.
 ///
 /// A `Menu` rather than a `Picker`, which is a performance decision and not

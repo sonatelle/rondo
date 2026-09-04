@@ -99,6 +99,29 @@ organization conventions; where the two differ, this file wins here.
 - Merge with GitHub `Rebase and merge` by default; delete branches after
   merge.
 
+## Layout
+
+A window is resizable, so every layout has to hold at more than the width
+it was written at. These are in the order to reach for them.
+
+- **The window has a floor**, `RondoWindow.minimumWidth` and
+  `minimumHeight`. Design for that width and above; below it is not a case
+  to support, it is a size the window will not become.
+- **Say what must not be compressed.** An amount never wraps - give it
+  `lineLimit(1)`. A currency broken across lines stops being a number:
+  "₹700.00" once came back as "₹70 / 0.0 / 0".
+- **`layoutPriority` is not a way to make something wider.** It decides who
+  gets squeezed first. Used to widen one of three cards it took the whole
+  row, left the others a dozen points, and their footnotes wrapped one
+  character per line into a thousand points of height. For proportions use
+  `containerRelativeFrame(count:span:)`.
+- **`ViewThatFits` when two arrangements are both right**, sparingly: each
+  use is a second layout to maintain and to check.
+- **Check it in a preview, not by asking somebody to run the app.** Every
+  screen gets a preview at the window's floor as well as at a comfortable
+  width, built from `PreviewData`. A layout that breaks when narrow should
+  be something to see in the canvas rather than something to be told about.
+
 ## Comments And Documentation
 
 Follow the Sonatelle comment standard: explain intent, constraints, and

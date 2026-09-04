@@ -237,7 +237,7 @@ struct ContentView: View {
         HStack {
           Text(Formatting.date(renewal.date))
           Spacer()
-          Text(Formatting.relative(renewal.date))
+          Text(Formatting.relative(renewal.date, from: model.referenceDay))
             .foregroundStyle(.secondary)
         }
       }

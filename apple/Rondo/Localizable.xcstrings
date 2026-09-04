@@ -12,6 +12,47 @@
         }
       }
     },
+    "%lld days ago": {
+      "comment": "How long ago a charge fell",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days ago"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 天前"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 天前"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%u categories added": {
       "localizations": {
         "en": {
@@ -1212,6 +1253,28 @@
         }
       }
     },
+    "Today": {
+      "comment": "How soon a charge falls",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天"
+          }
+        }
+      }
+    },
+    "Tomorrow": {
+      "comment": "How soon a charge falls",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明天"
+          }
+        }
+      }
+    },
     "Tools": {
       "comment": "Built-in category for utilities and productivity",
       "localizations": {
@@ -1340,6 +1403,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "天"
+          }
+        }
+      }
+    },
+    "in %lld days": {
+      "comment": "How soon a charge falls",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "in %lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "in %lld days"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 天后"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 天后"
+                }
+              }
+            }
           }
         }
       }

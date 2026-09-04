@@ -44,6 +44,11 @@ let draft = NewSubscription(
   notes: "family plan",
   templateId: "netflix",
   categoryId: nil,
+  // Left unsaid here on purpose: what a draft does when nobody fills these
+  // in is the case every other line of this file then reads back.
+  channel: nil,
+  account: nil,
+  paymentMethodId: nil,
   reminderLeadDays: nil
 )
 let added = try rondo.addSubscription(draft: draft)

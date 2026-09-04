@@ -351,6 +351,24 @@ impl From<&rondo_core::ServiceTemplate> for ServiceTemplate {
     }
 }
 
+/// What one price on one cycle comes to in a month.
+///
+/// A pure calculation with no database behind it, so a form can show "about
+/// £4.99 a month" for a yearly plan while it is still being typed. The
+/// arithmetic is the core's for the same reason every other sum is: a year
+/// divided by twelve is a statement about money.
+#[uniffi::export]
+pub fn levelled_monthly(
+    amount: Decimal,
+    currency: String,
+    cycle_count: u32,
+    cycle_unit: CycleUnit,
+) -> Result<Decimal> {
+    let money = Money::new(amount, &currency)?;
+    let cycle = BillingCycle::new(cycle_count, cycle_unit)?;
+    Ok(rondo_core::summary::monthly_cost(&money, cycle))
+}
+
 /// The bundled service catalogue.
 ///
 /// Deliberately not a method on an open database: the picker in a

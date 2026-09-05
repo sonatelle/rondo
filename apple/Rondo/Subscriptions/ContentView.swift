@@ -27,7 +27,14 @@ struct ContentView: View {
 
   /// Sorted here rather than by the core: which column someone clicked is
   /// a question about this window, not about billing.
-  @State private var sortOrder = [KeyPathComparator(\Renewal.date)]
+  @State private var sortOrder = [KeyPathComparator(\SubscriptionRow.date)]
+
+  /// Which columns are shown, and in what order.
+  ///
+  /// Kept per scene rather than stored: it belongs to a window the way a
+  /// scroll position does, and a second window opened on the same data may
+  /// reasonably be arranged differently.
+  @SceneStorage("subscriptionColumns") private var columns: TableColumnCustomization<SubscriptionRow>
 
   @State private var isAdding = false
   @State private var editing: Subscription?
@@ -224,15 +231,180 @@ struct ContentView: View {
     )
   }
 
+  /// The whole list, with what the form now collects spread across it.
+  ///
+  /// Seven columns is more than fits at the window's floor, so they can be
+  /// hidden and reordered: a table is the one place macOS lets somebody
+  /// decide that for themselves, and deciding for them which of the seven
+  /// matters would be guessing. The name is the exception - a row with no
+  /// name is not a row anybody can read.
+  ///
+  /// Each column is its own property rather than seven of them written out
+  /// inside the `Table`. Written inline, the compiler gave up on the whole
+  /// expression: "unable to type-check in reasonable time".
   private var table: some View {
-    Table(model.renewals, selection: $selection, sortOrder: $sortOrder) {
-      TableColumn(String(localized: "Name", bundle: Localization.bundle,
-                         locale: Localization.locale, comment: "Table column"),
-                  value: \.subscription.name)
-      { renewal in
+    Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
+      nameColumn
+      channelColumn
+      paymentColumn
+      priceColumn
+      cycleColumn
+      totalColumn
+      nextChargeColumn
+    }
+    .contextMenu(forSelectionType: Uuid.self) { ids in
+      menuItems(for: ids)
+    } primaryAction: { ids in
+      editing = subscriptions(for: ids).first
+    }
+  }
+
+  /// What the table sorts and draws.
+  ///
+  /// Flattened out of the renewal, the payment methods and the totals
+  /// rather than each cell asking for what it needs. A `Table` given a sort
+  /// order sorts by key paths into its row, and two of these columns -
+  /// which card paid, and what it has cost - are answers held beside the
+  /// subscription rather than on it. Assembled here, they are ordinary
+  /// fields and every column sorts the same way.
+  private var rows: [SubscriptionRow] {
+    let methods = model.paymentMethodsByID
+    return model.renewals.map { renewal in
+      let subscription = renewal.subscription
+      let category = model.categories.first { $0.id == subscription.categoryId }
+      let total = model.totals[subscription.id]
+      return SubscriptionRow(
+        renewal: renewal,
+        // The account and the category read as one line under the name;
+        // either may be missing, and the separator goes with it.
+        detail: [
+          subscription.account,
+          category.map { Categories.name($0.name, iconKey: $0.iconKey) },
+        ].compactMap(\.self).joined(separator: " · "),
+        channel: subscription.channel?.title ?? "",
+        paymentMethod: subscription.paymentMethodId.flatMap { methods[$0]?.name } ?? "",
+        total: total.map { Formatting.amount($0.total, currency: $0.currency) } ?? "",
+        totalValue: total.flatMap { Formatting.decimal($0.total) } ?? 0
+      )
+    }
+    .sorted(using: sortOrder)
+  }
+
+  private typealias Column = TableColumnContent<SubscriptionRow,
+    KeyPathComparator<SubscriptionRow>>
+
+  private var nameColumn: some Column {
+    TableColumn(heading("Name", "Table column"), value: \.name) { row in
+      identity(row)
+    }
+    .width(min: 170, ideal: 260)
+    .customizationID("name")
+    .disabledCustomizationBehavior(.visibility)
+  }
+
+  private var channelColumn: some Column {
+    TableColumn(heading("Bought through", "Table column: where it was bought"),
+                value: \.channel)
+    { row in
+      secondary(row.channel)
+    }
+    .width(min: 76, ideal: 86)
+    .customizationID("channel")
+  }
+
+  private var paymentColumn: some Column {
+    TableColumn(heading("Paid with", "Table column: which card or account pays"),
+                value: \.paymentMethod)
+    { row in
+      secondary(row.paymentMethod)
+    }
+    .width(min: 90, ideal: 118)
+    .customizationID("payment")
+  }
+
+  private var priceColumn: some Column {
+    TableColumn(heading("Price", "Table column"), value: \.amountValue) { row in
+      // Trailing, so the amounts line up on their last digit. Led out from
+      // the left they cannot: the symbol in front runs from one character
+      // to three, and every row starts somewhere else.
+      figure(Formatting.amount(row.renewal.subscription.amount,
+                               currency: row.renewal.subscription.currency),
+             faded: false)
+    }
+    .width(min: 84, ideal: 100)
+    .customizationID("price")
+  }
+
+  private var cycleColumn: some Column {
+    TableColumn(heading("Cycle", "Table column"), value: \.cycleDays) { row in
+      secondary(row.renewal.cycleDescription)
+    }
+    .width(min: 70, ideal: 110)
+    .customizationID("cycle")
+  }
+
+  private var totalColumn: some Column {
+    TableColumn(heading("Total", "Table column: what it has cost since the first charge"),
+                value: \.totalValue)
+    { row in
+      figure(row.total, faded: true)
+    }
+    .width(min: 76, ideal: 92)
+    .customizationID("total")
+  }
+
+  private var nextChargeColumn: some Column {
+    TableColumn(heading("Next charge", "Table column"), value: \.date) { row in
+      nextCharge(row.renewal)
+    }
+    .width(min: 100, ideal: 120)
+    .customizationID("next")
+  }
+
+  /// A column heading, through the catalogue.
+  private func heading(_ key: String.LocalizationValue, _ comment: StaticString) -> String {
+    String(localized: key, bundle: Localization.bundle, locale: Localization.locale,
+           comment: comment)
+  }
+
+  /// A word in a column that is not the row's own name.
+  private func secondary(_ text: String) -> some View {
+    Text(verbatim: text)
+      .foregroundStyle(.secondary)
+      .lineLimit(1)
+  }
+
+  /// An amount, read from its last digit.
+  private func figure(_ text: String, faded: Bool) -> some View {
+    Text(verbatim: text)
+      .monospacedDigit()
+      .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+      .frame(maxWidth: .infinity, alignment: .trailing)
+      .lineLimit(1)
+  }
+
+  /// When it falls, as the pill the overview draws.
+  private func nextCharge(_ renewal: Renewal) -> some View {
+    HStack(spacing: 0) {
+      Spacer(minLength: 0)
+      UrgencyBadge(date: renewal.date, reference: model.referenceDay)
+    }
+  }
+
+  /// The mark, the name, and the line under it that says whose account it
+  /// is and what it is filed under.
+  ///
+  /// Two things in one column because they answer one question - which
+  /// subscription is this - and because an account is only ever read next
+  /// to the name it belongs to.
+  private func identity(_ row: SubscriptionRow) -> some View {
+    HStack(spacing: Theme.Space.m) {
+      ServiceMark(name: row.name, side: 26)
+      VStack(alignment: .leading, spacing: 0) {
         HStack(spacing: 6) {
-          Text(verbatim: renewal.subscription.name)
-          if renewal.subscription.status == .archived {
+          Text(verbatim: row.name)
+            .lineLimit(1)
+          if row.renewal.subscription.status == .archived {
             Text(verbatim: String(localized: "Archived", bundle: Localization.bundle,
                                   locale: Localization.locale,
                                   comment: "Marks a row that is no longer counted"))
@@ -243,51 +415,13 @@ struct ContentView: View {
               .background(.quaternary, in: Capsule())
           }
         }
-      }
-      TableColumn(String(localized: "Price", bundle: Localization.bundle,
-                         locale: Localization.locale, comment: "Table column"),
-                  value: \.amountValue)
-      { renewal in
-        Text(
-          verbatim: Formatting.amount(
-            renewal.subscription.amount,
-            currency: renewal.subscription.currency
-          )
-        )
-        .monospacedDigit()
-        // Trailing, so the amounts line up on their last digit. Led out
-        // from the left they cannot: the symbol in front runs from one
-        // character to three, and every row starts somewhere else.
-        .frame(maxWidth: .infinity, alignment: .trailing)
-      }
-      .width(min: 90, ideal: 110)
-      TableColumn(String(localized: "Cycle", bundle: Localization.bundle,
-                         locale: Localization.locale, comment: "Table column"),
-                  value: \.cycleDays)
-      { renewal in
-        Text(verbatim: renewal.cycleDescription).foregroundStyle(.secondary)
-      }
-      .width(min: 90, ideal: 120)
-      TableColumn(String(localized: "Next charge", bundle: Localization.bundle,
-                         locale: Localization.locale, comment: "Table column"),
-                  value: \.date)
-      { renewal in
-        HStack {
-          Text(verbatim: Formatting.date(renewal.date))
-          Spacer()
-          Text(verbatim: Formatting.relative(renewal.date, from: model.referenceDay))
-            .foregroundStyle(.secondary)
+        if !row.detail.isEmpty {
+          Text(verbatim: row.detail)
+            .font(Theme.Font.footnote)
+            .foregroundStyle(Color.textMuted)
+            .lineLimit(1)
         }
       }
-      .width(min: 160, ideal: 220)
-    }
-    .onChange(of: sortOrder) { _, order in
-      model.sort(using: order)
-    }
-    .contextMenu(forSelectionType: Uuid.self) { ids in
-      menuItems(for: ids)
-    } primaryAction: { ids in
-      editing = subscriptions(for: ids).first
     }
   }
 
@@ -333,6 +467,53 @@ struct ContentView: View {
     }
     return String(localized: "Delete \(only.name)?", bundle: Localization.bundle,
                   locale: Localization.locale, comment: "Confirmation title for one")
+  }
+}
+
+/// One line of the table, with everything it draws already worked out.
+///
+/// A view model, which this app otherwise does without: the rest of the
+/// interface reads the core's records directly, and a second shape of the
+/// same data is usually one more thing to keep true. A sortable table earns
+/// the exception. `Table` sorts by key paths into its row, so a column can
+/// only sort by something the row *has* - and "which card paid for it" and
+/// "what it has cost" are held beside the subscription rather than on it.
+/// Looked up in the cell they would draw fine and refuse to sort.
+///
+/// It carries the renewal rather than copying every field out of it, so
+/// this cannot drift from what the core said.
+struct SubscriptionRow: Identifiable {
+  let renewal: Renewal
+
+  /// The account and the category, as one line under the name.
+  let detail: String
+
+  let channel: String
+  let paymentMethod: String
+
+  /// What it has cost since its first charge, and the same as a number to
+  /// sort by: "9" is more than "10" to a string comparison.
+  let total: String
+  let totalValue: Decimal
+
+  var id: Uuid {
+    renewal.subscription.id
+  }
+
+  var name: String {
+    renewal.subscription.name
+  }
+
+  var amountValue: Decimal {
+    renewal.amountValue
+  }
+
+  var cycleDays: Int {
+    renewal.cycleDays
+  }
+
+  var date: CivilDate {
+    renewal.date
   }
 }
 
@@ -445,4 +626,22 @@ private struct EmptyState: View {
       Image(systemName: symbol)
     }
   }
+}
+
+// MARK: - Previews
+
+// Both widths, because seven columns is the case this screen can get wrong.
+// At the floor the table runs out of room and the columns it cannot fit are
+// reached by scrolling sideways or hidden from the header's own menu; at a
+// comfortable width they all sit at once. Seeing which is which is the
+// whole point of pinning a preview to the number in `RondoWindow`.
+
+#Preview("Subscriptions, wide") {
+  ContentView(model: PreviewData.populated())
+    .frame(width: 1080, height: 700)
+}
+
+#Preview("Subscriptions, at the floor") {
+  ContentView(model: PreviewData.populated())
+    .frame(width: RondoWindow.minimumWidth, height: RondoWindow.minimumHeight)
 }

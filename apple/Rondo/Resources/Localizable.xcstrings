@@ -1231,7 +1231,7 @@
       }
     },
     "Name" : {
-      "comment" : "Form row: what this subscription is called\nTable column",
+      "comment" : "Form row: what this subscription is called",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1286,7 +1286,7 @@
       }
     },
     "Next charge" : {
-      "comment" : "Overview card: the soonest charge\nTable column",
+      "comment" : "Overview card: the soonest charge",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1561,7 +1561,7 @@
       }
     },
     "Price" : {
-      "comment" : "Form row: what it costs each cycle\nTable column",
+      "comment" : "Form row: what it costs each cycle",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2104,6 +2104,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工具"
+          }
+        }
+      }
+    },
+    "Total" : {
+      "comment" : "Table column: what it has cost since the first charge",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "累计"
           }
         }
       }

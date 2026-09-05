@@ -29,7 +29,9 @@ enum PreviewData {
       _ currency: String,
       inDays: Int,
       unit: CycleUnit = .month,
-      template: String? = nil
+      template: String? = nil,
+      channel: Channel = .web,
+      account: String? = nil
     ) -> NewSubscription {
       let date = calendar.date(byAdding: .day, value: inDays, to: today) ?? today
       return NewSubscription(
@@ -42,18 +44,24 @@ enum PreviewData {
         notes: nil,
         templateId: template,
         categoryId: model.categories.first { $0.iconKey == "ai" }?.id,
-        channel: .web,
-        account: nil,
+        channel: channel,
+        account: account,
         paymentMethodId: nil,
         reminderLeadDays: nil
       )
     }
 
     // Started a year ago, so it has a history to have cost something.
-    _ = model.add(draft("Netflix", "15.90", "USD", inDays: -365, template: "netflix"))
-    _ = model.add(draft("网易云音乐", "88.00", "CNY", inDays: -300, unit: .year))
-    _ = model.add(draft("ChatGPT", "499.99", "TRY", inDays: 2))
-    _ = model.add(draft("Grok", "700", "INR", inDays: 14))
+    //
+    // The channels and accounts vary because the table gives each of them a
+    // column: rows that all say the same thing hide a column that is too
+    // narrow as readily as one that is wrong.
+    _ = model.add(draft("Netflix", "15.90", "USD", inDays: -365, template: "netflix",
+                        channel: .appStore, account: "me@icloud.com"))
+    _ = model.add(draft("网易云音乐", "88.00", "CNY", inDays: -300, unit: .year,
+                        channel: .other, account: "138···· 6042"))
+    _ = model.add(draft("ChatGPT", "499.99", "TRY", inDays: 2, account: "work@rondo.app"))
+    _ = model.add(draft("Grok", "700", "INR", inDays: 14, channel: .googlePlay))
     _ = model.add(draft("Figma", "12.00", "USD", inDays: 6))
     return model
   }

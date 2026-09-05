@@ -32,6 +32,14 @@ struct ContentView: View {
   /// A search is a way of looking, not a way of changing what is there.
   @State private var searchText = ""
 
+  /// Which shop and which currency the list is narrowed to.
+  ///
+  /// Both are cleared when the page changes, along with the search: a page
+  /// that opens already narrowed by something chosen on another one looks
+  /// like a page with fewer subscriptions than it has.
+  @State private var channelFilter: ChannelFilter = .any
+  @State private var currencyFilter: String?
+
   /// The rows this page is showing, after the search has narrowed them.
   ///
   /// Matched on the name and on the account, which are the two things
@@ -45,13 +53,38 @@ struct ContentView: View {
   /// finds Café.
   private var matching: [Renewal] {
     let needle = searchText.trimmingCharacters(in: .whitespaces)
-    guard !needle.isEmpty else { return model.renewals }
     return model.renewals.filter { renewal in
-      let fields = [renewal.subscription.name, renewal.subscription.account ?? ""]
+      let subscription = renewal.subscription
+      guard channelFilter.matches(subscription) else { return false }
+      guard currencyFilter == nil || subscription.currency == currencyFilter else { return false }
+      guard !needle.isEmpty else { return true }
+      let fields = [subscription.name, subscription.account ?? ""]
       return fields.contains {
         $0.range(of: needle, options: [.caseInsensitive, .diacriticInsensitive]) != nil
       }
     }
+  }
+
+  /// The channels the page's own rows were bought through, in the order the
+  /// segmented control in the form offers them, and "nobody said" last if
+  /// anything is missing one.
+  ///
+  /// Taken from the rows before the filters narrow them, so choosing one
+  /// never empties the list of choices it was chosen from.
+  private var offeredChannels: [ChannelFilter] {
+    let present = Set(model.renewals.map(\.subscription.channel))
+    var offered: [ChannelFilter] = [Channel.appStore, .googlePlay, .web, .other]
+      .filter { present.contains($0) }
+      .map { ChannelFilter.bought($0) }
+    if present.contains(nil) {
+      offered.append(.unrecorded)
+    }
+    return offered
+  }
+
+  /// The currencies the page's own rows are charged in, by code.
+  private var offeredCurrencies: [String] {
+    Array(Set(model.renewals.map(\.subscription.currency))).sorted()
   }
 
   /// How many the page is showing, beside its title.
@@ -254,22 +287,41 @@ struct ContentView: View {
   /// and the totals under it.
   private var list: some View {
     VStack(spacing: 0) {
-      if matching.isEmpty, !searchText.isEmpty {
-        // A search that found nothing is not an empty database, and the
-        // answer to it is not "add a subscription". This is the system's
-        // own way of saying so, and it quotes back what was typed.
-        ContentUnavailableView.search(text: searchText)
-        Divider()
-        SpendingFooter(summaries: model.summaries)
-      } else if matching.isEmpty {
-        EmptyState(model: model, add: { isAdding = true })
-        Divider()
-        SpendingFooter(summaries: model.summaries)
-      } else {
-        table
-        Divider()
-        SpendingFooter(summaries: model.summaries)
+      // Offered even when nothing is filtered, so the way to narrow the
+      // list is visible rather than something to discover.
+      FilterBar(
+        channel: $channelFilter,
+        currency: $currencyFilter,
+        channels: offeredChannels,
+        currencies: offeredCurrencies
+      )
+      Divider()
+
+      // Whatever is in the middle takes the slack, so the filters stay at
+      // the top and the totals at the bottom. Left to itself a `VStack`
+      // sizes to its contents and centres them, which the table hid by
+      // being greedy and the empty states did not: the filter pills ended
+      // up floating halfway down an empty page.
+      Group {
+        if matching.isEmpty, !searchText.isEmpty {
+          // A search that found nothing is not an empty database, and the
+          // answer to it is not "add a subscription". This is the system's
+          // own way of saying so, and it quotes back what was typed.
+          ContentUnavailableView.search(text: searchText)
+        } else if matching.isEmpty, isFiltered {
+          // Filtered down to nothing, which is again not an empty database.
+          // The way out is the filters themselves, so the button clears them.
+          narrowedToNothing
+        } else if matching.isEmpty {
+          EmptyState(model: model, add: { isAdding = true })
+        } else {
+          table
+        }
       }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+      Divider()
+      SpendingFooter(summaries: model.summaries)
     }
     // Here rather than beside the title, so the field belongs to the pages
     // that have a list: a modifier on the whole detail column would put it
@@ -279,6 +331,41 @@ struct ContentView: View {
       prompt: String(localized: "Search subscriptions", bundle: Localization.bundle,
                      locale: Localization.locale, comment: "The toolbar's search field")
     )
+    // A page opened with another page's filters still on looks like a page
+    // with fewer subscriptions than it has.
+    .onChange(of: model.navigation) { _, _ in
+      searchText = ""
+      channelFilter = .any
+      currencyFilter = nil
+    }
+  }
+
+  private var isFiltered: Bool {
+    channelFilter != .any || currencyFilter != nil
+  }
+
+  private var narrowedToNothing: some View {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return ContentUnavailableView {
+      Label {
+        Text(verbatim: String(localized: "Nothing matches these filters", bundle: bundle,
+                              locale: locale, comment: "Empty state: the filters left no rows"))
+      } icon: {
+        Image(systemName: "line.3.horizontal.decrease.circle")
+      }
+    } description: {
+      Text(verbatim: String(localized: "There are subscriptions here, but none of this kind.",
+                            bundle: bundle, locale: locale,
+                            comment: "Under the filtered-to-nothing state"))
+    } actions: {
+      Button(String(localized: "Clear filters", bundle: bundle, locale: locale,
+                    comment: "Puts the filters back to showing everything"))
+      {
+        channelFilter = .any
+        currencyFilter = nil
+      }
+    }
   }
 
   /// The commands the menus offer for the database rather than a selection.

@@ -25,6 +25,35 @@ struct ContentView: View {
     return model.navigation.title ?? ""
   }
 
+  /// What has been typed into the toolbar's search field.
+  ///
+  /// It narrows this window's view and nothing else: the sidebar's counts,
+  /// the menu bar item and every total go on describing the whole database.
+  /// A search is a way of looking, not a way of changing what is there.
+  @State private var searchText = ""
+
+  /// The rows this page is showing, after the search has narrowed them.
+  ///
+  /// Matched on the name and on the account, which are the two things
+  /// somebody knows when they are hunting: what it is called, and which
+  /// address it bills to. The category and the payment method are left out
+  /// on purpose - the sidebar and the columns already sort those, and a
+  /// search that also matched them would return rows whose reason for
+  /// matching is invisible.
+  ///
+  /// Case and accents are ignored, so "netflix" finds Netflix and "cafe"
+  /// finds Café.
+  private var matching: [Renewal] {
+    let needle = searchText.trimmingCharacters(in: .whitespaces)
+    guard !needle.isEmpty else { return model.renewals }
+    return model.renewals.filter { renewal in
+      let fields = [renewal.subscription.name, renewal.subscription.account ?? ""]
+      return fields.contains {
+        $0.range(of: needle, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+      }
+    }
+  }
+
   /// How many the page is showing, beside its title.
   ///
   /// The subtitle macOS puts next to a window title, rather than a line of
@@ -38,7 +67,7 @@ struct ContentView: View {
   private var pageCount: String {
     let bundle = Localization.bundle
     let locale = Localization.locale
-    let count = model.renewals.count
+    let count = matching.count
     return switch model.navigation {
     case .overview: ""
     case .archived:
@@ -181,19 +210,19 @@ struct ContentView: View {
   }
 
   private var detail: some View {
-    VStack(spacing: 0) {
+    Group {
       if model.navigation == .overview {
         // The overview carries its own totals in its cards, so the footer
-        // below would be the same numbers a second time.
+        // the list pages get would be the same numbers a second time.
+        //
+        // It also gets no search field. The design draws one in its header,
+        // but the overview has no list to narrow - it is three cards and
+        // the next few charges - and a field that swallows what is typed
+        // and does nothing is worse than no field at all. Searching is on
+        // the pages that have something to search.
         OverviewView(model: model)
-      } else if model.renewals.isEmpty {
-        EmptyState(model: model, add: { isAdding = true })
-        Divider()
-        SpendingFooter(summaries: model.summaries)
       } else {
-        table
-        Divider()
-        SpendingFooter(summaries: model.summaries)
+        list
       }
     }
     .navigationTitle(pageTitle)
@@ -219,6 +248,37 @@ struct ContentView: View {
     .focusedSceneValue(\.subscriptionActions, actions)
     // And what it acts on when the command is about the whole database.
     .focusedSceneValue(\.backupActions, backupActions)
+  }
+
+  /// The table, whatever stands in for it when there is nothing to show,
+  /// and the totals under it.
+  private var list: some View {
+    VStack(spacing: 0) {
+      if matching.isEmpty, !searchText.isEmpty {
+        // A search that found nothing is not an empty database, and the
+        // answer to it is not "add a subscription". This is the system's
+        // own way of saying so, and it quotes back what was typed.
+        ContentUnavailableView.search(text: searchText)
+        Divider()
+        SpendingFooter(summaries: model.summaries)
+      } else if matching.isEmpty {
+        EmptyState(model: model, add: { isAdding = true })
+        Divider()
+        SpendingFooter(summaries: model.summaries)
+      } else {
+        table
+        Divider()
+        SpendingFooter(summaries: model.summaries)
+      }
+    }
+    // Here rather than beside the title, so the field belongs to the pages
+    // that have a list: a modifier on the whole detail column would put it
+    // in the toolbar on the overview too.
+    .searchable(
+      text: $searchText,
+      prompt: String(localized: "Search subscriptions", bundle: Localization.bundle,
+                     locale: Localization.locale, comment: "The toolbar's search field")
+    )
   }
 
   /// The commands the menus offer for the database rather than a selection.
@@ -295,7 +355,7 @@ struct ContentView: View {
   /// fields and every column sorts the same way.
   private var rows: [SubscriptionRow] {
     let methods = model.paymentMethodsByID
-    return model.renewals.map { renewal in
+    return matching.map { renewal in
       let subscription = renewal.subscription
       let category = model.categories.first { $0.id == subscription.categoryId }
       let total = model.totals[subscription.id]

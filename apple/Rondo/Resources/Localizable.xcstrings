@@ -135,6 +135,47 @@
         }
       }
     },
+    "%lld subscriptions will go back to saying nothing." : {
+      "comment" : "Deleting a payment method that subscriptions point at",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld subscription will go back to saying nothing."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld subscriptions will go back to saying nothing."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 项订阅的付款方式会变回未记录。"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 项订阅的付款方式会变回未记录。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%u categories added" : {
       "localizations" : {
         "en" : {
@@ -412,6 +453,17 @@
         }
       }
     },
+    "Alipay" : {
+      "comment" : "Built-in payment method",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支付宝"
+          }
+        }
+      }
+    },
     "All" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -530,6 +582,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已恢复备份"
+          }
+        }
+      }
+    },
+    "Bank card" : {
+      "comment" : "Built-in payment method: a debit or credit card",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "银行卡"
           }
         }
       }
@@ -809,7 +872,7 @@
       }
     },
     "Delete %@?" : {
-      "comment" : "Confirmation title for one",
+      "comment" : "Confirmation title before removing a payment method\nConfirmation title for one",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -826,6 +889,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "删除这 %lld 项订阅？"
+          }
+        }
+      }
+    },
+    "Delete this payment method" : {
+      "comment" : "Tooltip on the bin in the picker",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除这个付款方式"
           }
         }
       }
@@ -1031,6 +1105,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "通用"
+          }
+        }
+      }
+    },
+    "Gift card" : {
+      "comment" : "Built-in payment method",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "礼品卡"
           }
         }
       }
@@ -1241,6 +1326,39 @@
         }
       }
     },
+    "Name it the way you would recognise it on a statement." : {
+      "comment" : "Subtitle of the payment method sheet",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "起一个你在账单上认得出的名字。"
+          }
+        }
+      }
+    },
+    "New payment method" : {
+      "comment" : "Title of the sheet that names a card or account",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建付款方式"
+          }
+        }
+      }
+    },
+    "New payment method…" : {
+      "comment" : "Opens the sheet that names a card or account",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建付款方式…"
+          }
+        }
+      }
+    },
     "New price" : {
       "comment" : "Form row: the price from the new day on",
       "localizations" : {
@@ -1414,6 +1532,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "这个分类还是空的"
+          }
+        }
+      }
+    },
+    "Nothing is paid for with it." : {
+      "comment" : "Deleting a payment method nothing uses",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有订阅用它付款。"
           }
         }
       }
@@ -1801,6 +1930,17 @@
         }
       }
     },
+    "Rondo keeps only the name. It never asks for a card number." : {
+      "comment" : "Under the payment method field, about what is stored",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rondo 只保存这个名字，从不询问卡号。"
+          }
+        }
+      }
+    },
     "Rondo will be able to tell you before a charge lands. It cannot yet." : {
       "comment" : "Under the empty reminders tab",
       "localizations" : {
@@ -1830,6 +1970,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存"
+          }
+        }
+      }
+    },
+    "Search currencies" : {
+      "comment" : "The currency picker's search field",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索币种"
           }
         }
       }
@@ -2158,6 +2309,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当时的价格"
+          }
+        }
+      }
+    },
+    "WeChat" : {
+      "comment" : "Built-in payment method: paying through WeChat",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "微信"
           }
         }
       }

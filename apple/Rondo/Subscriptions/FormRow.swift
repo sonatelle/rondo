@@ -106,41 +106,175 @@ struct FormField: View {
   }
 }
 
+/// What opens a picker: a value, and a chevron saying there are others.
+///
+/// The same box the provider picker uses, because they are the same thing
+/// and the form reads as a column of fields rather than a column of
+/// different-looking controls. This is not a `Menu`: macOS draws a
+/// borderless menu as bare words with its own indicator on the leading
+/// edge, and neither `menuIndicator(.hidden)` nor a background on the label
+/// changes that. A button that opens a popover is drawn entirely by us.
+struct PickerChip: View {
+  let title: String
+
+  /// Wide enough not to jump between a short value and a long one, but not
+  /// stretched across the row: these sit beside a note.
+  var minWidth: CGFloat = 92
+
+  var body: some View {
+    HStack(spacing: Theme.Space.s) {
+      Text(verbatim: title)
+        .font(Theme.Font.body)
+        .foregroundStyle(Color.textPrimary)
+        .lineLimit(1)
+      Spacer(minLength: Theme.Space.xs)
+      Image(systemName: "chevron.down")
+        .font(.system(size: 10))
+        .foregroundStyle(Color.textFaint)
+    }
+    .padding(.horizontal, Theme.Space.m)
+    .frame(minWidth: minWidth, alignment: .leading)
+    .frame(height: 29)
+    .background(Color.fieldBackground, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
+    .contentShape(Rectangle())
+  }
+}
+
+/// One choice inside a picker's popover: what it is called, whether it is
+/// the one chosen, and - where the list allows it - a way to remove it.
+struct PickerRow<Trailing: View>: View {
+  let title: String
+  let isChosen: Bool
+  let choose: () -> Void
+  @ViewBuilder var trailing: Trailing
+
+  @State private var isHovering = false
+
+  var body: some View {
+    HStack(spacing: Theme.Space.s) {
+      Button(action: choose) {
+        HStack(spacing: Theme.Space.l) {
+          Text(verbatim: title)
+            .font(Theme.Font.body)
+            .foregroundStyle(Color.textPrimary)
+            .lineLimit(1)
+          Spacer(minLength: Theme.Space.xs)
+          if isChosen {
+            Image(systemName: "checkmark")
+              .font(.system(size: 11, weight: .semibold))
+              .foregroundStyle(Color.brand)
+          }
+        }
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      // Shown on hover rather than always: a row of delete buttons reads
+      // as a page about deleting things, and this is a page about choosing
+      // one. The row keeps its width either way, so nothing shifts.
+      trailing
+        .opacity(isHovering ? 1 : 0)
+    }
+    .padding(.horizontal, Theme.Space.m)
+    .padding(.vertical, Theme.Space.s)
+    .background(
+      isChosen ? Color.surfaceRaised : (isHovering ? Color.hoverBackground : .clear),
+      in: RoundedRectangle(cornerRadius: Theme.Radius.sidebarItem)
+    )
+    .onHover { isHovering = $0 }
+  }
+}
+
+extension PickerRow where Trailing == EmptyView {
+  init(title: String, isChosen: Bool, choose: @escaping () -> Void) {
+    self.init(title: title, isChosen: isChosen, choose: choose) { EmptyView() }
+  }
+}
+
 /// The currency an amount is recorded in.
 ///
-/// A `Menu` rather than a `Picker`, which is a performance decision and not
-/// a visual one. There are 159 codes, and a picker builds every row of its
-/// list the moment the view is built: measured on this machine, that is
-/// about 250ms of the sheet's opening, against 8ms for a menu, which builds
-/// its items when somebody actually opens it. The form used to take a
-/// visible beat to appear, and this was all of it.
+/// A button and a popover, the shape every other picker in this form takes.
+/// It is also what keeps the sheet quick: there are 159 codes, and a
+/// `Picker` builds every row of its list the moment the view is built -
+/// measured on this machine, about 250ms of the sheet's opening. A popover
+/// builds its contents when somebody opens it, which is 2ms.
+///
+/// Searchable, because 159 is more than anybody scrolls: three letters of
+/// either the code or the currency's name is faster than any list.
 ///
 /// The button shows the code alone. The design draws "CNY 人民币" there,
 /// which reads well in Chinese and becomes "Chinese Yuan Renminbi" in
 /// English - too wide for a row that also holds a price and a note. The
-/// name goes in the menu, where there is room for it.
-struct CurrencyMenu: View {
+/// name goes in the list, where there is room for it.
+struct CurrencyPicker: View {
   @Binding var currency: String
 
+  @State private var isPresented = false
+  @State private var query = ""
+
   var body: some View {
-    Menu {
-      ForEach(Currencies.including(currency), id: \.self) { code in
-        Button {
-          currency = code
-        } label: {
-          if let name = Localization.locale.localizedString(forCurrencyCode: code) {
-            Text(verbatim: "\(code) · \(name)")
-          } else {
-            Text(verbatim: code)
+    Button {
+      isPresented = true
+    } label: {
+      PickerChip(title: currency, minWidth: 84)
+    }
+    .buttonStyle(.plain)
+    .popover(isPresented: $isPresented, arrowEdge: .bottom) {
+      panel
+    }
+  }
+
+  private var panel: some View {
+    VStack(spacing: 0) {
+      TextField(
+        String(localized: "Search currencies", bundle: Localization.bundle,
+               locale: Localization.locale, comment: "The currency picker's search field"),
+        text: $query
+      )
+      .textFieldStyle(.plain)
+      .font(Theme.Font.body)
+      .padding(.horizontal, Theme.Space.l)
+      .frame(height: 29)
+      .background(Color.fieldBackground, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
+      .padding(Theme.Space.l)
+
+      Divider().foregroundStyle(Color.separatorLine)
+
+      ScrollView {
+        VStack(alignment: .leading, spacing: 2) {
+          ForEach(matches, id: \.self) { code in
+            PickerRow(title: label(code), isChosen: code == currency) {
+              currency = code
+              isPresented = false
+            }
           }
         }
+        .padding(Theme.Space.m)
       }
-    } label: {
-      Text(verbatim: currency)
-        .font(Theme.Font.body)
+      // A fixed height rather than a maximum: a popover measures itself
+      // once, so a list that grew back after a search was cleared would
+      // stay clipped to the shorter one's height.
+      .frame(height: 280)
     }
-    .menuStyle(.borderlessButton)
-    .fixedSize()
+    .frame(width: 260)
+    .background(Color.surface)
+    .multilineTextAlignment(.leading)
+  }
+
+  /// Matched on the code and on the name, since somebody hunting for yen
+  /// may know either. Case-folded, so "jpy" finds JPY.
+  private var matches: [String] {
+    let codes = Currencies.including(currency)
+    let needle = query.trimmingCharacters(in: .whitespaces).lowercased()
+    guard !needle.isEmpty else { return codes }
+    return codes.filter { label($0).lowercased().contains(needle) }
+  }
+
+  /// The code, and the currency's name where the reader's language has one.
+  private func label(_ code: String) -> String {
+    guard let name = Localization.locale.localizedString(forCurrencyCode: code) else {
+      return code
+    }
+    return "\(code) · \(name)"
   }
 }
 

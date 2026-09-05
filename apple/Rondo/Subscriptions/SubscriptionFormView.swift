@@ -154,7 +154,7 @@ struct SubscriptionFormView: View {
       // Picked rather than typed. The core rejects anything that is not
       // three uppercase letters, and a text field's way of saying so is to
       // refuse the whole form after the fact.
-      CurrencyMenu(currency: $currency)
+      CurrencyPicker(currency: $currency)
       Spacer(minLength: Theme.Space.m)
       FormNote(text: String(localized: "Currencies are never converted", bundle: bundle,
                             locale: locale, comment: "Beside the currency, in the form"))
@@ -243,18 +243,7 @@ struct SubscriptionFormView: View {
                           comment: "Form row: which card or account pays for it"),
             spacing: Theme.Space.l)
     {
-      Picker(selection: $paymentMethodID) {
-        Text(verbatim: String(localized: "Not recorded", bundle: bundle, locale: locale,
-                              comment: "No payment method was said"))
-          .tag(Uuid?.none)
-        ForEach(model.paymentMethods, id: \.id) { method in
-          Text(verbatim: method.name).tag(Uuid?.some(method.id))
-        }
-      } label: {
-        EmptyView()
-      }
-      .labelsHidden()
-      .fixedSize()
+      PaymentMethodPicker(model: model, selection: $paymentMethodID)
       FormNote(text: String(localized: "Subscriptions on one card are grouped together",
                             bundle: bundle, locale: locale,
                             comment: "Beside the payment method, in the form"),

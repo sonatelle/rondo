@@ -510,7 +510,9 @@ mod tests {
         let target = Store::open_in_memory().unwrap();
         import_json(&target, &json).unwrap();
 
-        assert_eq!(target.payment_methods().unwrap(), vec![card.clone()]);
+        // The built-in methods are in both databases already and are not
+        // what this is about; the card the test made is.
+        assert!(target.payment_methods().unwrap().contains(&card));
         let restored = target
             .subscription(subscription.id, TODAY)
             .unwrap()

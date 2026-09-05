@@ -654,6 +654,7 @@ static MIGRATIONS: LazyLock<Migrations<'static>> = LazyLock::new(|| {
         M::up(include_str!("../migrations/001-initial.sql")),
         M::up(include_str!("../migrations/002-price-history.sql")),
         M::up(include_str!("../migrations/003-seed-categories.sql")),
+        M::up(include_str!("../migrations/004-seed-payment-methods.sql")),
     ])
 });
 
@@ -665,6 +666,15 @@ static MIGRATIONS: LazyLock<Migrations<'static>> = LazyLock::new(|| {
 pub const BUILT_IN_CATEGORIES: [&str; 8] = [
     "video", "music", "reading", "games", "tools", "ai", "dev", "storage",
 ];
+
+/// The payment methods every database is seeded with, by the name the
+/// migration gives them.
+///
+/// By name rather than by a key of their own, because a payment method has
+/// no field for one: it is a name and an order. A frontend translating a
+/// built-in compares against these, and stops the moment somebody renames
+/// the row - at which point the name is theirs.
+pub const BUILT_IN_PAYMENT_METHODS: [&str; 4] = ["Gift card", "WeChat", "Alipay", "Bank card"];
 
 /// Rebuilds a [`Subscription`] from a row, re-validating every invariant.
 ///
@@ -846,6 +856,17 @@ mod tests {
             .collect()
     }
 
+    /// The payment methods a test made, without the ones every database is
+    /// seeded with. The same trick as `made_categories`.
+    fn made_payment_methods(store: &Store) -> Vec<PaymentMethod> {
+        store
+            .payment_methods()
+            .unwrap()
+            .into_iter()
+            .filter(|m| !m.id.to_string().starts_with("00000000-0000-7000-8000-"))
+            .collect()
+    }
+
     fn sample() -> Subscription {
         Subscription::new(
             "Netflix",
@@ -864,7 +885,7 @@ mod tests {
         let store = Store::open_in_memory().unwrap();
         assert_eq!(
             MIGRATIONS.current_version(&store.conn).unwrap(),
-            SchemaVersion::Inside(NonZeroUsize::new(3).unwrap())
+            SchemaVersion::Inside(NonZeroUsize::new(4).unwrap())
         );
     }
 
@@ -1070,6 +1091,31 @@ mod tests {
         );
     }
 
+    #[test]
+    fn a_new_database_starts_with_the_built_in_payment_methods() {
+        let store = Store::open_in_memory().unwrap();
+        let methods = store.payment_methods().unwrap();
+        assert_eq!(methods.len(), BUILT_IN_PAYMENT_METHODS.len());
+
+        // In the order the migration gives them, and by the names a
+        // frontend matches against to translate one. A rename in the
+        // migration without one here would leave those words untranslated
+        // with nothing to say so.
+        assert_eq!(
+            methods.iter().map(|m| m.name.as_str()).collect::<Vec<_>>(),
+            BUILT_IN_PAYMENT_METHODS
+        );
+    }
+
+    /// Fixed ids, for the reason the categories have them: two devices must
+    /// agree a built-in is one row, and a restore must not double it.
+    #[test]
+    fn the_built_in_payment_methods_have_the_same_ids_everywhere() {
+        let first = Store::open_in_memory().unwrap().payment_methods().unwrap();
+        let second = Store::open_in_memory().unwrap().payment_methods().unwrap();
+        assert_eq!(first, second);
+    }
+
     /// Every category a bundled template files into has to exist, or
     /// picking that service would point at nothing.
     #[test]
@@ -1170,9 +1216,7 @@ mod tests {
                 .insert_payment_method(&PaymentMethod::new(name, order).unwrap())
                 .unwrap();
         }
-        let names: Vec<String> = store
-            .payment_methods()
-            .unwrap()
+        let names: Vec<String> = made_payment_methods(&store)
             .into_iter()
             .map(|m| m.name)
             .collect();

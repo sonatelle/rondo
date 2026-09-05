@@ -1867,6 +1867,17 @@
         }
       }
     },
+    "Search subscriptions": {
+      "comment": "The toolbar's search field",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索订阅"
+          }
+        }
+      }
+    },
     "See all": {
       "comment": "Opens the full list from the overview",
       "localizations": {

@@ -486,6 +486,28 @@
         }
       }
     },
+    "All channels": {
+      "comment": "The channel filter, while it narrows nothing",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部渠道"
+          }
+        }
+      }
+    },
+    "All currencies": {
+      "comment": "The currency filter, while it narrows nothing",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部币种"
+          }
+        }
+      }
+    },
     "All services": {
       "comment": "Provider picker: the whole bundled catalogue",
       "localizations": {
@@ -648,6 +670,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "这一天之前的扣款，仍按原来的价格计算。"
+          }
+        }
+      }
+    },
+    "Clear filters": {
+      "comment": "Puts the filters back to showing everything",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除筛选"
           }
         }
       }
@@ -1451,6 +1484,17 @@
         }
       }
     },
+    "Nothing matches these filters": {
+      "comment": "Empty state: the filters left no rows",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有符合筛选条件的订阅"
+          }
+        }
+      }
+    },
     "Nothing scheduled": {
       "comment": "Nothing is charged in the period being shown",
       "localizations": {
@@ -2082,6 +2126,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "首次订阅价"
+          }
+        }
+      }
+    },
+    "There are subscriptions here, but none of this kind.": {
+      "comment": "Under the filtered-to-nothing state",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个页面里有订阅，但没有这一类的。"
           }
         }
       }

@@ -336,6 +336,41 @@ final class SubscriptionsModel {
     )
   }
 
+  /// Records a way of paying, and hands back its id to select.
+  ///
+  /// Added at the end of the list rather than sorted by name: the order is
+  /// the person's, and a card added today belongs where they put it. The
+  /// id comes back so whoever asked for it can choose it straight away -
+  /// nobody creates one of these except to use it.
+  func addPaymentMethod(named name: String) -> Uuid? {
+    do {
+      let method = try rondo.addPaymentMethod(
+        name: name,
+        sortOrder: Int32(paymentMethods.count)
+      )
+      reload()
+      return method.id
+    } catch {
+      report(error)
+      return nil
+    }
+  }
+
+  /// Removes a way of paying.
+  ///
+  /// The subscriptions that pointed at it are not deleted with it: the core
+  /// detaches them, and they go back to saying nobody has said how they are
+  /// paid for. That is the only sane reading - the subscription is still
+  /// being charged either way.
+  func deletePaymentMethod(_ method: PaymentMethod) {
+    do {
+      _ = try rondo.deletePaymentMethod(id: method.id)
+      reload()
+    } catch {
+      report(error)
+    }
+  }
+
   /// Every price a subscription has been charged at, earliest first.
   ///
   /// Read on demand rather than kept: only the form and the detail screen

@@ -282,7 +282,8 @@ struct ContentView: View {
           category.map { Categories.name($0.name, iconKey: $0.iconKey) },
         ].compactMap(\.self).joined(separator: " · "),
         channel: subscription.channel?.title ?? "",
-        paymentMethod: subscription.paymentMethodId.flatMap { methods[$0]?.name } ?? "",
+        paymentMethod: subscription.paymentMethodId
+          .flatMap { methods[$0].map { PaymentMethods.name($0.name) } } ?? "",
         total: total.map { Formatting.amount($0.total, currency: $0.currency) } ?? "",
         totalValue: total.flatMap { Formatting.decimal($0.total) } ?? 0
       )

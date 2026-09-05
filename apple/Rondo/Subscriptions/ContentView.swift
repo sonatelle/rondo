@@ -25,6 +25,31 @@ struct ContentView: View {
     return model.navigation.title ?? ""
   }
 
+  /// How many the page is showing, beside its title.
+  ///
+  /// The subtitle macOS puts next to a window title, rather than a line of
+  /// our own drawing: the design's header strip is the titlebar - the
+  /// traffic lights sit in it - so this is where it belongs.
+  ///
+  /// It says what the rows are, not only how many, because the same number
+  /// means different things on different pages: eight being paid for is not
+  /// eight that were stopped. The overview has no list to count, so it says
+  /// nothing at all rather than counting something arbitrary.
+  private var pageCount: String {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    let count = model.renewals.count
+    return switch model.navigation {
+    case .overview: ""
+    case .archived:
+      String(localized: "\(count) archived", bundle: bundle, locale: locale,
+             comment: "Beside the title: how many subscriptions were stopped")
+    case .subscriptions, .category:
+      String(localized: "\(count) active", bundle: bundle, locale: locale,
+             comment: "Beside the title: how many subscriptions are being paid for")
+    }
+  }
+
   /// Sorted here rather than by the core: which column someone clicked is
   /// a question about this window, not about billing.
   @State private var sortOrder = [KeyPathComparator(\SubscriptionRow.date)]
@@ -172,6 +197,7 @@ struct ContentView: View {
       }
     }
     .navigationTitle(pageTitle)
+    .navigationSubtitle(pageCount)
     .toolbar {
       ToolbarItem {
         Button {

@@ -96,4 +96,47 @@ struct SourceLanguageTests {
       "String(localized:) with no bundle: reads the system's language: \(offenders.sorted())"
     )
   }
+
+  @Test("Every word the code asks for is in the catalogue")
+  func everyKeyIsInTheCatalogue() throws {
+    // A key the catalogue has never heard of does not fail to build and
+    // does not fail to run: the lookup falls back to the key itself, so an
+    // English word appears in a Chinese window and only a reader of that
+    // language ever finds out. "Total" reached a table heading that way.
+    //
+    // `CatalogueTests` checks the other direction - that everything in the
+    // catalogue is translated - and the two together are what say the
+    // screen has no English left on it.
+    let catalogue = try catalogueKeys()
+    let lookup = #/String\(\s*\n?\s*localized:\s*\n?\s*"([^"\\]*)"/#
+    let offenders = try sources().flatMap { file -> [String] in
+      file.text.matches(of: lookup).compactMap { match in
+        let key = String(match.output.1)
+        // A key with a value in it - "About \(levelled) a month" - reaches
+        // the catalogue with a format specifier in place of the value, and
+        // which specifier depends on the type. Those are left to the
+        // export; what is checked here is every plain word.
+        guard !key.isEmpty, !catalogue.contains(key) else { return nil }
+        let line = file.text[file.text.startIndex ..< match.range.lowerBound]
+          .count(where: { $0 == "\n" }) + 1
+        return "\(file.name):\(line) \(key.debugDescription)"
+      }
+    }
+    #expect(
+      offenders.isEmpty,
+      "asked for but not in the catalogue, so they stay English: \(offenders.sorted())"
+    )
+  }
+
+  /// The keys the catalogue carries, read as a document the way
+  /// `CatalogueTests` reads it.
+  private func catalogueKeys() throws -> Set<String> {
+    let url = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .appendingPathComponent("Rondo/Resources/Localizable.xcstrings")
+    let root = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+    let strings = try #require(root?["strings"] as? [String: Any])
+    return Set(strings.keys)
+  }
 }

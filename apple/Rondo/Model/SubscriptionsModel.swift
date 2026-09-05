@@ -83,6 +83,19 @@ final class SubscriptionsModel {
   /// is left out: nothing has been spent on it to rank.
   private(set) var topSpending: [(subscription: Subscription, total: SubscriptionTotal)] = []
 
+  /// What each subscription has cost, to look up by id.
+  ///
+  /// The same answers `topSpending` ranks, kept in a form a table row can
+  /// ask a question of: a row knows its own subscription and nothing about
+  /// where it came in a ranking. Subscriptions not charged yet are absent,
+  /// which is a different thing from having cost nothing.
+  private(set) var totals: [Uuid: SubscriptionTotal] = [:]
+
+  /// The ways of paying, by id, for a row that holds only the id.
+  var paymentMethodsByID: [Uuid: PaymentMethod] {
+    Dictionary(uniqueKeysWithValues: paymentMethods.map { ($0.id, $0) })
+  }
+
   /// The last failure, for the interface to show and the person to dismiss.
   var failure: String?
 
@@ -143,15 +156,23 @@ final class SubscriptionsModel {
       // are tens of these, and a call each keeps the core's answer per
       // subscription rather than assembling a ranking here.
       var spending: [(Subscription, SubscriptionTotal)] = []
-      for renewal in everything where renewal.subscription.status == .active {
+      var byID: [Uuid: SubscriptionTotal] = [:]
+      // Archived rows are asked about too. They are left out of the
+      // ranking, which is about what is being spent, but the table still
+      // shows what one cost while it ran - that is the whole reason for
+      // keeping an archived row rather than deleting it.
+      for renewal in everything {
         let total = try rondo.subscriptionTotal(
           id: renewal.subscription.id,
           until: Self.day(after: referenceDay, days: 1)
         )
-        if total.chargeCount > 0 {
+        guard total.chargeCount > 0 else { continue }
+        byID[renewal.subscription.id] = total
+        if renewal.subscription.status == .active {
           spending.append((renewal.subscription, total))
         }
       }
+      totals = byID
       // Sorted by the amount as a number, not as text: "9" is more than
       // "10" to a string comparison. Currencies are never converted, so a
       // ranking across them is a rough one and the amount beside each name
@@ -163,14 +184,6 @@ final class SubscriptionsModel {
     } catch {
       report(error)
     }
-  }
-
-  /// Reorders the rows for a table column the person clicked.
-  ///
-  /// Sorting is a property of the view, but the array it sorts lives here,
-  /// so the reorder has to be asked for rather than done in place.
-  func sort(using order: [KeyPathComparator<Renewal>]) {
-    renewals.sort(using: order)
   }
 
   /// Records a subscription and refreshes what the window shows.

@@ -21,6 +21,26 @@ extension Renewal: Identifiable {
   }
 }
 
+extension Channel {
+  /// Where it was bought, in words.
+  ///
+  /// The two stores keep their own names in every language, which is how
+  /// they are written on the receipts people are matching this against;
+  /// the other two are ordinary words and are translated.
+  var title: String {
+    switch self {
+    case .appStore: "App Store"
+    case .googlePlay: "Google Play"
+    case .web: String(localized: "Its own site", bundle: Localization.bundle,
+                      locale: Localization.locale,
+                      comment: "Bought from the service's own site or app")
+    case .other: String(localized: "Elsewhere", bundle: Localization.bundle,
+                        locale: Localization.locale,
+                        comment: "Bought somewhere none of the other choices name")
+    }
+  }
+}
+
 extension Renewal {
   /// The price as a number, for sorting a column by it.
   ///

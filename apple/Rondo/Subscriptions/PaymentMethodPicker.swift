@@ -219,11 +219,9 @@ private struct PaymentMethodSheet: View {
       FormCard {
         FormRow(label: String(localized: "Name", bundle: bundle, locale: locale,
                               comment: "Form row: what this subscription is called"),
-                spacing: Theme.Space.l)
+                isRequired: true, spacing: Theme.Space.l)
         {
           FormField(text: $name)
-          FormNote(text: String(localized: "required", bundle: bundle, locale: locale,
-                                comment: "Beside a field that must be filled in"))
         }
       }
       .padding(.horizontal, Theme.Space.xxl)

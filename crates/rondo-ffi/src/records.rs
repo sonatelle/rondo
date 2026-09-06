@@ -265,6 +265,30 @@ impl From<rondo_core::summary::CategoryShare> for CategoryShare {
     }
 }
 
+/// One charge that fell due, and what it cost that day.
+///
+/// The amount and the currency travel apart, as they do everywhere across
+/// this boundary: money is text on the way over, and a frontend formats it
+/// for the reader rather than being handed a formatted string.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct Charge {
+    /// The day it fell due.
+    pub date: Date,
+    /// What was charged, at the price in force on that day.
+    pub amount: Decimal,
+    pub currency: String,
+}
+
+impl From<rondo_core::summary::Charge> for Charge {
+    fn from(charge: rondo_core::summary::Charge) -> Self {
+        Self {
+            date: charge.date,
+            amount: charge.amount.amount(),
+            currency: charge.amount.currency().to_owned(),
+        }
+    }
+}
+
 /// What was spent over some window, in one currency.
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct WindowTotal {

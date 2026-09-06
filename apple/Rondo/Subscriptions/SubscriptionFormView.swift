@@ -138,26 +138,22 @@ struct SubscriptionFormView: View {
 
     FormRow(label: String(localized: "Name", bundle: bundle, locale: locale,
                           comment: "Form row: what this subscription is called"),
-            spacing: Theme.Space.xxl)
+            isRequired: true, spacing: Theme.Space.xxl)
     {
       FormField(text: $name)
-      FormNote(text: String(localized: "required", bundle: bundle, locale: locale,
-                            comment: "Beside a field that must be filled in"))
     }
     FormDivider()
 
     FormRow(label: String(localized: "Price", bundle: bundle, locale: locale,
                           comment: "Form row: what it costs each cycle"),
-            spacing: Theme.Space.l)
+            isRequired: true, spacing: Theme.Space.l)
     {
       FormField(text: $amount, width: 96)
       // Picked rather than typed. The core rejects anything that is not
       // three uppercase letters, and a text field's way of saying so is to
       // refuse the whole form after the fact.
       CurrencyPicker(currency: $currency)
-      Spacer(minLength: Theme.Space.m)
-      FormNote(text: String(localized: "Currencies are never converted", bundle: bundle,
-                            locale: locale, comment: "Beside the currency, in the form"))
+      Spacer(minLength: 0)
     }
     FormDivider()
 
@@ -223,9 +219,7 @@ struct SubscriptionFormView: View {
       .pickerStyle(.segmented)
       .labelsHidden()
       .fixedSize()
-      Spacer(minLength: Theme.Space.m)
-      FormNote(text: String(localized: "Decides where you cancel it", bundle: bundle,
-                            locale: locale, comment: "Beside the channel, in the form"))
+      Spacer(minLength: 0)
     }
     FormDivider()
 
@@ -234,8 +228,6 @@ struct SubscriptionFormView: View {
             spacing: Theme.Space.l)
     {
       FormField(text: $account)
-      FormNote(text: String(localized: "optional", bundle: bundle, locale: locale,
-                            comment: "Beside a field that may be left empty"))
     }
     FormDivider()
 
@@ -244,10 +236,6 @@ struct SubscriptionFormView: View {
             spacing: Theme.Space.l)
     {
       PaymentMethodPicker(model: model, selection: $paymentMethodID)
-      FormNote(text: String(localized: "Subscriptions on one card are grouped together",
-                            bundle: bundle, locale: locale,
-                            comment: "Beside the payment method, in the form"),
-               speaking: true)
       Spacer(minLength: 0)
     }
     FormDivider()
@@ -295,8 +283,6 @@ struct SubscriptionFormView: View {
             spacing: Theme.Space.l)
     {
       FormField(text: $notes)
-      FormNote(text: String(localized: "optional", bundle: bundle, locale: locale,
-                            comment: "Beside a field that may be left empty"))
     }
   }
 

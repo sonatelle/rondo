@@ -20,6 +20,15 @@ struct FormRow<Content: View>: View {
   /// caller - with `Localization.bundle` - and arrive here as text to draw.
   let label: String
 
+  /// Whether the form refuses to be saved without this one.
+  ///
+  /// Marked with an asterisk rather than the word "required" beside the
+  /// field, and its absence means optional rather than the word "optional".
+  /// Two fields out of eleven are required; spelling that out on all eleven
+  /// put a column of words next to a column of fields, and a form somebody
+  /// has to read twice is a form that says less than it appears to.
+  var isRequired = false
+
   /// The gap between the row's own parts, which the design varies from 10
   /// to 14 depending on what is in the row.
   var spacing: CGFloat = Theme.Space.xl
@@ -34,10 +43,20 @@ struct FormRow<Content: View>: View {
 
   var body: some View {
     HStack(alignment: .center, spacing: spacing) {
-      Text(verbatim: label)
-        .font(Theme.Font.label)
-        .foregroundStyle(Color.textSecondary)
-        .frame(width: Self.labelWidth, alignment: .leading)
+      HStack(spacing: 2) {
+        Text(verbatim: label)
+          .font(Theme.Font.label)
+          .foregroundStyle(Color.textSecondary)
+        if isRequired {
+          // Not red. Red in this app means a charge is nearly due, and an
+          // asterisk that shouts is a field the eye keeps returning to
+          // long after it has been filled in.
+          Text(verbatim: "*")
+            .font(Theme.Font.label)
+            .foregroundStyle(Color.textFaint)
+        }
+      }
+      .frame(width: Self.labelWidth, alignment: .leading)
       content
     }
     .padding(.horizontal, Theme.Space.card)

@@ -937,17 +937,6 @@
         }
       }
     },
-    "Decides where you cancel it": {
-      "comment": "Beside the channel, in the form",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "决定去哪里退订"
-          }
-        }
-      }
-    },
     "Delete": {
       "comment": "Confirms deleting subscriptions",
       "localizations": {
@@ -2329,17 +2318,6 @@
         }
       }
     },
-    "Subscriptions on one card are grouped together": {
-      "comment": "Beside the payment method, in the form",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "同一张卡上的订阅会归到一起"
-          }
-        }
-      }
-    },
     "Sunday": {
       "comment": "Day a week starts on",
       "localizations": {
@@ -2724,28 +2702,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "月"
-          }
-        }
-      }
-    },
-    "optional": {
-      "comment": "Beside a field that may be left empty",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "选填"
-          }
-        }
-      }
-    },
-    "required": {
-      "comment": "Beside a field that must be filled in",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "必填"
           }
         }
       }

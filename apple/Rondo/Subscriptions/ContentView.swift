@@ -448,6 +448,12 @@ struct ContentView: View {
       totalColumn
       nextChargeColumn
     }
+    // The banded background a macOS table draws by default, off. It exists
+    // to lead the eye across a wide row of numbers, and this table is
+    // already ruled by hairlines; what it did here was fill the space under
+    // the last subscription with grey stripes of nothing, which the design
+    // draws as plain paper.
+    .alternatingRowBackgrounds(.disabled)
     .contextMenu(forSelectionType: Uuid.self) { ids in
       menuItems(for: ids)
     } primaryAction: { ids in

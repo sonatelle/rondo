@@ -70,6 +70,17 @@ expect(march.first?.date == "2026-03-31", "March returns to the anchored 31st")
 let summary = try rondo.spendingSummary(on: today)
 expect(summary.count == 1 && summary[0].currency == "USD", "spending is totalled per currency")
 
+/// The same sum over a set the caller narrowed itself, which is what a
+/// filtered list needs: adding amounts is the core's job either way.
+let narrowed = try rondo.levelledTotal(subscriptions: [])
+expect(narrowed.isEmpty, "an empty set comes to nothing")
+let everything = try rondo.subscriptions(on: today, includeArchived: false)
+let totalled = try rondo.levelledTotal(subscriptions: everything)
+expect(
+  totalled.count == summary.count && totalled.first?.monthly == summary.first?.monthly,
+  "totalling every subscription agrees with the database's own summary"
+)
+
 /// A value the core refuses must arrive as a thrown Swift error, not as a
 /// silently wrong record.
 var rejected = draft

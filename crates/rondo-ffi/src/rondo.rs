@@ -236,6 +236,27 @@ impl Rondo {
             .collect())
     }
 
+    /// The same totals, for a set of subscriptions the caller has already
+    /// narrowed rather than for the whole database.
+    ///
+    /// What a window is showing is the window's business - a page, a
+    /// search, a filter - but what that comes to a month is money, and
+    /// money is added here. A frontend adding its own amounts would be
+    /// doing the one thing this crate exists to keep in one place.
+    ///
+    /// The records are rebuilt through the validating constructors, so a
+    /// caller cannot total something the core would have refused.
+    pub fn levelled_total(&self, subscriptions: Vec<Subscription>) -> Result<Vec<SpendingSummary>> {
+        let records = subscriptions
+            .into_iter()
+            .map(CoreSubscription::try_from)
+            .collect::<Result<Vec<_>>>()?;
+        Ok(rondo_core::summary::summarize(&records)
+            .into_iter()
+            .map(SpendingSummary::from)
+            .collect())
+    }
+
     /// What one subscription has cost from its first charge up to but not
     /// including `until`.
     ///

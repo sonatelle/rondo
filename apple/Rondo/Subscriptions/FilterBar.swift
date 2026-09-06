@@ -21,6 +21,10 @@ struct FilterBar: View {
   let channels: [ChannelFilter]
   let currencies: [String]
 
+  /// What the rows on screen come to a month, per currency, worked out by
+  /// the core over exactly the rows the filters left.
+  let totals: [SpendingSummary]
+
   var body: some View {
     HStack(spacing: Theme.Space.s) {
       FilterPill(
@@ -49,9 +53,44 @@ struct FilterBar: View {
         }
       )
       Spacer(minLength: Theme.Space.m)
+      levelled
     }
     .padding(.horizontal, Theme.Space.section)
     .padding(.vertical, Theme.Space.m)
+  }
+
+  /// What the filtered rows come to a month, at the far end of the bar.
+  ///
+  /// Beside the filters rather than under the table, which is where the
+  /// design puts it and which is also the only place it reads correctly:
+  /// a total sitting next to the controls that narrowed the list is
+  /// understood to be the total of what they left, and now it is.
+  ///
+  /// Currencies stay apart, as everywhere else in Rondo, so this is a list
+  /// of sums and never one.
+  @ViewBuilder
+  private var levelled: some View {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    if !totals.isEmpty {
+      HStack(spacing: Theme.Space.xs) {
+        Text(verbatim: String(localized: "Levelled monthly", bundle: bundle, locale: locale,
+                              comment: "Label on the total beside the filters"))
+          .foregroundStyle(Color.textMuted)
+        ForEach(Array(totals.enumerated()), id: \.element.currency) { index, total in
+          if index > 0 {
+            Text(verbatim: "·")
+              .foregroundStyle(Color.textFaint)
+          }
+          Text(verbatim: Formatting.amount(total.monthly, currency: total.currency))
+            .fontWeight(.semibold)
+            .monospacedDigit()
+            .foregroundStyle(Color.textPrimary)
+            .lineLimit(1)
+        }
+      }
+      .font(Theme.Font.caption)
+    }
   }
 
   private var channelTitle: String {

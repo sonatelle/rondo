@@ -1165,6 +1165,17 @@
         }
       }
     },
+    "Levelled monthly": {
+      "comment": "Label on the total beside the filters",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合计每月均摊"
+          }
+        }
+      }
+    },
     "Light": {
       "comment": "Appearance setting",
       "localizations": {
@@ -2320,17 +2331,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "年"
-          }
-        }
-      }
-    },
-    "a month": {
-      "comment": "After an amount, in the table's footer",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每月"
           }
         }
       }

@@ -356,6 +356,23 @@ final class SubscriptionsModel {
     }
   }
 
+  /// What a set of subscriptions comes to a month, per currency.
+  ///
+  /// Asked of the core rather than added up here. Which rows a window is
+  /// showing is the window's own business - a page, a search, a filter -
+  /// but adding their amounts is money arithmetic, and this side does none.
+  ///
+  /// Archived rows count for nothing, which the core decides: a total is
+  /// about what is still being paid for.
+  func levelledTotal(of subscriptions: [Subscription]) -> [SpendingSummary] {
+    do {
+      return try Self.ordered(rondo.levelledTotal(subscriptions: subscriptions))
+    } catch {
+      report(error)
+      return []
+    }
+  }
+
   /// Removes a way of paying.
   ///
   /// The subscriptions that pointed at it are not deleted with it: the core

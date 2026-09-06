@@ -293,7 +293,8 @@ struct ContentView: View {
         channel: $channelFilter,
         currency: $currencyFilter,
         channels: offeredChannels,
-        currencies: offeredCurrencies
+        currencies: offeredCurrencies,
+        totals: model.levelledTotal(of: matching.map(\.subscription))
       )
       Divider()
 
@@ -319,9 +320,6 @@ struct ContentView: View {
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-      Divider()
-      SpendingFooter(summaries: model.summaries)
     }
     // Here rather than beside the title, so the field belongs to the pages
     // that have a list: a modifier on the whole detail column would put it
@@ -688,42 +686,6 @@ struct SubscriptionRow: Identifiable {
 
   var date: CivilDate {
     renewal.date
-  }
-}
-
-/// Monthly totals, one per currency.
-///
-/// Along the bottom rather than the top: it is the sum of what is above it,
-/// and a running total belongs at the end of the column it totals.
-/// Currencies stay apart because the core never converts between them.
-private struct SpendingFooter: View {
-  let summaries: [SpendingSummary]
-
-  var body: some View {
-    HStack(spacing: 12) {
-      if summaries.isEmpty {
-        Text(verbatim: String(localized: "Nothing scheduled", bundle: Localization.bundle,
-                              locale: Localization.locale,
-                              comment: "Nothing is charged in the period being shown"))
-          .foregroundStyle(.secondary)
-      } else {
-        ForEach(summaries, id: \.currency) { summary in
-          HStack(spacing: 4) {
-            Text(verbatim: Formatting.amount(summary.monthly, currency: summary.currency))
-              .monospacedDigit()
-            Text(verbatim: String(localized: "a month", bundle: Localization.bundle,
-                                  locale: Localization.locale,
-                                  comment: "After an amount, in the table's footer"))
-              .foregroundStyle(.secondary)
-          }
-        }
-      }
-      Spacer()
-    }
-    .font(.callout)
-    .padding(.horizontal, 14)
-    .padding(.vertical, 8)
-    .background(.bar)
   }
 }
 

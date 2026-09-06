@@ -27,6 +27,9 @@ struct SubscriptionDetailView: View {
 
   @Environment(\.dismiss) private var dismiss
 
+  /// Whether the guide to cancelling this one is up.
+  @State private var isCancelling = false
+
   private var subscription: Subscription {
     renewal.subscription
   }
@@ -54,6 +57,14 @@ struct SubscriptionDetailView: View {
     let locale = Localization.locale
     return HStack(spacing: Theme.Space.s) {
       Spacer()
+      // Beside archiving rather than under a menu, because the two are one
+      // errand: somebody who came here to stop paying will do both, and
+      // the guide's own last step is to archive it.
+      DetailButton(title: String(localized: "How to cancel", bundle: bundle, locale: locale,
+                                 comment: "Opens the guide to cancelling this subscription"))
+      {
+        isCancelling = true
+      }
       if subscription.status == .active {
         DetailButton(title: String(localized: "Archive", bundle: bundle, locale: locale,
                                    comment: "Context menu command"))
@@ -79,6 +90,12 @@ struct SubscriptionDetailView: View {
     .padding(.horizontal, Theme.Space.xxl)
     .padding(.vertical, Theme.Space.l)
     .overlay(alignment: .bottom) { Divider() }
+    .sheet(isPresented: $isCancelling) {
+      CancellationGuide(model: model, renewal: renewal) {
+        model.setArchived(subscription, true)
+        dismiss()
+      }
+    }
   }
 
   /// The mark, the name, what kind of thing it is, and what it costs.

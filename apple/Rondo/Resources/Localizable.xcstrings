@@ -685,6 +685,17 @@
         }
       }
     },
+    "Clear the search": {
+      "comment": "Tooltip on the search field's clear button",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除搜索"
+          }
+        }
+      }
+    },
     "Coming up": {
       "comment": "Overview section: the next few charges",
       "localizations": {
@@ -1050,6 +1061,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "在「文件」菜单里导出备份或从备份恢复。"
+          }
+        }
+      }
+    },
+    "Find": {
+      "comment": "Edit menu command: puts the cursor in the search field",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查找"
           }
         }
       }

@@ -32,6 +32,9 @@ struct ContentView: View {
   /// A search is a way of looking, not a way of changing what is there.
   @State private var searchText = ""
 
+  /// Whether the cursor is in the search field, so ⌘F can put it there.
+  @FocusState private var searchFocused: Bool
+
   /// Which shop and which currency the list is narrowed to.
   ///
   /// Both are cleared when the page changes, along with the search: a page
@@ -261,21 +264,49 @@ struct ContentView: View {
     .navigationTitle(pageTitle)
     .navigationSubtitle(pageCount)
     .toolbar {
+      // The search field first, so it sits where the design puts it: to the
+      // left of the button that adds one.
+      if model.navigation != .overview {
+        ToolbarItem {
+          SearchField(text: $searchText, isFocused: $searchFocused)
+        }
+        .plainToolbarItem()
+      }
+
       ToolbarItem {
+        // Filled and in the app's own blue, as the design draws it: this is
+        // the one thing on the window somebody came here to do, and the
+        // rest of the chrome is deliberately grey so that it stands out.
+        //
+        // Drawn here rather than left to `.borderedProminent`, which takes
+        // the system's accent colour - whatever the person set in System
+        // Settings - and the system's control metrics. Beside the pills and
+        // chips on this window, which are all drawn from the design's own
+        // numbers, it was the one control that did not match.
+        //
+        // The words, not only a plus. A "+" alone is read by whoever
+        // already knows what this window is; the first time it is opened
+        // there is nothing here to add one to, and the button has to say
+        // what it would do.
         Button {
           isAdding = true
         } label: {
-          Label {
-            Text(verbatim: String(localized: "Add Subscription", bundle: Localization.bundle,
-                                  locale: Localization.locale,
-                                  comment: "Toolbar button that opens the form"))
-          } icon: {
-            Image(systemName: "plus")
-          }
+          Text(verbatim: String(localized: "Add Subscription", bundle: Localization.bundle,
+                                locale: Localization.locale,
+                                comment: "Toolbar button that opens the form"))
+            .font(Theme.Font.body)
+            .fontWeight(.medium)
+            .foregroundStyle(Color.white)
+            .padding(.horizontal, 12)
+            .frame(height: 26)
+            .background(Color.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .help(String(localized: "Add a subscription", bundle: Localization.bundle,
                      locale: Localization.locale, comment: "Tooltip on the toolbar button"))
       }
+      .plainToolbarItem()
     }
     // What the menu bar acts on: whatever this window has selected.
     .focusedSceneValue(\.subscriptionActions, actions)
@@ -321,14 +352,6 @@ struct ContentView: View {
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    // Here rather than beside the title, so the field belongs to the pages
-    // that have a list: a modifier on the whole detail column would put it
-    // in the toolbar on the overview too.
-    .searchable(
-      text: $searchText,
-      prompt: String(localized: "Search subscriptions", bundle: Localization.bundle,
-                     locale: Localization.locale, comment: "The toolbar's search field")
-    )
     // A page opened with another page's filters still on looks like a page
     // with fewer subscriptions than it has.
     .onChange(of: model.navigation) { _, _ in
@@ -395,6 +418,8 @@ struct ContentView: View {
     let archived = chosen.filter { $0.status == .archived }
     return SubscriptionActions(
       add: { isAdding = true },
+      // Absent on the overview, which has no search field to focus.
+      find: model.navigation == .overview ? nil : { searchFocused = true },
       edit: chosen.count == 1 ? { editing = chosen.first } : nil,
       archive: active.isEmpty ? nil : { active.forEach { model.setArchived($0, true) } },
       restore: archived.isEmpty ? nil : { archived.forEach { model.setArchived($0, false) } },

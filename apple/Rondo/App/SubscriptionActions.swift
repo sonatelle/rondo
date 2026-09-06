@@ -8,6 +8,15 @@ import SwiftUI
 /// to grey itself out rather than offering something that would do nothing.
 struct SubscriptionActions {
   var add: () -> Void
+
+  /// Puts the cursor in the toolbar's search field.
+  ///
+  /// The field is drawn by the window rather than by `.searchable`, so the
+  /// ⌘F that came free with the system's field has to be hung somewhere;
+  /// the menu bar is where macOS keeps Find, and a shortcut that appears in
+  /// a menu is one somebody can discover. Absent on a page with no list.
+  var find: (() -> Void)?
+
   var edit: (() -> Void)?
   var archive: (() -> Void)?
   var restore: (() -> Void)?
@@ -44,6 +53,20 @@ struct SubscriptionCommands: Commands {
                     comment: "File menu command")) { actions?.edit?() }
         .keyboardShortcut("e")
         .disabled(actions?.edit == nil)
+    }
+
+    // Where macOS keeps Find, and where somebody looks for ⌘F. The
+    // window's own search field is drawn rather than `.searchable`, so
+    // this is what carries the shortcut.
+    CommandGroup(after: .textEditing) {
+      Button(String(localized: "Find", bundle: Localization.bundle,
+                    locale: Localization.locale,
+                    comment: "Edit menu command: puts the cursor in the search field"))
+      {
+        actions?.find?()
+      }
+      .keyboardShortcut("f")
+      .disabled(actions?.find == nil)
     }
 
     // The group macOS reserves in the File menu for moving data in and

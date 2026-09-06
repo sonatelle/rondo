@@ -13,9 +13,9 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-v0.3.0 is out. The macOS app runs and keeps real data.
+v0.4.0 is out. The macOS app runs and keeps real data.
 
-**Backups written by v0.3.0 cannot be read by v0.1.0 or v0.2.0.** They
+**Backups written by v0.3.0 and later cannot be read by v0.1.0 or v0.2.0.** They
 carry a price history those builds know nothing about, and a build refuses
 a format newer than its own by design. Backups written by the older builds
 restore here as they always did.
@@ -23,8 +23,20 @@ restore here as they always did.
 What works:
 
 - Record subscriptions with a price, a billing cycle, and a first charge,
-  starting from a bundled service or from nothing.
+  starting from a bundled service or from nothing. Searching the services
+  finds them by nickname too: "B站" finds Bilibili.
+- File a subscription under a category, say where it was bought, whose
+  account it bills to, and which card pays for it.
 - See what renews next, and what it all costs per month, per currency.
+- Read the whole list as a table of seven columns, sorted by any of them,
+  narrowed by a search over names and accounts or by channel and currency.
+  What is left is totalled per month at the top.
+- Open one subscription to see what it has cost since its first charge,
+  every charge it has fallen due for, and where a price rose.
+- Be told where to go to cancel it, which depends on where it was bought.
+- Keep a price history: correcting a price is not the same as recording a
+  rise, so totals across a rise are the real number rather than today's
+  price multiplied out.
 - Edit, archive, restore, and delete.
 - Glance at the next charges from the menu bar without opening a window.
 - Export a backup, and restore one. Restoring merges and never deletes, so
@@ -36,16 +48,18 @@ What works:
 - Light, dark, or follow the system, the menu bar item included.
 - Local SQLite storage. No cloud, no account, no network.
 
-v0.3.0 changes almost nothing you can see. It is the release where the
-data model learned price history, payment methods and category icons, so
-that the screens still to come can be right about what things cost. All of
-those screens arrive together in v0.4.0.
+v0.4.0 is where the main window becomes the one in the design. v0.3.0 had
+taught the data model price history, payment methods and category icons
+without showing any of it; this is the release that shows it — the
+overview, the form and its provider picker, the table with those fields
+spread across it, and a page for one subscription.
 
 Still to come:
 
 - Renewal reminders through local notifications.
-- The rest of the design. The menu bar and settings carry it; the main
-  window, and the six screens that do not exist yet, do not.
+- A calendar of what falls due, and an analytics page.
+- Spending grouped by payment method.
+- First run.
 
 ## Install
 

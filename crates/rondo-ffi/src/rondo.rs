@@ -14,8 +14,8 @@ use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
 use crate::records::{
-    Category, CategoryShare, MonthlySpending, PaymentMethod, Price, SpendingSummary, Subscription,
-    SubscriptionTotal, WindowTotal,
+    Category, CategoryShare, Charge, MonthlySpending, PaymentMethod, Price, SpendingSummary,
+    Subscription, SubscriptionTotal, WindowTotal,
 };
 
 /// An open Rondo database.
@@ -273,6 +273,29 @@ impl Rondo {
             })?;
         let history = store.price_history(id)?;
         Ok(rondo_core::summary::subscription_total(&sub, &history, until)?.into())
+    }
+
+    /// Every charge one subscription falls due for across `[from, to)`,
+    /// each priced at the entry in force on its own day.
+    ///
+    /// The primitive the totals are built from, handed over whole so a
+    /// screen can list charges rather than only sum them. A caller wanting
+    /// what has actually been charged passes tomorrow as `to`; one wanting
+    /// the next charge as well passes the day after it.
+    ///
+    /// Ordered by date, earliest first, as the core produces them.
+    pub fn charges(&self, id: Uuid, from: Date, to: Date) -> Result<Vec<Charge>> {
+        let store = self.store()?;
+        let sub = store
+            .subscription(id, from)?
+            .ok_or_else(|| RondoError::InvalidInput {
+                message: format!("no subscription with id {id}"),
+            })?;
+        let history = store.price_history(id)?;
+        Ok(rondo_core::summary::charges(&sub, &history, from, to)?
+            .into_iter()
+            .map(Charge::from)
+            .collect())
     }
 
     /// Month-by-month spending across `[from, to)`, one entry per month and

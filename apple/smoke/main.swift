@@ -158,6 +158,17 @@ expect(
   "an all-time window knows where to start"
 )
 
+/// The charges themselves, which the totals above are sums of. Listing them
+/// and summing them cannot disagree - the same primitive produced both.
+let listed = try rondo.charges(id: added.id, from: span.from, to: span.to)
+expect(listed.count == Int(total.chargeCount), "the charges listed are the charges counted")
+expect(listed.first?.date == "2026-01-31", "a charge carries the day it fell due")
+expect(listed.last?.amount == "19.90", "and the price in force on that day, not today's")
+expect(
+  listed.reduce(Decimal.zero) { $0 + Decimal(string: $1.amount)! } == Decimal(string: total.total)!,
+  "the listed charges add up to the cumulative"
+)
+
 expect(!serviceTemplates().isEmpty, "the bundled templates are readable without a database")
 
 /// A nickname sharing no characters with the name it finds: proof the query

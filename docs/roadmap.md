@@ -45,6 +45,7 @@ its own before the next begins.
 - [x] v0.1.0 published, 2026-08-28
 - [x] v0.2.0 published, 2026-09-01
 - [x] v0.3.0 published, 2026-09-03 - the release the backup format moved in
+- [x] v0.4.0 published, 2026-09-06 - the release the main window arrived in
 
 ## M6 - The design handoff (in progress)
 
@@ -63,12 +64,11 @@ changes the backup format and that needs a boundary a reader can point at.
       the backup format to v2 - v0.3.0
 - [x] The aggregations the analytics screen needs - v0.3.0
 - [x] Sidebar navigation and the overview - v0.4.0
-- [ ] The form, picking a provider, and the full table - v0.4.0
-- [ ] Subscription detail - v0.4.0
+- [x] The form, picking a provider, and the full table - v0.4.0
+- [x] Subscription detail, and where to cancel by channel - v0.4.0
 - [ ] Calendar, the archive, and the empty states - v0.5.0
 - [ ] Analytics - v0.6.0
 - [ ] Spending grouped by payment method - v0.7.0
-- [ ] Where to cancel, by channel - v0.8.0
 - [ ] First run - v0.8.0
 - [ ] Local notifications - which also closes M4 - v0.8.0
 
@@ -76,9 +76,30 @@ v0.3.0 was the release to be careful with. Its screens barely changed, but
 a backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse
 formats from the future by design.
 
-v0.4.0 carries three rounds rather than two: the fields v0.3.0 added get
+v0.4.0 carried three rounds rather than two: the fields v0.3.0 added got
 their whole interface at once, so recording a price change and seeing the
-history arrive together rather than a version apart.
+history arrived together rather than a version apart.
+
+Where to cancel came a version early, in v0.4.0 rather than v0.8.0. Its
+entry is a button in the detail page's header, and building that page
+twice - once without it and once with - would have cost more than building
+it once.
+
+Two things v0.4.0 found rather than planned. The first: round 4 had built
+payment methods with their whole CRUD across the boundary, and nothing in
+the interface could create one, so the picker offered an empty list and
+the column beside it was always blank. Naming and removing one now happens
+where somebody discovers they need it, in the form.
+
+The second is older than the round that found it: a `LocalizedStringKey`
+resolves against the system's language rather than the one chosen in
+settings, so the interface was half
+translated for anybody whose Mac disagreed with their choice. Every string
+now goes through `Localization.bundle`, and two tests hold it there. The
+words macOS supplies itself - the File and Edit menus, the standard items
+in the app menu - still follow the system, because AppKit fixes its own
+language when the process starts. Changing that means relaunching, which
+is a decision rather than a fix.
 
 The design gained five screens in September, and the plan two rounds. Three
 of them - the full subscription table, the archive, the empty states - are

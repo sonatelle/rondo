@@ -402,6 +402,21 @@ final class SubscriptionsModel {
     }
   }
 
+  /// Every charge a subscription falls due for, earliest first.
+  ///
+  /// The half-open range the core takes, passed through unchanged: a caller
+  /// wanting the next charge included asks for the day after it. Read on
+  /// demand, like the price history, because only the detail screen wants
+  /// it and there is no sense holding every subscription's.
+  func charges(of subscription: Subscription, from: CivilDate, to: CivilDate) -> [Charge] {
+    do {
+      return try rondo.charges(id: subscription.id, from: from, to: to)
+    } catch {
+      report(error)
+      return []
+    }
+  }
+
   /// Records that a subscription's price changed from a given day.
   ///
   /// A rise, not a correction: charges before that day keep what they cost.

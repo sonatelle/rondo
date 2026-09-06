@@ -126,8 +126,8 @@ struct ContentView: View {
   /// reasonably be arranged differently.
   @SceneStorage("subscriptionColumns") private var columns: TableColumnCustomization<SubscriptionRow>
 
-  @State private var isAdding = false
-  @State private var editing: Subscription?
+  /// Which page the sheet is showing, if any.
+  @State private var sheet: SheetRoute?
   @State private var pendingDeletion: [Subscription] = []
 
   /// The backup waiting to be saved; present only while the save panel is
@@ -144,11 +144,24 @@ struct ContentView: View {
     } detail: {
       detail
     }
-    .sheet(isPresented: $isAdding) {
-      SubscriptionFormView(model: model)
-    }
-    .sheet(item: $editing) { subscription in
-      SubscriptionFormView(model: model, editing: subscription)
+    // One sheet with three faces rather than three sheets. The detail page
+    // opens the form, and two `.sheet` modifiers racing - one dismissing as
+    // the other presents - is how that goes wrong. With one, the change is
+    // which page it is showing.
+    .sheet(item: $sheet) { route in
+      switch route {
+      case .add:
+        SubscriptionFormView(model: model)
+      case let .edit(subscription):
+        SubscriptionFormView(model: model, editing: subscription)
+      case let .detail(renewal):
+        SubscriptionDetailView(
+          model: model,
+          renewal: renewal,
+          edit: { sheet = .edit(renewal.subscription) },
+          delete: { pendingDeletion = [renewal.subscription] }
+        )
+      }
     }
     .confirmationDialog(
       deletionTitle,
@@ -289,7 +302,7 @@ struct ContentView: View {
         // there is nothing here to add one to, and the button has to say
         // what it would do.
         Button {
-          isAdding = true
+          sheet = .add
         } label: {
           Text(verbatim: String(localized: "Add Subscription", bundle: Localization.bundle,
                                 locale: Localization.locale,
@@ -345,7 +358,7 @@ struct ContentView: View {
           // The way out is the filters themselves, so the button clears them.
           narrowedToNothing
         } else if matching.isEmpty {
-          EmptyState(model: model, add: { isAdding = true })
+          EmptyState(model: model, add: { sheet = .add })
         } else {
           table
         }
@@ -417,10 +430,10 @@ struct ContentView: View {
     let active = chosen.filter { $0.status == .active }
     let archived = chosen.filter { $0.status == .archived }
     return SubscriptionActions(
-      add: { isAdding = true },
+      add: { sheet = .add },
       // Absent on the overview, which has no search field to focus.
       find: model.navigation == .overview ? nil : { searchFocused = true },
-      edit: chosen.count == 1 ? { editing = chosen.first } : nil,
+      edit: chosen.count == 1 ? { chosen.first.map { sheet = .edit($0) } } : nil,
       archive: active.isEmpty ? nil : { active.forEach { model.setArchived($0, true) } },
       restore: archived.isEmpty ? nil : { archived.forEach { model.setArchived($0, false) } },
       delete: chosen.isEmpty ? nil : { pendingDeletion = chosen }
@@ -457,7 +470,10 @@ struct ContentView: View {
     .contextMenu(forSelectionType: Uuid.self) { ids in
       menuItems(for: ids)
     } primaryAction: { ids in
-      editing = subscriptions(for: ids).first
+      // Double-clicking opens the detail page, not the form: the
+      // question a double-click asks is "what is this", not "let me
+      // change it". The detail page carries the way to edit.
+      rows.first { ids.contains($0.id) }.map { sheet = .detail($0.renewal) }
     }
   }
 
@@ -670,6 +686,26 @@ struct ContentView: View {
     }
     return String(localized: "Delete \(only.name)?", bundle: Localization.bundle,
                   locale: Localization.locale, comment: "Confirmation title for one")
+  }
+}
+
+/// Which page the window's sheet is showing.
+///
+/// One type rather than a flag per page, so the three cannot be true at
+/// once. Identified by the subscription it is about - or by nothing, for
+/// the blank form - which is what lets `sheet(item:)` swap one page for
+/// another without a dismissal in between.
+enum SheetRoute: Identifiable {
+  case add
+  case edit(Subscription)
+  case detail(Renewal)
+
+  var id: String {
+    switch self {
+    case .add: "add"
+    case let .edit(subscription): "edit-\(subscription.id)"
+    case let .detail(renewal): "detail-\(renewal.subscription.id)"
+    }
   }
 }
 

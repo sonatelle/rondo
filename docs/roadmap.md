@@ -57,6 +57,12 @@ which buys a one-command install at the price of waiving Gatekeeper's check
 without asking. Signing and notarizing would undo both the exclusion and the
 waiver; it needs a paid Developer ID.
 
+Pushing to the tap needs a token for another repository, held here as the
+`HOMEBREW_TAP_TOKEN` secret. When it expires the release still succeeds and
+the tap quietly stops moving, so `brew install` goes on handing people an
+old version with nothing saying why. The workflow can be re-run by hand
+against a tag once a new token is in place.
+
 ## M6 - The design handoff (in progress)
 
 Eighteen screens, delivered as a hifi design in August 2026 and widened

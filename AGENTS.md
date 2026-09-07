@@ -68,9 +68,9 @@ organization conventions; where the two differ, this file wins here.
   cannot destroy data. Keep it that way.
 - An exchange rate is a *history*, exactly as a price is: rows of
   `(currency, effective day, rate)`, and a charge on some day is converted
-  at the rate in force on or before that day. Rates are published on
-  business days only, so an exact match is the wrong lookup - a Saturday
-  charge would find nothing.
+  at the rate in force on or before that day. A source publishes on the
+  days it publishes and no others, so an exact match is the wrong lookup:
+  a charge falling on a day the source skipped would find nothing.
 - A rate somebody typed is marked as theirs and is never overwritten by a
   fetch. A charge older than the earliest rate that can be had is **not
   converted**: it is shown in its own currency and counted in the "some

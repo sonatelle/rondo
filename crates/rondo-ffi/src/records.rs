@@ -9,9 +9,9 @@
 
 use jiff::civil::Date;
 use rondo_core::model::{
-    BillingCycle, Category as CoreCategory, Channel, CycleUnit, Money,
-    PaymentMethod as CorePaymentMethod, Price as CorePrice, Subscription as CoreSubscription,
-    SubscriptionStatus,
+    BillingCycle, Category as CoreCategory, Channel, CycleUnit, ExchangeRate as CoreExchangeRate,
+    Money, PaymentMethod as CorePaymentMethod, Price as CorePrice,
+    Subscription as CoreSubscription, SubscriptionStatus,
 };
 use rust_decimal::Decimal;
 use uuid::Uuid;
@@ -212,6 +212,125 @@ impl From<rondo_core::summary::SubscriptionTotal> for SubscriptionTotal {
             currency: total.currency,
             total: total.total,
             charge_count: total.charge_count,
+            first_charge: total.first_charge,
+            last_charge: total.last_charge,
+        }
+    }
+}
+
+/// One day's exchange rate, as seen from a frontend.
+///
+/// `rate` says how many units of `currency` one unit of the base currency
+/// bought that day; ask [`crate::rondo::base_currency`] which that is.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ExchangeRate {
+    pub currency: String,
+    /// The day the rate was published for. It stands for every day after
+    /// it until the next entry, and for none before it.
+    pub effective_on: Date,
+    /// Units of `currency` per one unit of the base, exact.
+    pub rate: Decimal,
+    /// True when a person typed this rate. A fetch never overwrites one.
+    pub is_manual: bool,
+}
+
+impl From<CoreExchangeRate> for ExchangeRate {
+    fn from(rate: CoreExchangeRate) -> Self {
+        Self {
+            currency: rate.currency,
+            effective_on: rate.effective_on,
+            rate: rate.rate,
+            is_manual: rate.is_manual,
+        }
+    }
+}
+
+impl TryFrom<ExchangeRate> for CoreExchangeRate {
+    type Error = RondoError;
+
+    fn try_from(rate: ExchangeRate) -> Result<Self> {
+        Ok(CoreExchangeRate::new(
+            &rate.currency,
+            rate.effective_on,
+            rate.rate,
+            rate.is_manual,
+        )?)
+    }
+}
+
+/// Spending in one currency that no rate could convert.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct Unconverted {
+    pub currency: String,
+    pub subscription_count: u32,
+    /// Monthly total, in this currency rather than the primary one.
+    pub monthly: Decimal,
+    /// Yearly total, in this currency rather than the primary one.
+    pub yearly: Decimal,
+}
+
+impl From<rondo_core::summary::Unconverted> for Unconverted {
+    fn from(left: rondo_core::summary::Unconverted) -> Self {
+        Self {
+            currency: left.currency,
+            subscription_count: left.subscription_count,
+            monthly: left.monthly,
+            yearly: left.yearly,
+        }
+    }
+}
+
+/// Normalized spending as one figure, plus what would not convert.
+///
+/// `unconverted` being non-empty is not an error and must not be hidden:
+/// the totals are true about the subscriptions they cover and silent about
+/// the rest, so a screen showing them has to say what was left out.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ConvertedSpending {
+    /// The currency `monthly` and `yearly` are in.
+    pub currency: String,
+    pub subscription_count: u32,
+    pub monthly: Decimal,
+    pub yearly: Decimal,
+    pub unconverted: Vec<Unconverted>,
+}
+
+impl From<rondo_core::summary::ConvertedSpending> for ConvertedSpending {
+    fn from(spending: rondo_core::summary::ConvertedSpending) -> Self {
+        Self {
+            currency: spending.currency,
+            subscription_count: spending.subscription_count,
+            monthly: spending.monthly,
+            yearly: spending.yearly,
+            unconverted: spending.unconverted.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// What one subscription has cost in a chosen currency.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ConvertedTotal {
+    pub subscription_id: Uuid,
+    /// The currency `total` is in.
+    pub currency: String,
+    pub total: Decimal,
+    /// How many charges fell in the window.
+    pub charge_count: u32,
+    /// How many of those `total` covers. Fewer when the rate history does
+    /// not reach the earliest charges.
+    pub converted_charge_count: u32,
+    pub first_charge: Option<Date>,
+    pub last_charge: Option<Date>,
+}
+
+impl From<rondo_core::summary::ConvertedTotal> for ConvertedTotal {
+    fn from(total: rondo_core::summary::ConvertedTotal) -> Self {
+        Self {
+            subscription_id: total.subscription_id,
+            currency: total.currency,
+            total: total.total,
+            charge_count: total.charge_count,
+            converted_charge_count: total.converted_charge_count,
             first_charge: total.first_charge,
             last_charge: total.last_charge,
         }

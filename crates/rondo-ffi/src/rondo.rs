@@ -14,8 +14,9 @@ use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
 use crate::records::{
-    Category, CategoryShare, Charge, MonthlySpending, PaymentMethod, Price, SpendingSummary,
-    Subscription, SubscriptionTotal, WindowTotal,
+    Category, CategoryShare, Charge, ConvertedSpending, ConvertedTotal, ExchangeRate,
+    MonthlySpending, PaymentMethod, Price, SpendingSummary, Subscription, SubscriptionTotal,
+    WindowTotal,
 };
 
 /// An open Rondo database.
@@ -406,6 +407,140 @@ impl Rondo {
         Ok(self.store()?.delete_price(id)?)
     }
 
+    /// Stores rates that came from a fetch; reports how many were written.
+    ///
+    /// Days and currencies somebody typed a rate for are left untouched,
+    /// so a refresh cannot undo a correction. Everything else is
+    /// overwritten, so a source revising a rate is picked up.
+    ///
+    /// Rates must be quoted against [`base_currency`]. The core does not
+    /// reach the network - fetching is the frontend's job, and this is
+    /// where the result is handed over.
+    pub fn record_rates(&self, rates: Vec<ExchangeRate>) -> Result<u32> {
+        let records = rates
+            .into_iter()
+            .map(rondo_core::model::ExchangeRate::try_from)
+            .collect::<Result<Vec<_>>>()?;
+        Ok(self.store()?.record_fetched_rates(&records)? as u32)
+    }
+
+    /// Records a rate a person typed, replacing whatever was there.
+    ///
+    /// Marked as theirs, so no later fetch overwrites it.
+    pub fn set_manual_rate(
+        &self,
+        currency: String,
+        on: Date,
+        rate: Decimal,
+    ) -> Result<ExchangeRate> {
+        Ok(self.store()?.set_manual_rate(&currency, on, rate)?.into())
+    }
+
+    /// Removes one rate; reports whether one was there.
+    ///
+    /// A currency may end up with none, which simply means amounts in it
+    /// cannot be converted until one arrives.
+    pub fn delete_rate(&self, currency: String, on: Date) -> Result<bool> {
+        Ok(self.store()?.delete_rate(&currency, on)?)
+    }
+
+    /// Every rate stored for one currency, earliest first.
+    pub fn rates(&self, currency: String) -> Result<Vec<ExchangeRate>> {
+        Ok(self
+            .store()?
+            .rates(&currency)?
+            .into_iter()
+            .map(ExchangeRate::from)
+            .collect())
+    }
+
+    /// The rate for `currency` in force on `on`, or nothing if none is.
+    ///
+    /// Nothing means the history does not reach that far back, and the
+    /// caller must not convert rather than substituting a later rate.
+    pub fn rate_in_force(&self, currency: String, on: Date) -> Result<Option<ExchangeRate>> {
+        Ok(self
+            .store()?
+            .rate_in_force(&currency, on)?
+            .map(ExchangeRate::from))
+    }
+
+    /// The most recent day any rate is stored for, across every currency.
+    ///
+    /// What a settings screen shows as "last updated", and what a fetch
+    /// starts from: everything after this day is missing.
+    pub fn newest_rate_day(&self) -> Result<Option<Date>> {
+        Ok(self
+            .store()?
+            .all_rates()?
+            .into_values()
+            .filter_map(|history| history.last().map(|rate| rate.effective_on))
+            .max())
+    }
+
+    /// Converts one amount into `to` at the rate in force on `on`.
+    ///
+    /// Nothing means no rate covers that day, which a screen must show as
+    /// an unconverted amount rather than as zero or as the same number.
+    pub fn convert_amount(
+        &self,
+        amount: Decimal,
+        currency: String,
+        to: String,
+        on: Date,
+    ) -> Result<Option<Decimal>> {
+        let rates = self.store()?.all_rates()?;
+        Ok(
+            rondo_core::convert::convert(&rates, &Money::new(amount, &currency)?, &to, on)?
+                .map(|money| money.amount()),
+        )
+    }
+
+    /// Totals the subscriptions handed in as one figure in `primary`.
+    ///
+    /// The converting counterpart of [`Self::levelled_total`], and used the
+    /// same way: a window passes what it is showing rather than the whole
+    /// database. Currencies with no rate on `on` are reported in
+    /// `unconverted` instead of being guessed at or dropped.
+    pub fn converted_total(
+        &self,
+        subscriptions: Vec<Subscription>,
+        primary: String,
+        on: Date,
+    ) -> Result<ConvertedSpending> {
+        let records = subscriptions
+            .into_iter()
+            .map(CoreSubscription::try_from)
+            .collect::<Result<Vec<_>>>()?;
+        let rates = self.store()?.all_rates()?;
+        Ok(rondo_core::summary::summarize_in(&records, &rates, &primary, on)?.into())
+    }
+
+    /// What one subscription has cost in `primary`, charge by charge.
+    ///
+    /// Each charge is converted at the rate of the day it fell due, so the
+    /// figure does not move when today's rate does. Charges older than the
+    /// rate history are counted in `charge_count` and left out of `total`.
+    pub fn converted_subscription_total(
+        &self,
+        id: Uuid,
+        primary: String,
+        until: Date,
+    ) -> Result<ConvertedTotal> {
+        let store = self.store()?;
+        let sub = store
+            .subscription(id, until)?
+            .ok_or_else(|| RondoError::InvalidInput {
+                message: format!("no subscription with id {id}"),
+            })?;
+        let history = store.price_history(id)?;
+        let rates = store.all_rates()?;
+        Ok(
+            rondo_core::summary::subscription_total_in(&sub, &history, &rates, &primary, until)?
+                .into(),
+        )
+    }
+
     /// Lists payment methods in the order the person arranged them.
     pub fn payment_methods(&self) -> Result<Vec<PaymentMethod>> {
         Ok(self
@@ -501,6 +636,7 @@ impl Rondo {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::base_currency;
     use rondo_core::model::CycleUnit;
     use std::str::FromStr;
 
@@ -838,5 +974,134 @@ mod tests {
             rondo.set_archived(Uuid::now_v7(), true, TODAY),
             Err(RondoError::InvalidInput { .. })
         ));
+    }
+
+    // -- exchange rates --
+
+    fn rate(currency: &str, day: Date, value: &str) -> ExchangeRate {
+        ExchangeRate {
+            currency: currency.to_owned(),
+            effective_on: day,
+            rate: Decimal::from_str(value).unwrap(),
+            is_manual: false,
+        }
+    }
+
+    #[test]
+    fn rates_cross_the_boundary_and_come_back_the_same() {
+        let rondo = open();
+        let day = Date::constant(2026, 1, 1);
+        assert_eq!(
+            rondo.record_rates(vec![rate("USD", day, "1.10")]).unwrap(),
+            1
+        );
+
+        let stored = rondo.rates("USD".into()).unwrap();
+        assert_eq!(stored.len(), 1);
+        // The amount survives as text; a double would have rounded it.
+        assert_eq!(stored[0].rate.to_string(), "1.10");
+        assert!(!stored[0].is_manual);
+        assert_eq!(rondo.newest_rate_day().unwrap(), Some(day));
+    }
+
+    #[test]
+    fn a_fetch_across_the_boundary_leaves_a_typed_rate_alone() {
+        let rondo = open();
+        let day = Date::constant(2026, 1, 1);
+        rondo
+            .set_manual_rate("USD".into(), day, Decimal::from_str("2.00").unwrap())
+            .unwrap();
+
+        assert_eq!(
+            rondo.record_rates(vec![rate("USD", day, "1.10")]).unwrap(),
+            0
+        );
+        let kept = rondo.rate_in_force("USD".into(), day).unwrap().unwrap();
+        assert_eq!(kept.rate.to_string(), "2.00");
+        assert!(kept.is_manual);
+    }
+
+    #[test]
+    fn a_rate_that_is_not_a_number_a_market_makes_is_refused() {
+        let rondo = open();
+        let day = Date::constant(2026, 1, 1);
+        assert!(matches!(
+            rondo.record_rates(vec![rate("USD", day, "0")]),
+            Err(RondoError::InvalidInput { .. })
+        ));
+        assert!(matches!(
+            rondo.set_manual_rate("usd".into(), day, Decimal::ONE),
+            Err(RondoError::InvalidInput { .. })
+        ));
+    }
+
+    #[test]
+    fn an_amount_converts_and_says_so_when_it_cannot() {
+        let rondo = open();
+        let day = Date::constant(2026, 1, 1);
+        rondo.record_rates(vec![rate("USD", day, "1.10")]).unwrap();
+
+        // 11 USD is 10 of the base.
+        let converted = rondo
+            .convert_amount(
+                Decimal::from_str("11").unwrap(),
+                "USD".into(),
+                base_currency(),
+                day,
+            )
+            .unwrap();
+        assert_eq!(converted.map(|d| d.to_string()), Some("10".to_owned()));
+
+        // The day before anything is known is not converted at 1:1.
+        assert_eq!(
+            rondo
+                .convert_amount(
+                    Decimal::from_str("11").unwrap(),
+                    "USD".into(),
+                    base_currency(),
+                    Date::constant(2025, 12, 31),
+                )
+                .unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn a_converted_total_reports_what_it_could_not_convert() {
+        let rondo = open();
+        let day = Date::constant(2026, 1, 1);
+        rondo.record_rates(vec![rate("USD", day, "1.10")]).unwrap();
+        rondo.add_subscription(draft("Netflix")).unwrap();
+        let mut yen = draft("Nintendo");
+        yen.currency = "JPY".into();
+        rondo.add_subscription(yen).unwrap();
+
+        let subs = rondo.subscriptions(TODAY, false).unwrap();
+        let total = rondo.converted_total(subs, base_currency(), TODAY).unwrap();
+
+        assert_eq!(total.currency, base_currency());
+        assert_eq!(total.subscription_count, 1);
+        assert_eq!(total.unconverted.len(), 1);
+        assert_eq!(total.unconverted[0].currency, "JPY");
+    }
+
+    #[test]
+    fn a_subscription_total_converts_each_charge_at_its_own_day() {
+        let rondo = open();
+        rondo
+            .record_rates(vec![
+                rate("USD", Date::constant(2026, 1, 1), "1.00"),
+                rate("USD", Date::constant(2026, 3, 1), "2.00"),
+            ])
+            .unwrap();
+        let sub = rondo.add_subscription(draft("Netflix")).unwrap();
+
+        // Charges on Jan 31 and Feb 28 are at 1.00; Mar 31 is at 2.00.
+        let total = rondo
+            .converted_subscription_total(sub.id, base_currency(), Date::constant(2026, 4, 1))
+            .unwrap();
+        assert_eq!(total.charge_count, 3);
+        assert_eq!(total.converted_charge_count, 3);
+        assert_eq!(total.total.to_string(), "39.75");
     }
 }

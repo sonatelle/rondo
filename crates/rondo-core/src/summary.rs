@@ -12,6 +12,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::convert::{RateHistories, convert};
 use crate::error::{Error, Result};
 use crate::model::{
     BillingCycle, CycleUnit, Money, Price, Subscription, SubscriptionStatus, price_on,
@@ -378,6 +379,150 @@ pub fn summarize(subscriptions: &[Subscription]) -> Vec<SpendingSummary> {
         entry.yearly += yearly_cost(&sub.price, sub.cycle);
     }
     by_currency.into_values().collect()
+}
+
+/// Spending that could not be converted, kept in its own currency.
+///
+/// Present so a screen can say what it left out rather than quietly
+/// understating a total. One entry per currency no rate could be found for.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Unconverted {
+    /// The currency the amounts below are in.
+    pub currency: String,
+    /// Active subscriptions left out of the converted totals.
+    pub subscription_count: u32,
+    /// Their monthly total, in their own currency.
+    pub monthly: Decimal,
+    /// Their yearly total, in their own currency.
+    pub yearly: Decimal,
+}
+
+/// Normalized spending as one figure, plus whatever would not convert.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConvertedSpending {
+    /// The currency `monthly` and `yearly` are in.
+    pub currency: String,
+    /// Active subscriptions counted into the totals.
+    pub subscription_count: u32,
+    /// Total cost normalized to a month, full precision.
+    pub monthly: Decimal,
+    /// Total cost normalized to a year, full precision.
+    pub yearly: Decimal,
+    /// What was left out, by currency, sorted by code. Empty is the good
+    /// case and the common one.
+    pub unconverted: Vec<Unconverted>,
+}
+
+/// Sums active subscriptions into one figure in `primary`.
+///
+/// Amounts are grouped by their own currency and each group converted once,
+/// rather than each subscription separately: one division per currency
+/// truncates a repeating decimal in one place instead of in every row.
+///
+/// A currency with no rate on `on` is not converted and not guessed at. Its
+/// group moves to [`ConvertedSpending::unconverted`] whole, so the total
+/// stays a number that is true about the subscriptions it claims to cover.
+///
+/// `on` is the day whose rates to use. These are levelled figures about
+/// what things cost now, so it is normally today rather than any charge's
+/// own day.
+pub fn summarize_in(
+    subscriptions: &[Subscription],
+    rates: &RateHistories,
+    primary: &str,
+    on: Date,
+) -> Result<ConvertedSpending> {
+    let mut converted = ConvertedSpending {
+        currency: primary.to_owned(),
+        subscription_count: 0,
+        monthly: Decimal::ZERO,
+        yearly: Decimal::ZERO,
+        unconverted: Vec::new(),
+    };
+    for group in summarize(subscriptions) {
+        let monthly = convert(
+            rates,
+            &Money::new(group.monthly, &group.currency)?,
+            primary,
+            on,
+        )?;
+        let yearly = convert(
+            rates,
+            &Money::new(group.yearly, &group.currency)?,
+            primary,
+            on,
+        )?;
+        // Both or neither: a month converted and a year not would be two
+        // figures a reader would have no way to tell apart.
+        match (monthly, yearly) {
+            (Some(monthly), Some(yearly)) => {
+                converted.subscription_count += group.subscription_count;
+                converted.monthly += monthly.amount();
+                converted.yearly += yearly.amount();
+            }
+            _ => converted.unconverted.push(Unconverted {
+                currency: group.currency,
+                subscription_count: group.subscription_count,
+                monthly: group.monthly,
+                yearly: group.yearly,
+            }),
+        }
+    }
+    Ok(converted)
+}
+
+/// What one subscription has cost, every charge converted at its own day.
+///
+/// This is where storing rates as a history earns itself: a subscription
+/// billed through a year of moving rates is totalled at what each charge
+/// actually cost, so the figure does not move when the market does.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConvertedTotal {
+    pub subscription_id: Uuid,
+    /// The currency `total` is in.
+    pub currency: String,
+    /// Sum of every charge that could be converted.
+    pub total: Decimal,
+    /// How many charges fell in the window.
+    pub charge_count: u32,
+    /// How many of those `total` actually covers. Less than `charge_count`
+    /// when the history does not reach back to the earliest ones, which is
+    /// what a screen must say rather than imply by a smaller number.
+    pub converted_charge_count: u32,
+    /// The first and last charge counted, absent when there were none.
+    pub first_charge: Option<Date>,
+    pub last_charge: Option<Date>,
+}
+
+/// Totals one subscription in `primary`, converting charge by charge.
+///
+/// Charges from before the rate history begins are counted in
+/// `charge_count` and left out of `total`; see [`ConvertedTotal`].
+pub fn subscription_total_in(
+    sub: &Subscription,
+    history: &[Price],
+    rates: &RateHistories,
+    primary: &str,
+    until: Date,
+) -> Result<ConvertedTotal> {
+    let charges = charges(sub, history, sub.first_billing_date, until)?;
+    let mut total = Decimal::ZERO;
+    let mut converted_charge_count = 0;
+    for charge in &charges {
+        if let Some(amount) = convert(rates, &charge.amount, primary, charge.date)? {
+            total += amount.amount();
+            converted_charge_count += 1;
+        }
+    }
+    Ok(ConvertedTotal {
+        subscription_id: sub.id,
+        currency: primary.to_owned(),
+        total,
+        charge_count: charges.len() as u32,
+        converted_charge_count,
+        first_charge: charges.first().map(|c| c.date),
+        last_charge: charges.last().map(|c| c.date),
+    })
 }
 
 #[cfg(test)]
@@ -791,5 +936,163 @@ mod tests {
                 Date::constant(2026, 4, 30),
             ]
         );
+    }
+
+    // -- converting into a primary currency --
+
+    /// One EUR bought 8.25 CNY and 1.10 USD from 2026-01-01, with nothing
+    /// recorded before that day.
+    fn rates() -> RateHistories {
+        let mut rates = RateHistories::new();
+        for (currency, rate) in [("CNY", "8.25"), ("USD", "1.10")] {
+            rates.insert(
+                currency.to_owned(),
+                vec![
+                    crate::model::ExchangeRate::new(
+                        currency,
+                        Date::constant(2026, 1, 1),
+                        Decimal::from_str(rate).unwrap(),
+                        false,
+                    )
+                    .unwrap(),
+                ],
+            );
+        }
+        rates
+    }
+
+    const RATE_DAY: Date = Date::constant(2026, 6, 1);
+
+    #[test]
+    fn currencies_are_added_together_once_converted() {
+        // 11 USD and 82.50 CNY are both 10 EUR a month, so the total is 20.
+        let subs = [
+            sub("A", money("11", "USD"), cycle(1, CycleUnit::Month)),
+            sub("B", money("82.50", "CNY"), cycle(1, CycleUnit::Month)),
+        ];
+        let total = summarize_in(&subs, &rates(), "EUR", RATE_DAY).unwrap();
+
+        assert_eq!(total.currency, "EUR");
+        assert_eq!(total.subscription_count, 2);
+        assert_eq!(total.monthly, Decimal::from_str("20").unwrap());
+        assert!(total.unconverted.is_empty());
+    }
+
+    #[test]
+    fn a_currency_with_no_rate_is_reported_rather_than_dropped() {
+        let subs = [
+            sub("A", money("11", "USD"), cycle(1, CycleUnit::Month)),
+            sub("B", money("1000", "JPY"), cycle(1, CycleUnit::Month)),
+        ];
+        let total = summarize_in(&subs, &rates(), "EUR", RATE_DAY).unwrap();
+
+        // The converted figure covers only what it can, and says so.
+        assert_eq!(total.subscription_count, 1);
+        assert_eq!(total.monthly, Decimal::from_str("10").unwrap());
+        assert_eq!(total.unconverted.len(), 1);
+        assert_eq!(total.unconverted[0].currency, "JPY");
+        assert_eq!(total.unconverted[0].subscription_count, 1);
+        assert_eq!(
+            total.unconverted[0].monthly,
+            Decimal::from_str("1000").unwrap()
+        );
+    }
+
+    #[test]
+    fn a_database_with_no_rates_still_totals_a_single_currency() {
+        // The common case for somebody who never leaves their own currency:
+        // nothing to fetch, and the total must still be right.
+        let subs = [
+            sub("A", money("10", "CNY"), cycle(1, CycleUnit::Month)),
+            sub("B", money("20", "CNY"), cycle(1, CycleUnit::Month)),
+        ];
+        let total = summarize_in(&subs, &RateHistories::new(), "CNY", RATE_DAY).unwrap();
+
+        assert_eq!(total.monthly, Decimal::from_str("30").unwrap());
+        assert!(total.unconverted.is_empty());
+    }
+
+    #[test]
+    fn archived_subscriptions_stay_out_of_the_converted_total() {
+        let mut archived = sub("Old", money("11", "USD"), cycle(1, CycleUnit::Month));
+        archived.status = SubscriptionStatus::Archived;
+        let subs = [
+            sub("A", money("11", "USD"), cycle(1, CycleUnit::Month)),
+            archived,
+        ];
+        let total = summarize_in(&subs, &rates(), "EUR", RATE_DAY).unwrap();
+
+        assert_eq!(total.subscription_count, 1);
+        assert_eq!(total.monthly, Decimal::from_str("10").unwrap());
+    }
+
+    #[test]
+    fn a_subscription_is_totalled_at_the_rate_of_each_charge() {
+        // The rate moves between the two charges, so a total built from
+        // today's rate alone would be wrong by the difference.
+        let mut rates = RateHistories::new();
+        rates.insert(
+            "USD".to_owned(),
+            vec![
+                crate::model::ExchangeRate::new(
+                    "USD",
+                    Date::constant(2026, 1, 1),
+                    Decimal::from_str("1.00").unwrap(),
+                    false,
+                )
+                .unwrap(),
+                crate::model::ExchangeRate::new(
+                    "USD",
+                    Date::constant(2026, 2, 1),
+                    Decimal::from_str("2.00").unwrap(),
+                    false,
+                )
+                .unwrap(),
+            ],
+        );
+        let s = sub("A", money("10", "USD"), cycle(1, CycleUnit::Month));
+        let history = [Price::new(
+            s.id,
+            money("10", "USD"),
+            Date::constant(2026, 1, 1),
+        )];
+
+        // January at 1.00 is 10 EUR; February at 2.00 is 5 EUR.
+        let total =
+            subscription_total_in(&s, &history, &rates, "EUR", Date::constant(2026, 3, 1)).unwrap();
+        assert_eq!(total.charge_count, 2);
+        assert_eq!(total.converted_charge_count, 2);
+        assert_eq!(total.total, Decimal::from_str("15").unwrap());
+    }
+
+    #[test]
+    fn charges_older_than_the_rate_history_are_counted_but_not_summed() {
+        let mut rates = RateHistories::new();
+        rates.insert(
+            "USD".to_owned(),
+            vec![
+                crate::model::ExchangeRate::new(
+                    "USD",
+                    Date::constant(2026, 2, 1),
+                    Decimal::from_str("1.00").unwrap(),
+                    false,
+                )
+                .unwrap(),
+            ],
+        );
+        let s = sub("A", money("10", "USD"), cycle(1, CycleUnit::Month));
+        let history = [Price::new(
+            s.id,
+            money("10", "USD"),
+            Date::constant(2026, 1, 1),
+        )];
+
+        let total =
+            subscription_total_in(&s, &history, &rates, "EUR", Date::constant(2026, 3, 1)).unwrap();
+        // Two charges fell due; only February's could be converted.
+        assert_eq!(total.charge_count, 2);
+        assert_eq!(total.converted_charge_count, 1);
+        assert_eq!(total.total, Decimal::from_str("10").unwrap());
+        assert_eq!(total.first_charge, Some(Date::constant(2026, 1, 1)));
     }
 }

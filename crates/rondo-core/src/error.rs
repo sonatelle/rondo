@@ -17,6 +17,11 @@ pub enum Error {
     #[error("invalid subscription: {0}")]
     InvalidSubscription(String),
 
+    /// An exchange rate was not a positive number, or was quoted for
+    /// something that is not a currency code.
+    #[error("invalid exchange rate: {0}")]
+    InvalidRate(String),
+
     /// A billing-date computation left the supported calendar range.
     #[error("billing date out of range: {0}")]
     DateOutOfRange(String),

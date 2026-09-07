@@ -14,13 +14,14 @@ use jiff::Timestamp;
 use jiff::civil::Date;
 use rusqlite::{Connection, OptionalExtension, Row, params};
 use rusqlite_migration::{M, Migrations};
+use rust_decimal::Decimal;
 use uuid::Uuid;
 
 use crate::error::{Error, Result};
 use crate::model;
 use crate::model::{
-    BillingCycle, Category, Channel, CycleUnit, Money, PaymentMethod, Price, Subscription,
-    SubscriptionStatus,
+    BillingCycle, Category, Channel, CycleUnit, ExchangeRate, Money, PaymentMethod, Price,
+    Subscription, SubscriptionStatus,
 };
 
 /// Handle to one Rondo database.
@@ -523,6 +524,139 @@ impl Store {
         Ok(methods)
     }
 
+    // -- exchange rates --
+
+    /// The rate for `currency` in force on `on`, or `None` if none is.
+    ///
+    /// "In force" means the latest entry on or before that day, because a
+    /// source publishes on the days it publishes and a charge can fall on
+    /// one it skipped. `None` means the history does not reach back that
+    /// far, which is a real answer and not a reason to substitute a later
+    /// rate.
+    ///
+    /// [`model::BASE_CURRENCY`] is not stored and so is not found here; it
+    /// is 1 by definition, and conversion handles it.
+    pub fn rate_in_force(&self, currency: &str, on: Date) -> Result<Option<ExchangeRate>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT * FROM exchange_rate
+             WHERE currency = ?1 AND effective_on <= ?2
+             ORDER BY effective_on DESC LIMIT 1",
+        )?;
+        let mut rows = stmt.query(params![currency, on.to_string()])?;
+        match rows.next()? {
+            Some(row) => Ok(Some(rate_from_row(row)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// Every rate stored for one currency, earliest first.
+    pub fn rates(&self, currency: &str) -> Result<Vec<ExchangeRate>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT * FROM exchange_rate WHERE currency = ?1 ORDER BY effective_on")?;
+        let mut rows = stmt.query([currency])?;
+        let mut rates = Vec::new();
+        while let Some(row) = rows.next()? {
+            rates.push(rate_from_row(row)?);
+        }
+        Ok(rates)
+    }
+
+    /// Every rate in the store, grouped by currency, earliest first.
+    pub fn all_rates(&self) -> Result<HashMap<String, Vec<ExchangeRate>>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT * FROM exchange_rate ORDER BY currency, effective_on")?;
+        let mut rows = stmt.query([])?;
+        let mut rates: HashMap<String, Vec<ExchangeRate>> = HashMap::new();
+        while let Some(row) = rows.next()? {
+            let rate = rate_from_row(row)?;
+            rates.entry(rate.currency.clone()).or_default().push(rate);
+        }
+        Ok(rates)
+    }
+
+    /// Stores rates that came from a fetch, reporting how many were written.
+    ///
+    /// A day and currency somebody entered by hand is left exactly as it is:
+    /// they corrected it on purpose, and a refresh that undid that would be
+    /// the bug. Everything else is overwritten, so a source revising a rate
+    /// is picked up.
+    pub fn record_fetched_rates(&self, rates: &[ExchangeRate]) -> Result<usize> {
+        let tx = self.transaction()?;
+        let mut written = 0;
+        for rate in rates {
+            written += tx.execute(
+                "INSERT INTO exchange_rate
+                     (currency, effective_on, rate, is_manual, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, 0, ?4, ?5)
+                 ON CONFLICT (currency, effective_on) DO UPDATE SET
+                     rate = excluded.rate, updated_at = excluded.updated_at
+                 WHERE exchange_rate.is_manual = 0",
+                params![
+                    rate.currency,
+                    rate.effective_on.to_string(),
+                    rate.rate.to_string(),
+                    rate.created_at.to_string(),
+                    rate.updated_at.to_string(),
+                ],
+            )?;
+        }
+        tx.commit()?;
+        Ok(written)
+    }
+
+    /// Records a rate a person typed, replacing whatever was there.
+    ///
+    /// The reverse of [`Self::record_fetched_rates`]: a hand-entered rate
+    /// always wins, including over another hand-entered one.
+    pub fn set_manual_rate(&self, currency: &str, on: Date, rate: Decimal) -> Result<ExchangeRate> {
+        let rate = ExchangeRate::new(currency, on, rate, true)?;
+        self.upsert_rate(&rate)?;
+        Ok(rate)
+    }
+
+    /// Writes a rate as given, inserting or overwriting by currency and day.
+    ///
+    /// Preserves timestamps and the manual flag exactly, which is what
+    /// restoring a backup must do. Returns whether the row was new.
+    pub fn upsert_rate(&self, rate: &ExchangeRate) -> Result<bool> {
+        let existing: i64 = self.conn.query_row(
+            "SELECT count(*) FROM exchange_rate WHERE currency = ?1 AND effective_on = ?2",
+            params![rate.currency, rate.effective_on.to_string()],
+            |row| row.get(0),
+        )?;
+        self.conn.execute(
+            "INSERT INTO exchange_rate
+                 (currency, effective_on, rate, is_manual, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+             ON CONFLICT (currency, effective_on) DO UPDATE SET
+                 rate = excluded.rate, is_manual = excluded.is_manual,
+                 created_at = excluded.created_at, updated_at = excluded.updated_at",
+            params![
+                rate.currency,
+                rate.effective_on.to_string(),
+                rate.rate.to_string(),
+                rate.is_manual,
+                rate.created_at.to_string(),
+                rate.updated_at.to_string(),
+            ],
+        )?;
+        Ok(existing == 0)
+    }
+
+    /// Deletes one rate; reports whether one was there.
+    ///
+    /// Unlike a price, a currency may end up with no rates at all: it just
+    /// means amounts in it cannot be converted until one arrives.
+    pub fn delete_rate(&self, currency: &str, on: Date) -> Result<bool> {
+        let changed = self.conn.execute(
+            "DELETE FROM exchange_rate WHERE currency = ?1 AND effective_on = ?2",
+            params![currency, on.to_string()],
+        )?;
+        Ok(changed > 0)
+    }
+
     // -- categories --
 
     /// Inserts a category exactly as given.
@@ -655,6 +789,7 @@ static MIGRATIONS: LazyLock<Migrations<'static>> = LazyLock::new(|| {
         M::up(include_str!("../migrations/002-price-history.sql")),
         M::up(include_str!("../migrations/003-seed-categories.sql")),
         M::up(include_str!("../migrations/004-seed-payment-methods.sql")),
+        M::up(include_str!("../migrations/005-exchange-rates.sql")),
     ])
 });
 
@@ -747,6 +882,22 @@ fn price_from_row(row: &Row<'_>) -> Result<Price> {
         created_at: parse_text(row.get::<_, String>("created_at")?)?,
         updated_at: parse_text(row.get::<_, String>("updated_at")?)?,
     })
+}
+
+fn rate_from_row(row: &Row<'_>) -> Result<ExchangeRate> {
+    let currency: String = row.get("currency")?;
+    let rate: String = row.get("rate")?;
+    let mut stored = ExchangeRate::new(
+        &currency,
+        parse_text(row.get::<_, String>("effective_on")?)?,
+        rate.parse()
+            .map_err(|e| Error::Corrupt(format!("rate {rate:?}: {e}")))?,
+        row.get("is_manual")?,
+    )?;
+    // `new` stamps both timestamps with now; the stored ones are the truth.
+    stored.created_at = parse_text(row.get::<_, String>("created_at")?)?;
+    stored.updated_at = parse_text(row.get::<_, String>("updated_at")?)?;
+    Ok(stored)
 }
 
 /// Reads the `amount` and `currency` columns of a price row as [`Money`].
@@ -885,7 +1036,7 @@ mod tests {
         let store = Store::open_in_memory().unwrap();
         assert_eq!(
             MIGRATIONS.current_version(&store.conn).unwrap(),
-            SchemaVersion::Inside(NonZeroUsize::new(4).unwrap())
+            SchemaVersion::Inside(NonZeroUsize::new(5).unwrap())
         );
     }
 
@@ -1409,5 +1560,175 @@ mod tests {
         }
         let store = Store::open(&path).unwrap();
         assert_eq!(store.subscription(sub.id, TODAY).unwrap().unwrap(), sub);
+    }
+
+    // -- exchange rates --
+
+    fn rate(currency: &str, day: (i16, i8, i8), value: &str) -> ExchangeRate {
+        ExchangeRate::new(
+            currency,
+            Date::constant(day.0, day.1, day.2),
+            Decimal::from_str(value).unwrap(),
+            false,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn a_rate_stands_for_every_day_until_the_next_one() {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .record_fetched_rates(&[
+                rate("CNY", (2026, 9, 4), "8.20"),
+                rate("CNY", (2026, 9, 7), "8.25"),
+            ])
+            .unwrap();
+
+        // Friday's rate covers the weekend the source did not publish on.
+        for day in 4..=6 {
+            let found = store
+                .rate_in_force("CNY", Date::constant(2026, 9, day))
+                .unwrap()
+                .unwrap();
+            assert_eq!(found.rate, Decimal::from_str("8.20").unwrap(), "day {day}");
+        }
+        let monday = store
+            .rate_in_force("CNY", Date::constant(2026, 9, 7))
+            .unwrap()
+            .unwrap();
+        assert_eq!(monday.rate, Decimal::from_str("8.25").unwrap());
+    }
+
+    #[test]
+    fn a_day_before_the_history_begins_has_no_rate() {
+        // Deliberately unlike a price, which falls back to its earliest
+        // entry. Converting at a rate from a later year would be a wrong
+        // number that looks like a right one.
+        let store = Store::open_in_memory().unwrap();
+        store
+            .record_fetched_rates(&[rate("CNY", (2026, 9, 4), "8.20")])
+            .unwrap();
+        assert!(
+            store
+                .rate_in_force("CNY", Date::constant(2026, 9, 3))
+                .unwrap()
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn a_fetch_never_overwrites_a_rate_somebody_typed() {
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+        store
+            .set_manual_rate("CNY", day, Decimal::from_str("8.00").unwrap())
+            .unwrap();
+
+        let written = store
+            .record_fetched_rates(&[
+                rate("CNY", (2026, 9, 4), "8.20"),
+                rate("USD", (2026, 9, 4), "1.10"),
+            ])
+            .unwrap();
+
+        // Only the untouched currency was written.
+        assert_eq!(written, 1);
+        let kept = store.rate_in_force("CNY", day).unwrap().unwrap();
+        assert_eq!(kept.rate, Decimal::from_str("8.00").unwrap());
+        assert!(kept.is_manual);
+    }
+
+    #[test]
+    fn typing_a_rate_replaces_a_fetched_one() {
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+        store
+            .record_fetched_rates(&[rate("CNY", (2026, 9, 4), "8.20")])
+            .unwrap();
+        store
+            .set_manual_rate("CNY", day, Decimal::from_str("8.00").unwrap())
+            .unwrap();
+
+        let stored = store.rate_in_force("CNY", day).unwrap().unwrap();
+        assert_eq!(stored.rate, Decimal::from_str("8.00").unwrap());
+        assert!(stored.is_manual);
+        assert_eq!(store.rates("CNY").unwrap().len(), 1);
+    }
+
+    #[test]
+    fn a_revised_rate_from_the_source_is_picked_up() {
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+        store
+            .record_fetched_rates(&[rate("CNY", (2026, 9, 4), "8.20")])
+            .unwrap();
+        store
+            .record_fetched_rates(&[rate("CNY", (2026, 9, 4), "8.21")])
+            .unwrap();
+
+        assert_eq!(store.rates("CNY").unwrap().len(), 1);
+        assert_eq!(
+            store.rate_in_force("CNY", day).unwrap().unwrap().rate,
+            Decimal::from_str("8.21").unwrap()
+        );
+    }
+
+    #[test]
+    fn restoring_a_rate_preserves_its_timestamps_and_its_flag() {
+        let store = Store::open_in_memory().unwrap();
+        let mut stored = rate("CNY", (2026, 9, 4), "8.20");
+        stored.is_manual = true;
+        stored.created_at = "2020-01-01T00:00:00Z".parse().unwrap();
+        stored.updated_at = "2020-01-02T00:00:00Z".parse().unwrap();
+
+        assert!(store.upsert_rate(&stored).unwrap());
+        assert!(!store.upsert_rate(&stored).unwrap());
+        assert_eq!(store.rates("CNY").unwrap(), vec![stored]);
+    }
+
+    #[test]
+    fn rates_are_grouped_by_currency_earliest_first() {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .record_fetched_rates(&[
+                rate("USD", (2026, 9, 7), "1.10"),
+                rate("CNY", (2026, 9, 7), "8.25"),
+                rate("CNY", (2026, 9, 4), "8.20"),
+            ])
+            .unwrap();
+
+        let all = store.all_rates().unwrap();
+        assert_eq!(all.len(), 2);
+        let cny: Vec<_> = all["CNY"].iter().map(|r| r.effective_on).collect();
+        assert_eq!(
+            cny,
+            vec![Date::constant(2026, 9, 4), Date::constant(2026, 9, 7)]
+        );
+    }
+
+    #[test]
+    fn deleting_a_rate_is_allowed_to_empty_a_currency() {
+        // Unlike a price: a currency with no rates simply cannot be
+        // converted yet, which is a state the app has to handle anyway.
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+        store
+            .record_fetched_rates(&[rate("CNY", (2026, 9, 4), "8.20")])
+            .unwrap();
+
+        assert!(store.delete_rate("CNY", day).unwrap());
+        assert!(!store.delete_rate("CNY", day).unwrap());
+        assert!(store.rates("CNY").unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_rate_must_be_a_currency_and_a_positive_number() {
+        let day = Date::constant(2026, 9, 4);
+        let one = Decimal::ONE;
+        assert!(ExchangeRate::new("cny", day, one, false).is_err());
+        assert!(ExchangeRate::new("CNYY", day, one, false).is_err());
+        assert!(ExchangeRate::new("CNY", day, Decimal::ZERO, false).is_err());
+        assert!(ExchangeRate::new("CNY", day, -one, false).is_err());
+        assert!(ExchangeRate::new("CNY", day, one, false).is_ok());
     }
 }

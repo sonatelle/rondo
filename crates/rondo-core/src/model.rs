@@ -379,6 +379,84 @@ pub fn price_on(history: &[Price], date: Date) -> Option<&Price> {
         .or_else(|| history.first())
 }
 
+/// The currency every stored exchange rate is quoted against.
+///
+/// Fixed rather than following whichever currency totals are shown in:
+/// changing that setting would otherwise make every stored rate meaningless
+/// and require fetching the whole history again. Converting between two
+/// other currencies goes through this one.
+pub const BASE_CURRENCY: &str = "EUR";
+
+/// What one unit of [`BASE_CURRENCY`] bought of some currency on one day.
+///
+/// Rates form a history exactly as prices do, and for the same reason: a
+/// charge is converted at the rate of the day it fell on, so a total over
+/// past months does not move when today's rate does.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExchangeRate {
+    /// Three-letter uppercase code this rate is for.
+    pub currency: String,
+    /// The civil date the rate was published for.
+    ///
+    /// It stands for every day from here until the next entry. Unlike a
+    /// price, it does *not* stand for the days before itself: a charge
+    /// older than anything that can be fetched is left unconverted rather
+    /// than converted at a rate from a later year.
+    pub effective_on: Date,
+    /// Units of [`Self::currency`] per one unit of the base.
+    pub rate: Decimal,
+    /// Whether a person typed this rate rather than a fetch supplying it.
+    ///
+    /// A fetch never overwrites one of these.
+    pub is_manual: bool,
+    /// Creation instant (UTC). Kept accurate for future sync.
+    pub created_at: Timestamp,
+    /// Last modification instant (UTC). Kept accurate for future sync.
+    pub updated_at: Timestamp,
+}
+
+impl ExchangeRate {
+    /// Records a rate with fresh timestamps.
+    ///
+    /// Fails with [`Error::InvalidRate`] when the currency is not a
+    /// three-letter uppercase code or the rate is not strictly positive.
+    /// Zero is refused as firmly as a negative: it is the one value that
+    /// converts every amount to nothing and divides every amount by
+    /// nothing, and no market ever produces it.
+    pub fn new(currency: &str, effective_on: Date, rate: Decimal, is_manual: bool) -> Result<Self> {
+        if currency.len() != 3 || !currency.bytes().all(|b| b.is_ascii_uppercase()) {
+            return Err(Error::InvalidRate(format!(
+                "currency must be a three-letter uppercase code, got {currency:?}"
+            )));
+        }
+        if rate <= Decimal::ZERO {
+            return Err(Error::InvalidRate(format!(
+                "rate must be greater than zero, got {rate}"
+            )));
+        }
+        let now = Timestamp::now();
+        Ok(Self {
+            currency: currency.to_owned(),
+            effective_on,
+            rate,
+            is_manual,
+            created_at: now,
+            updated_at: now,
+        })
+    }
+}
+
+/// The rate in force on `date`, from a history sorted by `effective_on`.
+///
+/// Returns `None` when every entry is later than the day asked about. That
+/// is deliberately unlike [`price_on`], which falls back to its earliest
+/// entry: a subscription with no price yet is impossible, but a charge from
+/// before the rate history begins is ordinary, and the honest answer there
+/// is that it cannot be converted.
+pub fn rate_on(history: &[ExchangeRate], date: Date) -> Option<&ExchangeRate> {
+    history.iter().rfind(|rate| rate.effective_on <= date)
+}
+
 impl Category {
     /// Creates a category with a fresh id.
     ///
@@ -475,5 +553,40 @@ mod tests {
         assert!(bad.is_err());
         let good: Money = serde_json::from_str(r#"{"amount":"15.99","currency":"USD"}"#).unwrap();
         assert_eq!(good.currency(), "USD");
+    }
+
+    #[test]
+    fn rate_on_holds_the_last_rate_forward_but_never_backward() {
+        let history = [
+            ExchangeRate::new(
+                "CNY",
+                Date::constant(2026, 9, 4),
+                Decimal::from_str("8.20").unwrap(),
+                false,
+            )
+            .unwrap(),
+            ExchangeRate::new(
+                "CNY",
+                Date::constant(2026, 9, 7),
+                Decimal::from_str("8.25").unwrap(),
+                false,
+            )
+            .unwrap(),
+        ];
+
+        assert_eq!(
+            rate_on(&history, Date::constant(2026, 9, 6)).unwrap().rate,
+            Decimal::from_str("8.20").unwrap()
+        );
+        assert_eq!(
+            rate_on(&history, Date::constant(2026, 12, 31))
+                .unwrap()
+                .rate,
+            Decimal::from_str("8.25").unwrap()
+        );
+        // Where `price_on` would fall back to its earliest entry, this
+        // reports that it does not know - and the caller must not convert.
+        assert!(rate_on(&history, Date::constant(2026, 9, 3)).is_none());
+        assert!(rate_on(&[], Date::constant(2026, 9, 6)).is_none());
     }
 }

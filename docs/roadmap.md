@@ -41,11 +41,21 @@ its own before the next begins.
 
 - [x] dmg packaging, drafted by pushing a version tag and published by hand
 - [x] Known limitation recorded: without notarization the first launch
-      needs right-click -> Open past Gatekeeper
+      needs getting past Gatekeeper by hand, in a way that changed in
+      macOS 15
+- [x] A Homebrew tap, written to by the release that publishes, 2026-09-07
 - [x] v0.1.0 published, 2026-08-28
 - [x] v0.2.0 published, 2026-09-01
 - [x] v0.3.0 published, 2026-09-03 - the release the backup format moved in
 - [x] v0.4.0 published, 2026-09-06 - the release the main window arrived in
+
+The tap is `sonatelle/homebrew-tap`, and it has to be a tap of our own:
+homebrew-cask stopped taking casks that fail Gatekeeper on 2026-09-01, and
+Homebrew removed the `--no-quarantine` flag in 5.1, so an unnotarized app
+has nowhere else to go. The cask clears the quarantine attribute itself,
+which buys a one-command install at the price of waiving Gatekeeper's check
+without asking. Signing and notarizing would undo both the exclusion and the
+waiver; it needs a paid Developer ID.
 
 ## M6 - The design handoff (in progress)
 

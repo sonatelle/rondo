@@ -25,5 +25,6 @@ command.
 
 It runs on Apple Silicon Macs, macOS 14 or later. There is no Intel build.
 
-Rondo keeps its data in a local SQLite file and makes no network requests
-of any kind.
+Rondo keeps its data in a local SQLite file. It has no account and sends
+nothing about you anywhere. From v0.5.0 it fetches exchange rates, and
+that is the only thing it asks the network for.

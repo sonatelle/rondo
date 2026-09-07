@@ -56,10 +56,13 @@ spread across it, and a page for one subscription.
 
 Still to come:
 
-- Renewal reminders through local notifications.
+- One total rather than one per currency. v0.5.0 converts to a currency
+  you pick, which is the first thing Rondo will use the network for: it
+  fetches exchange rates, and nothing else. Until then currencies are
+  listed apart and never converted.
 - A calendar of what falls due, and an analytics page.
-- Spending grouped by payment method.
-- First run.
+- Spending grouped by payment method, and the archive as a page of its own.
+- First run, and renewal reminders through local notifications.
 
 ## Install
 

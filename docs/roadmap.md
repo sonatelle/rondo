@@ -59,8 +59,8 @@ waiver; it needs a paid Developer ID.
 
 ## M6 - The design handoff (in progress)
 
-Sixteen screens, delivered as a hifi design in August 2026 and widened in
-September. It is named a milestone of its own because it is not a coat of
+Eighteen screens, delivered as a hifi design in August 2026 and widened
+twice in September. It is named a milestone of its own because it is not a coat of
 paint: most of the screens did not exist, the overview was a rewrite rather
 than a restyle, and the handoff asked the core for price history, payment
 methods and a provider table. One round per pull request, in dependency
@@ -76,11 +76,13 @@ changes the backup format and that needs a boundary a reader can point at.
 - [x] Sidebar navigation and the overview - v0.4.0
 - [x] The form, picking a provider, and the full table - v0.4.0
 - [x] Subscription detail, and where to cancel by channel - v0.4.0
-- [ ] Calendar, the archive, and the empty states - v0.5.0
-- [ ] Analytics - v0.6.0
-- [ ] Spending grouped by payment method - v0.7.0
-- [ ] First run - v0.8.0
-- [ ] Local notifications - which also closes M4 - v0.8.0
+- [ ] Exchange rates, conversion, and the currency settings - v0.5.0
+- [ ] The amount display rules, across every screen that prints money -
+      v0.5.0
+- [ ] The calendar and its year view - v0.6.0
+- [ ] Analytics - v0.7.0
+- [ ] Spending grouped by payment method, and the archive - v0.8.0
+- [ ] First run, and local notifications - which also closes M4 - v0.9.0
 
 v0.3.0 was the release to be careful with. Its screens barely changed, but
 a backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse
@@ -123,6 +125,36 @@ not to aggregate them. That rested on the analytics design having no such
 view; the September design has one, so the aggregation now has a screen
 that can show it is wrong.
 
+The design was widened a second time at the end of the month, and this one
+reordered the rest of the plan. Every total becomes a single figure in a
+primary currency, which reverses the oldest rule the project had about
+money - that currencies are listed apart and never converted - and brings
+two screens of its own, the currency settings and a sheet of rules for how
+an amount is written. Rates come from the network, which Rondo had not
+done at all. `AGENTS.md` carries what that cost and why it was accepted.
+
+So currency goes first, before the calendar and the analytics rather than
+after them. Both of those screens are almost entirely numbers; built under
+the old rule they would be built twice.
+
+An exchange rate is stored as a history, in the shape a price already has,
+rather than as a rate locked onto each charge the way the handoff
+describes. The two agree about the answer - a charge is converted at the
+rate of its own day, and a total does not move when rates do - but a
+charge in Rondo is derived from the anchor date and the cycle rather than
+written down, so there is no row to lock a rate onto. Writing one would
+mean a ledger, a thing to keep in step with the schedule it was derived
+from, and a class of bug where editing a first billing date leaves stale
+rows behind. The rate source having a historical endpoint settles the one
+argument the ledger had: rates from before Rondo was installed can be
+fetched rather than only accumulated.
+
+Two more fields fall out of the widened design: `cancel_url` on the
+provider table, which round 8 was told to skip and which the guide to
+cancelling can use once it exists, and `archived_at`, which the archive
+screen needs to say how long something ran. Both are migrations, and both
+wait for the round that shows them.
+
 ## Later, undated
 
 - iOS delivery (blocked on a distribution story outside GitHub Releases)
@@ -131,5 +163,9 @@ that can show it is wrong.
 
 ## Non-goals for the MVP
 
-Currency conversion, tags, charts, widgets, accounts, and App Store
-integrations are deliberately out of scope until the MVP is done.
+Tags, widgets, accounts, and App Store integrations are deliberately out of
+scope until the MVP is done.
+
+Currency conversion and charts were on this list until 2026-09-07, when the
+design made both of them the point of a screen. `AGENTS.md` records the
+decision and what it withdrew.

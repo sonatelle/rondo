@@ -1,0 +1,107 @@
+name: "Update the Homebrew tap"
+
+# release.yml drafts a release when a version tag is pushed; a person then
+# reads the notes and presses publish. This runs on that second act rather
+# than the first, because a draft's assets are not downloadable by anybody
+# else - a cask pointing at one would 404 for every person who typed
+# `brew install`.
+on:
+  release:
+    types: [published]
+  # For the releases published before this workflow existed, and for the
+  # second attempt when pushing to the tap fails on something that has
+  # nothing to do with the release.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to sync, for example v0.4.0"
+        required: true
+
+concurrency:
+  group: tap-${{ github.ref }}
+  cancel-in-progress: false
+
+# Nothing in this repository is written. The tap is a different repository
+# and is reached with its own token below.
+permissions:
+  contents: read
+
+jobs:
+  cask:
+    # A prerelease is not what `brew install rondo` should hand somebody.
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    steps:
+      - name: Work out which release this is
+        id: release
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          echo "tag=${TAG}" >>"${GITHUB_OUTPUT}"
+          echo "version=${TAG#v}" >>"${GITHUB_OUTPUT}"
+
+      - name: Hash the disk image
+        id: image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          # Downloaded and hashed here rather than read from the release
+          # asset's `digest` field: this is byte for byte the file brew will
+          # fetch and check, where a digest copied out of metadata proves only
+          # that the metadata agrees with itself.
+          gh release download "${TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern "Rondo-${VERSION}.dmg"
+          sha256="$(sha256sum "Rondo-${VERSION}.dmg" | cut -d' ' -f1)"
+          echo "sha256=${sha256}" >>"${GITHUB_OUTPUT}"
+          echo "::notice::Rondo-${VERSION}.dmg is ${sha256}"
+
+      - name: Check out the tap
+        uses: actions/checkout@v6
+        with:
+          repository: sonatelle/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Write the version and the checksum into the cask
+        working-directory: tap
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          SHA256: ${{ steps.image.outputs.sha256 }}
+        run: |
+          sed -i \
+            -e "s|^  version \".*\"\$|  version \"${VERSION}\"|" \
+            -e "s|^  sha256 \".*\"\$|  sha256 \"${SHA256}\"|" \
+            Casks/rondo.rb
+
+          # sed quietly matching nothing is how this job would go green while
+          # leaving the tap on the old version, and a reformat of either line
+          # is all that would take. Read back what was meant to be written.
+          grep -qx "  version \"${VERSION}\"" Casks/rondo.rb || {
+            echo "::error::the version line was not rewritten; the cask's shape must have changed"
+            exit 1
+          }
+          grep -qx "  sha256 \"${SHA256}\"" Casks/rondo.rb || {
+            echo "::error::the sha256 line was not rewritten; the cask's shape must have changed"
+            exit 1
+          }
+
+      - name: Commit and push
+        working-directory: tap
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          # Re-running a tag the tap already carries does nothing rather than
+          # making an empty commit, which is what makes workflow_dispatch safe
+          # to reach for when something else in this job needs another go.
+          if git diff --quiet; then
+            echo "::notice::the cask already names ${VERSION}; nothing to push"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "chore(rondo): update the cask to ${VERSION}" Casks/rondo.rb
+          git push

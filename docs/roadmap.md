@@ -155,6 +155,15 @@ rows behind. The rate source having a historical endpoint settles the one
 argument the ledger had: rates from before Rondo was installed can be
 fetched rather than only accumulated.
 
+The source is Frankfurter, `api.frankfurter.dev/v2`, verified on
+2026-09-07: no key, 201 currencies from 84 official sources, and open
+source with a self-hosted option if it ever goes away. It answers for one
+day (`?date=`), for a range (`?from=&to=`, optionally grouped by month),
+and for only the currencies asked about (`?base=&quotes=`), which is what
+makes backfilling a subscription's whole history one request rather than
+one per charge. Its v1 nested `rates` object is superseded by v2's flat
+arrays; write against v2.
+
 Two more fields fall out of the widened design: `cancel_url` on the
 provider table, which round 8 was told to skip and which the guide to
 cancelling can use once it exists, and `archived_at`, which the archive

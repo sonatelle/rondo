@@ -5,6 +5,7 @@
 //! `rondo-ffi`. Nothing here touches the network or a specific platform.
 
 pub mod backup;
+pub mod convert;
 pub mod cycle;
 pub mod error;
 pub mod model;

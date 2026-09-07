@@ -14,6 +14,9 @@ pub mod templates;
 
 pub use backup::Backup;
 pub use error::{Error, Result};
-pub use model::{BillingCycle, Category, CycleUnit, Money, Subscription, SubscriptionStatus};
+pub use model::{
+    BASE_CURRENCY, BillingCycle, Category, CycleUnit, ExchangeRate, Money, Subscription,
+    SubscriptionStatus,
+};
 pub use store::Store;
 pub use templates::ServiceTemplate;

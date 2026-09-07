@@ -36,6 +36,7 @@ impl From<CoreError> for RondoError {
             CoreError::InvalidCycle(_)
             | CoreError::InvalidMoney(_)
             | CoreError::InvalidSubscription(_)
+            | CoreError::InvalidRate(_)
             | CoreError::DateOutOfRange(_) => Self::InvalidInput { message },
             CoreError::Storage(_) | CoreError::Migration(_) => Self::Storage { message },
             CoreError::Corrupt(_) => Self::UnusableData { message },

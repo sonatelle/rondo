@@ -66,7 +66,21 @@ organization conventions; where the two differ, this file wins here.
   the old shape; import must keep refusing versions from the future.
 - Importing a backup merges and never deletes, so restoring the wrong file
   cannot destroy data. Keep it that way.
-- Data is local-only. `rondo-core` must not perform network requests.
+- An exchange rate is a *history*, exactly as a price is: rows of
+  `(currency, effective day, rate)`, and a charge on some day is converted
+  at the rate in force on or before that day. Rates are published on
+  business days only, so an exact match is the wrong lookup - a Saturday
+  charge would find nothing.
+- A rate somebody typed is marked as theirs and is never overwritten by a
+  fetch. A charge older than the earliest rate that can be had is **not
+  converted**: it is shown in its own currency and counted in the "some
+  amounts were not converted" note. Never fall back to 1:1, which is a
+  wrong number wearing the clothes of a right one.
+- `rondo-core` does not reach the network. Fetching rates is the
+  frontend's job - it hands them to the core, which stores them, converts
+  with them, and does every sum. A core carrying an HTTP stack would make
+  every frontend carry one it does not need, and would put the sandbox
+  entitlement in the wrong place.
 
 ## Development Environment
 
@@ -139,6 +153,20 @@ implemented behavior.
 
 ## MVP Non-Goals
 
-Do not add these without an explicit decision: currency conversion, tags,
-charts, widgets, device sync, accounts, or any App Store-specific
-integration (IAP, iCloud entitlements).
+Do not add these without an explicit decision: tags, widgets, device sync,
+accounts, or any App Store-specific integration (IAP, iCloud entitlements).
+
+Currency conversion was one of these and is no longer. The September 2026
+design turned every total into one figure in a primary currency, and on
+2026-09-07 the decision to follow it was taken deliberately, knowing what
+it costs: Rondo reaches the network now, for exchange rates and nothing
+else. Two claims had to be withdrawn rather than quietly dropped - the
+README's "no network requests of any kind", which is printed in the
+published v0.4.0 notes, and the sandbox holding no network entitlement,
+which had made that claim something macOS enforced rather than something
+we promised. Charts left the list at the same time and for the same
+reason: the analytics screen is one of the eighteen.
+
+The exception this leaves is narrow, and worth keeping narrow. Rondo asks
+one host for one file of numbers, sends nothing about the person, and
+works offline on what it has already stored.

@@ -53,7 +53,9 @@ These invariants hold everywhere in the codebase:
 - **Normalization convention.** For summaries, a year is 365.25 days and a
   month is exactly 1/12 of a year. Month- and year-based cycles divide
   exactly; day- and week-based cycles are approximations by nature.
-- **Local-only data.** The core performs no network requests. Entities
+- **Local-only data.** The core performs no network requests: from v0.5.0
+  a frontend fetches exchange rates and hands them over, and that is the
+  only thing Rondo asks the network for at all. Entities
   carry UUIDv7 ids and UTC created/updated timestamps so a future sync
   feature remains possible, but nothing syncs today. A v7 id embeds its
   creation millisecond, so ids sort in creation order - inserts stay local
@@ -189,8 +191,10 @@ not about duplication but about what a mistake costs:
   `make-app-icon.swift` and committed as PNGs. A ring that deepens as it
   travels and returns to where it began, with a card at the centre. The
   card is not a currency symbol on purpose: Rondo holds several currencies
-  at once and never converts between them, so one currency's glyph at the
-  centre of the mark would claim something the app does not do.
+  at once, and putting one of them at the centre of the mark would make the
+  app look like it belonged to that one. From v0.5.0 it converts them to a
+  currency somebody picks, which is a reason to keep the mark neutral
+  rather than to change it - the picked one is theirs, not ours.
 - `apple/Rondo/` - the macOS app. `SubscriptionsModel` holds the open
   database and the last-read values; the views read from it and call back
   into it, and none of them compute anything about money or dates.

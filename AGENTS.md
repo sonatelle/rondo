@@ -83,6 +83,13 @@ organization conventions; where the two differ, this file wins here.
 - All work lands through pull requests, even solo. Use one short-lived
   branch per independent change; `main` stays stable.
 - Use Conventional Commits subjects (e.g. `feat(core): add cycle math`).
+- The workspace version in the root `Cargo.toml` is the core's own, and it
+  moves on its own schedule rather than with the app's. Raise it in the
+  same pull request that gives the core a migration or a new function
+  across the FFI. It is what the About tab reports, and the only thing
+  that could catch an app built against a stale XCFramework - a version
+  that never changes catches nothing. It was missed once, and went two
+  releases' worth of migrations and new calls without moving.
 - Commit in small, single-intent increments; each commit should build and
   pass checks on its own.
 - Land each unit as soon as it stands alone and passes checks, before

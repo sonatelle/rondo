@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::error::{Error, Result};
-use crate::model::{Category, PaymentMethod, Price, Subscription};
+use crate::model::{Category, ExchangeRate, PaymentMethod, Price, Subscription};
 use crate::store::Store;
 
 /// Format version written by this build.
@@ -25,7 +25,10 @@ use crate::store::Store;
 /// per subscription and no history at all, so importing one opens a history
 /// with that price, effective from the first charge - the same thing the
 /// schema migration does to a version 1 database.
-pub const FORMAT_VERSION: u32 = 2;
+///
+/// Version 3 added hand-entered exchange rates. Older files carry none,
+/// which is simply the truth about them; nothing has to be reconstructed.
+pub const FORMAT_VERSION: u32 = 3;
 
 /// A complete export of one Rondo database.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -57,6 +60,17 @@ pub struct Backup {
     /// truth: nothing could have referenced one.
     #[serde(default)]
     pub payment_methods: Vec<PaymentMethod>,
+    /// Exchange rates a person typed, and only those.
+    ///
+    /// Fetched rates are deliberately not carried: they can be had from the
+    /// source again, and a file holding years of daily rates for a dozen
+    /// currencies would be mostly numbers nobody chose. A hand-entered rate
+    /// is the opposite - it exists nowhere but this database.
+    ///
+    /// Absent from files older than version 3, where an empty list is the
+    /// truth: no build before it could store a rate at all.
+    #[serde(default)]
+    pub manual_rates: Vec<ExchangeRate>,
 }
 
 /// What an import changed.
@@ -97,6 +111,7 @@ pub fn export(store: &Store) -> Result<Backup> {
         subscriptions: store.subscriptions(None, today)?,
         prices,
         payment_methods: store.payment_methods()?,
+        manual_rates: store.manual_rates()?,
     })
 }
 
@@ -167,6 +182,15 @@ pub fn import(store: &Store, backup: &Backup) -> Result<ImportReport> {
     // After the subscriptions, so the foreign key resolves.
     for price in &prices {
         store.upsert_price(price)?;
+    }
+    // Rates reference nothing, so their position here is free; last keeps
+    // the order of the file. A backed-up rate overwrites a stored one for
+    // the same currency and day, hand-entered or not, which is the same
+    // rule `set_manual_rate` follows - somebody typed both, and the one
+    // being restored is the one they asked for. Nothing is removed, so the
+    // promise that importing cannot destroy data still holds.
+    for rate in &backup.manual_rates {
+        store.upsert_rate(rate)?;
     }
     tx.commit()?;
     Ok(report)
@@ -524,8 +548,92 @@ mod tests {
     #[test]
     fn a_file_from_a_future_version_is_still_refused() {
         let store = Store::open_in_memory().unwrap();
-        let ahead = V1_BACKUP.replace("\"version\": 1", "\"version\": 3");
+        // Derived rather than written out, so raising the format version
+        // never quietly turns this into a test of a version we support.
+        let ahead = V1_BACKUP.replace(
+            "\"version\": 1",
+            &format!("\"version\": {}", FORMAT_VERSION + 1),
+        );
         assert!(import_json(&store, &ahead).is_err());
         assert!(store.subscriptions(None, TODAY).unwrap().is_empty());
+    }
+
+    // -- exchange rates --
+
+    const RATE_DAY: Date = Date::constant(2026, 9, 4);
+
+    #[test]
+    fn a_backup_carries_typed_rates_and_leaves_fetched_ones_behind() {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .set_manual_rate("CNY", RATE_DAY, Decimal::from_str("8.00").unwrap())
+            .unwrap();
+        store
+            .record_fetched_rates(&[ExchangeRate::new(
+                "USD",
+                RATE_DAY,
+                Decimal::from_str("1.10").unwrap(),
+                false,
+            )
+            .unwrap()])
+            .unwrap();
+
+        let backup = export(&store).unwrap();
+        assert_eq!(backup.version, 3);
+        let carried: Vec<_> = backup
+            .manual_rates
+            .iter()
+            .map(|r| r.currency.as_str())
+            .collect();
+        assert_eq!(carried, vec!["CNY"]);
+    }
+
+    #[test]
+    fn restoring_a_rate_keeps_its_value_flag_and_timestamps() {
+        let source = Store::open_in_memory().unwrap();
+        source
+            .set_manual_rate("CNY", RATE_DAY, Decimal::from_str("8.00").unwrap())
+            .unwrap();
+        let json = export_json(&source).unwrap();
+
+        let target = Store::open_in_memory().unwrap();
+        import_json(&target, &json).unwrap();
+
+        assert_eq!(
+            target.manual_rates().unwrap(),
+            source.manual_rates().unwrap()
+        );
+    }
+
+    #[test]
+    fn a_restored_rate_replaces_one_typed_on_the_same_day() {
+        let source = Store::open_in_memory().unwrap();
+        source
+            .set_manual_rate("CNY", RATE_DAY, Decimal::from_str("8.00").unwrap())
+            .unwrap();
+        let json = export_json(&source).unwrap();
+
+        let target = Store::open_in_memory().unwrap();
+        target
+            .set_manual_rate("CNY", RATE_DAY, Decimal::from_str("7.50").unwrap())
+            .unwrap();
+        // A second currency the file knows nothing about, to show the
+        // import merged rather than replaced the set.
+        target
+            .set_manual_rate("JPY", RATE_DAY, Decimal::from_str("170").unwrap())
+            .unwrap();
+
+        import_json(&target, &json).unwrap();
+
+        let cny = target.rate_in_force("CNY", RATE_DAY).unwrap().unwrap();
+        assert_eq!(cny.rate, Decimal::from_str("8.00").unwrap());
+        assert!(target.rate_in_force("JPY", RATE_DAY).unwrap().is_some());
+    }
+
+    #[test]
+    fn a_file_from_before_rates_existed_restores_with_none() {
+        let store = Store::open_in_memory().unwrap();
+        import_json(&store, V1_BACKUP).unwrap();
+        assert!(store.manual_rates().unwrap().is_empty());
     }
 }

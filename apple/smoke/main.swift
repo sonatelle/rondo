@@ -169,6 +169,51 @@ expect(
   "the listed charges add up to the cumulative"
 )
 
+/// Exchange rates, which the app fetches and the core stores and converts.
+/// Handing rates over and getting a converted total back is the whole shape
+/// of that division, so it is worth proving through the packaged artifact
+/// rather than only in Rust.
+let base = baseCurrency()
+try rondo.recordRates(rates: [
+  ExchangeRate(currency: "USD", effectiveOn: "2026-01-01", rate: "1.00", isManual: false),
+  ExchangeRate(currency: "USD", effectiveOn: "2026-03-01", rate: "2.00", isManual: false),
+])
+expect(try rondo.newestRateDay() == "2026-03-01", "the newest stored day is what a fetch resumes from")
+expect(
+  try rondo.convertAmount(amount: "11", currency: "USD", to: base, on: "2026-01-01") == "11",
+  "an amount converts at the rate of the day asked about"
+)
+expect(
+  try rondo.convertAmount(amount: "11", currency: "USD", to: base, on: "2025-12-31") == nil,
+  "and a day before the history begins converts to nothing, never to 1:1"
+)
+
+// A typed rate outranks a fetched one, and no later fetch undoes it.
+_ = try rondo.setManualRate(currency: "USD", on: "2026-01-01", rate: "4.00")
+expect(
+  try rondo.recordRates(rates: [
+    ExchangeRate(currency: "USD", effectiveOn: "2026-01-01", rate: "1.00", isManual: false),
+  ]) == 0,
+  "a fetch writes nothing over a rate somebody typed"
+)
+expect(
+  try rondo.rateInForce(currency: "USD", on: "2026-01-01")?.rate == "4.00",
+  "and the typed rate is still the one in force"
+)
+
+/// The unconverted list is the part a screen must not ignore, so prove it
+/// arrives rather than being flattened into a smaller total.
+let converted = try rondo.convertedTotal(
+  subscriptions: rondo.subscriptions(on: span.to, includeArchived: false),
+  primary: "JPY",
+  on: span.to
+)
+expect(converted.subscriptionCount == 0, "nothing converts into a currency with no rate")
+expect(
+  converted.unconverted.first?.currency == "USD",
+  "and what could not be converted is named rather than dropped"
+)
+
 expect(!serviceTemplates().isEmpty, "the bundled templates are readable without a database")
 
 /// A nickname sharing no characters with the name it finds: proof the query

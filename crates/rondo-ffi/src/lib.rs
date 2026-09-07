@@ -23,6 +23,17 @@ pub fn library_version() -> String {
     env!("CARGO_PKG_VERSION").to_owned()
 }
 
+/// The currency every stored exchange rate is quoted against.
+///
+/// A frontend fetching rates must ask its source for this base, and the
+/// rates it hands back must be units of each currency per one unit of it.
+/// Exposed rather than written into the frontend so the two can never
+/// disagree about which currency the stored numbers mean.
+#[uniffi::export]
+pub fn base_currency() -> String {
+    rondo_core::BASE_CURRENCY.to_owned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -30,5 +41,12 @@ mod tests {
     #[test]
     fn the_reported_version_matches_the_crate() {
         assert_eq!(library_version(), env!("CARGO_PKG_VERSION"));
+    }
+
+    #[test]
+    fn the_base_currency_is_the_core_s_own() {
+        // A copy of the code here rather than a reference to it would be a
+        // second source of truth, and the kind that goes wrong silently.
+        assert_eq!(base_currency(), rondo_core::BASE_CURRENCY);
     }
 }

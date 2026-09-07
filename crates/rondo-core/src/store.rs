@@ -562,6 +562,24 @@ impl Store {
         Ok(rates)
     }
 
+    /// Every hand-entered rate, by currency and then by day.
+    ///
+    /// What a backup carries. Fetched rates are left out on purpose: they
+    /// can be had again from the source, whereas a rate somebody typed
+    /// exists nowhere else and would be lost with the machine.
+    pub fn manual_rates(&self) -> Result<Vec<ExchangeRate>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT * FROM exchange_rate WHERE is_manual = 1
+             ORDER BY currency, effective_on",
+        )?;
+        let mut rows = stmt.query([])?;
+        let mut rates = Vec::new();
+        while let Some(row) = rows.next()? {
+            rates.push(rate_from_row(row)?);
+        }
+        Ok(rates)
+    }
+
     /// Every rate in the store, grouped by currency, earliest first.
     pub fn all_rates(&self) -> Result<HashMap<String, Vec<ExchangeRate>>> {
         let mut stmt = self

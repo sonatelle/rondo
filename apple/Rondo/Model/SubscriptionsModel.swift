@@ -63,6 +63,21 @@ final class SubscriptionsModel {
     let isManual: Bool
   }
 
+  /// Bumped every time the stored rates may have changed.
+  ///
+  /// Read by the query methods below, and that is its whole purpose. A
+  /// view calling `converted(_:currency:on:)` in its body is asking the
+  /// database a question, which registers no dependency with SwiftUI - so
+  /// a fetch landing a second later changed nothing on screen. Touching an
+  /// observable property inside the query gives the calling body something
+  /// to depend on, and the tracking is dynamic, so it works no matter
+  /// which view made the call.
+  ///
+  /// It is a counter rather than a date because it has to change even when
+  /// the newest day does not: fetching a currency for the first time when
+  /// others already have today's rate moves nothing else.
+  private(set) var ratesVersion = 0
+
   /// A reading for every currency the settings list shows.
   ///
   /// Held here for the same reason `primaryCurrency` is. A row that called
@@ -227,6 +242,7 @@ final class SubscriptionsModel {
         )
       }
       rateReadings = readings
+      ratesVersion &+= 1
       converted = convertedTotal(of: everything
         .filter { $0.subscription.status == .active }
         .map(\.subscription))
@@ -479,17 +495,24 @@ final class SubscriptionsModel {
   /// is not today. Nothing comes back when no rate reaches that day, which
   /// the caller shows as the billed amount alone.
   func converted(_ amount: DecimalString, currency: String, on day: CivilDate) -> DecimalString? {
-    try? rondo.convertAmount(
+    // Reading these is what makes a view calling this redraw when rates
+    // change; see `ratesVersion`. Deleting either line would compile, pass
+    // every test, and quietly restore a bug that took three attempts to
+    // find.
+    _ = ratesVersion
+    let primary = primaryCurrency
+    return try? rondo.convertAmount(
       amount: amount,
       currency: currency,
-      to: Currencies.preferred,
+      to: primary,
       on: day
     )
   }
 
   /// Every rate stored for one currency, earliest first.
   func rates(for currency: String) -> [ExchangeRate] {
-    (try? rondo.rates(currency: currency)) ?? []
+    _ = ratesVersion
+    return (try? rondo.rates(currency: currency)) ?? []
   }
 
   /// What a set of subscriptions comes to in the primary currency.
@@ -592,7 +615,8 @@ final class SubscriptionsModel {
   /// The pair the settings row shows. Nothing when no rate reaches that
   /// day, which the row shows as an empty field rather than a zero.
   func pairRate(of currency: String, against primary: String, on day: CivilDate) -> DecimalString? {
-    try? rondo.pairRate(currency: currency, primary: primary, on: day)
+    _ = ratesVersion
+    return try? rondo.pairRate(currency: currency, primary: primary, on: day)
   }
 
   /// Stores a rate typed as a pair; returns why it could not be, or nothing.

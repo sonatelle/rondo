@@ -58,6 +58,70 @@ struct ModelWiringTests {
     )
   }
 
+  @Test("No view reads the primary currency behind SwiftUI's back")
+  func primaryCurrencyIsReadFromTheModel() throws {
+    // `Currencies.preferred` reads `UserDefaults` directly, so a view that
+    // calls it gives SwiftUI nothing to notice when the setting changes.
+    // Rates on screen went on saying "USD" after the setting had moved to
+    // CNY, and only a row that happened to be newly created came out
+    // right - which is what made it look like a refresh problem rather
+    // than a missing dependency. It took three attempts to see that.
+    //
+    // `model.primaryCurrency` is the same value as observable state.
+    //
+    // Two files are allowed it and say why in place: the model, which is
+    // where the preference is read, and the form, which uses it once as
+    // the initial value of a field rather than as something to redraw for.
+    let allowed = ["SubscriptionsModel.swift", "SubscriptionFormView.swift",
+                   "Currency.swift", "CurrencySettings.swift"]
+    var offenders: [String] = []
+    for file in try sources() where !allowed.contains(file.name) {
+      for (number, line) in file.text.components(separatedBy: .newlines).enumerated() {
+        let code = line.trimmingCharacters(in: .whitespaces)
+        guard !code.hasPrefix("//") else { continue }
+        if code.contains("Currencies.preferred") {
+          offenders.append("\(file.name):\(number + 1)")
+        }
+      }
+    }
+    #expect(
+      offenders.isEmpty,
+      """
+      These read the primary currency from the defaults, which SwiftUI \
+      cannot track - the view will keep showing the old one. Use \
+      model.primaryCurrency: \(offenders)
+      """
+    )
+  }
+
+  @Test("Every rate-derived query takes an observable dependency")
+  func rateQueriesRegisterWithSwiftUI() throws {
+    // The other half of the same bug. These three ask the database a
+    // question, and a question is not a dependency: a fetch landing a
+    // second after a view drew changed nothing on screen, so switching to
+    // a currency never seen before left every field blank underneath a
+    // note saying the rates had just been updated.
+    //
+    // Each reads `ratesVersion` first, which is what the calling body ends
+    // up depending on. Nothing enforces that at compile time, and removing
+    // a line would pass every other test here - hence this one.
+    let model = try String(
+      contentsOf: URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("Rondo/Model/SubscriptionsModel.swift"),
+      encoding: .utf8
+    )
+    for query in ["func converted(", "func rates(for", "func pairRate("] {
+      let start = try #require(model.range(of: query), "\(query) has been renamed")
+      let body = model[start.lowerBound...].prefix(600)
+      #expect(
+        body.contains("ratesVersion"),
+        "\(query) does not read ratesVersion, so a view calling it will not redraw when rates change"
+      )
+    }
+  }
+
   @Test("Settings opens even when the database did not")
   @MainActor
   func settingsSurvivesAFailedDatabase() {

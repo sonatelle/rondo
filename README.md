@@ -13,12 +13,14 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-v0.4.0 is out. The macOS app runs and keeps real data.
+v0.5.0 is out. The macOS app runs and keeps real data.
 
-**Backups written by v0.3.0 and later cannot be read by v0.1.0 or v0.2.0.** They
-carry a price history those builds know nothing about, and a build refuses
-a format newer than its own by design. Backups written by the older builds
-restore here as they always did.
+**Backups written by v0.5.0 cannot be read by v0.4.0 or earlier**, and those
+written by v0.3.0 and later cannot be read by v0.1.0 or v0.2.0. Each carries
+something the older builds know nothing about - hand-entered exchange rates,
+and before that a price history - and a build refuses a format newer than its
+own by design. Backups written by older builds restore here as they always
+did.
 
 What works:
 
@@ -41,25 +43,33 @@ What works:
 - Glance at the next charges from the menu bar without opening a window.
 - Export a backup, and restore one. Restoring merges and never deletes, so
   opening the wrong file cannot cost you data.
-- Record a price in any currency the system knows, picked from a list.
-  Currencies are kept apart; Rondo never converts between them.
+- Record a price in any currency the system knows, picked from a list, and
+  see every total as one figure in the currency you count in. Each amount
+  shows what it comes to beside what it is actually billed at.
+- Fetch exchange rates, or type one in yourself. A rate you set is never
+  overwritten by an update, and a charge older than any rate Rondo has is
+  shown in its own currency rather than converted at a number nobody
+  checked.
 - Read it in English or Simplified Chinese, chosen in Settings rather than
   inherited from the system. Dates and amounts follow the language picked.
 - Light, dark, or follow the system, the menu bar item included.
-- Local SQLite storage. No cloud, no account, no network.
+- Local SQLite storage. No cloud, no account. The one thing Rondo asks the
+  network for is exchange rates, from a single host, sending nothing about
+  you - and it works offline on what it already has.
 
-v0.4.0 is where the main window becomes the one in the design. v0.3.0 had
-taught the data model price history, payment methods and category icons
-without showing any of it; this is the release that shows it — the
-overview, the form and its provider picker, the table with those fields
-spread across it, and a page for one subscription.
+v0.5.0 is the release that stops listing currencies apart. Every total is
+one figure in the currency you pick, converted at the rate of the day each
+charge fell on — so a total over past months does not move when today's rate
+does. It is also the release that reaches the network at all, which earlier
+versions never did; that was a deliberate trade, and the one exception is
+kept narrow.
+
+v0.4.0 was where the main window became the one in the design: the overview,
+the form and its provider picker, the table, and a page for one
+subscription.
 
 Still to come:
 
-- One total rather than one per currency. v0.5.0 converts to a currency
-  you pick, which is the first thing Rondo will use the network for: it
-  fetches exchange rates, and nothing else. Until then currencies are
-  listed apart and never converted.
 - A calendar of what falls due, and an analytics page.
 - Spending grouped by payment method, and the archive as a page of its own.
 - First run, and renewal reminders through local notifications.

@@ -48,6 +48,8 @@ its own before the next begins.
 - [x] v0.2.0 published, 2026-09-01
 - [x] v0.3.0 published, 2026-09-03 - the release the backup format moved in
 - [x] v0.4.0 published, 2026-09-06 - the release the main window arrived in
+- [x] v0.5.0 published, 2026-09-08 - the release that converts currencies,
+      and the first that reaches the network
 
 The tap is `sonatelle/homebrew-tap`, and it has to be a tap of our own:
 homebrew-cask stopped taking casks that fail Gatekeeper on 2026-09-01, and

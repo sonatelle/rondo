@@ -535,10 +535,15 @@ impl Rondo {
             })?;
         let history = store.price_history(id)?;
         let rates = store.all_rates()?;
-        Ok(
-            rondo_core::summary::subscription_total_in(&sub, &history, &rates, &primary, until)?
-                .into(),
-        )
+        Ok(rondo_core::summary::subscription_total_in(
+            &sub,
+            &history,
+            &rates,
+            &primary,
+            until,
+            rondo_core::summary::RateBasis::OwnDay,
+        )?
+        .into())
     }
 
     /// Lists payment methods in the order the person arranged them.

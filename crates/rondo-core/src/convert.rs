@@ -58,6 +58,21 @@ pub fn convert(rates: &RateHistories, money: &Money, to: &str, on: Date) -> Resu
     Ok(Some(Money::new(converted, to)?))
 }
 
+/// How many units of `to` one unit of `from` bought on `on`.
+///
+/// The rate as a person thinks of it - "1 USD = 7.1240 CNY" - rather than
+/// as it is stored, which is against a fixed base neither of them may be.
+/// A screen naming the rate a total used shows this, and gets it from the
+/// same conversion the total went through rather than working it back out.
+///
+/// `None` for the same reason [`convert`] returns it: no rate reaches that
+/// day. `Some(1)` when the two currencies are the same, which is true and
+/// occasionally worth printing.
+pub fn pair_rate(rates: &RateHistories, from: &str, to: &str, on: Date) -> Result<Option<Decimal>> {
+    let one = Money::new(Decimal::ONE, from)?;
+    Ok(convert(rates, &one, to, on)?.map(|money| money.amount()))
+}
+
 /// Units of `currency` per one unit of the base, in force on `on`.
 ///
 /// The base is not in the table and does not need to be: it is 1 against

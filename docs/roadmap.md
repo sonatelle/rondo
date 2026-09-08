@@ -82,7 +82,7 @@ changes the backup format and that needs a boundary a reader can point at.
 - [x] Sidebar navigation and the overview - v0.4.0
 - [x] The form, picking a provider, and the full table - v0.4.0
 - [x] Subscription detail, and where to cancel by channel - v0.4.0
-- [ ] Exchange rates, conversion, and the currency settings - v0.5.0
+- [x] Exchange rates, conversion, and the currency settings - v0.5.0
 - [ ] The amount display rules, across every screen that prints money -
       v0.5.0
 - [ ] The calendar and its year view - v0.6.0
@@ -93,6 +93,13 @@ changes the backup format and that needs a boundary a reader can point at.
 v0.3.0 was the release to be careful with. Its screens barely changed, but
 a backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse
 formats from the future by design.
+
+v0.5.0 draws the same line again, and it needs saying in the release notes
+for the same reason. The backup format went to 3 to carry hand-entered
+exchange rates, so a file written by v0.5.0 is refused by v0.4.0 and
+earlier. Only rates somebody typed are carried: a fetched one can be had
+from the source again, while a hand-entered one exists nowhere else and
+would be lost with the machine.
 
 v0.4.0 carried three rounds rather than two: the fields v0.3.0 added got
 their whole interface at once, so recording a price change and seeing the
@@ -169,6 +176,48 @@ provider table, which round 8 was told to skip and which the guide to
 cancelling can use once it exists, and `archived_at`, which the archive
 screen needs to say how long something ran. Both are migrations, and both
 wait for the round that shows them.
+
+Round 9 stopped at rates that can be fetched, stored, converted with, and
+a currency to show totals in. Six things the handoff asks for are left,
+and they are round 10's list rather than loose ends, because every one of
+them is the same subject: how an amount is written.
+
+1. **An amount is two lines, not one.** The converted figure on top with
+   an `≈` in front, the billed currency under it at 11.5pt and muted. A
+   subscription already in the primary currency keeps one line and takes
+   no `≈` - the sign means "converted", so putting it on an amount that
+   was not is a small lie repeated on every row. The table's price column
+   and the overview's rows both show amounts this way.
+2. **A rate reads against the primary currency**: `1 USD = 7.1240` with
+   CNY beside it, not the `1 EUR = 8.25` that is actually in the table.
+   Storage stays against the fixed base for the reasons above; only the
+   settings row converts for display. Somebody checking a rate against
+   their bank compares it to the pair they think in.
+3. **A switch for updating rates daily**, which the settings screen has no
+   row for yet.
+4. **A switch for pricing past charges at the rate of their own day**,
+   default on. Turning it off recomputes history at today's rate, which
+   the core cannot do: `subscription_total_in` always uses each charge's
+   own day. It needs the other mode before the switch can exist.
+5. **A hand-entered rate is marked in blue**, `#2f6fed`, as a field with
+   an inset border. The handoff is explicit that warm red is reserved for
+   a charge three days out or nearer; typing a rate is not an alarm.
+6. **A total's footnote names the rate it used**, "including US$73.90 at
+   7.1240", rather than only naming what it had to leave out.
+
+Two lines in the handoff contradict the currency rules and were read as
+superseded rather than followed. Screen 6a's filter bar shows a total as
+two currencies side by side, and 6b says a group holding more than one
+currency lists them apart without converting. Both describe the design as
+it was before totals became one figure - the amount rules say they apply
+across the whole app, and the currency section says in as many words that
+the new rule *replaces* the old "listed apart, never converted" one. If
+that reading is wrong it is cheap to undo, and this paragraph is where to
+look first.
+
+The handoff itself lives outside the repository, which is worth knowing
+when one of these entries turns out to be too short: it is a folder of
+HTML and a long README, not something a later reader can find from here.
 
 ## Later, undated
 

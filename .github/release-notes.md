@@ -28,3 +28,32 @@ It runs on Apple Silicon Macs, macOS 14 or later. There is no Intel build.
 Rondo keeps its data in a local SQLite file. It has no account and sends
 nothing about you anywhere. From v0.5.0 it fetches exchange rates, and
 that is the only thing it asks the network for.
+
+## What's new
+
+Every total is now one figure in a currency you pick, rather than a list of
+one per currency. Each amount shows what it comes to over what it is
+actually billed at, and a total names what went into it.
+
+Charges are converted at the rate of the day they fell on, so a total over
+past months does not move when today's rate does. There is a switch if you
+would rather price everything at today's rate, and its description says what
+that costs.
+
+Rates come from frankfurter.dev, once a day if you let it. You can type a
+rate in yourself and no update will overwrite it. Anything Rondo has no rate
+for is shown in the currency it is billed in — never converted at a number
+nobody checked, and never at 1:1.
+
+Settings gains a Currency tab: which currency to total in, when rates were
+last brought up to date, and a rate per currency you can overrule.
+
+## Before you upgrade
+
+**A backup written by v0.5.0 cannot be read by v0.4.0 or earlier.** The
+format carries hand-entered exchange rates now, and a build refuses a format
+newer than its own by design. Backups from older versions restore here as
+they always did.
+
+Only rates you typed are carried in a backup. Fetched ones can be had from
+the source again; one you set by hand exists nowhere else.

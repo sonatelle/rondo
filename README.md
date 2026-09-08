@@ -13,14 +13,14 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-v0.5.0 is out. The macOS app runs and keeps real data.
+v0.5.1 is out. The macOS app runs and keeps real data.
 
-**Backups written by v0.5.0 cannot be read by v0.4.0 or earlier**, and those
-written by v0.3.0 and later cannot be read by v0.1.0 or v0.2.0. Each carries
-something the older builds know nothing about - hand-entered exchange rates,
-and before that a price history - and a build refuses a format newer than its
-own by design. Backups written by older builds restore here as they always
-did.
+**Backups written by v0.5.0 or later cannot be read by v0.4.0 or earlier**,
+and those written by v0.3.0 and later cannot be read by v0.1.0 or v0.2.0.
+Each carries something the older builds know nothing about - hand-entered
+exchange rates, and before that a price history - and a build refuses a
+format newer than its own by design. Backups written by older builds restore
+here as they always did.
 
 What works:
 
@@ -56,6 +56,10 @@ What works:
 - Local SQLite storage. No cloud, no account. The one thing Rondo asks the
   network for is exchange rates, from a single host, sending nothing about
   you - and it works offline on what it already has.
+
+v0.5.1 corrects the menu bar window, which v0.5.0 left showing each charge in
+the currency it is billed in under a total in yours, and from which settings
+could not be opened at all.
 
 v0.5.0 is the release that stops listing currencies apart. Every total is
 one figure in the currency you pick, converted at the rate of the day each

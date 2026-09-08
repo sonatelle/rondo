@@ -338,7 +338,8 @@ struct ContentView: View {
         currency: $currencyFilter,
         channels: offeredChannels,
         currencies: offeredCurrencies,
-        totals: model.levelledTotal(of: matching.map(\.subscription))
+        totals: model.levelledTotal(of: matching.map(\.subscription)),
+        converted: model.convertedTotal(of: matching.map(\.subscription))
       )
       Divider()
 

@@ -81,7 +81,18 @@ struct MenuBarView: View {
         .foregroundStyle(Color.textMuted)
       Spacer(minLength: Theme.Space.m)
       VStack(alignment: .trailing, spacing: 1) {
-        if model.summaries.isEmpty {
+        if let converted = model.converted, converted.subscriptionCount > 0 {
+          HStack(spacing: Theme.Space.xs) {
+            // The status item has no room to explain an omission, so it
+            // marks one and leaves the explanation to the window.
+            if !converted.unconverted.isEmpty {
+              Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(Color.danger)
+            }
+            Text(verbatim: Formatting.amount(converted.monthly, currency: converted.currency))
+              .monospacedDigit()
+          }
+        } else if model.summaries.isEmpty {
           // A placeholder, not prose: it would otherwise sit in the
           // catalogue as an em dash waiting to be translated.
           Text(verbatim: "—").foregroundStyle(Color.textFaint)

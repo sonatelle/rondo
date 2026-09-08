@@ -25,6 +25,11 @@ struct FilterBar: View {
   /// the core over exactly the rows the filters left.
   let totals: [SpendingSummary]
 
+  /// The same rows as one figure in the primary currency, when the rates
+  /// reach far enough. Nothing here when they do not, and the per-currency
+  /// list is shown instead.
+  let converted: ConvertedSpending?
+
   var body: some View {
     HStack(spacing: Theme.Space.s) {
       FilterPill(
@@ -66,13 +71,33 @@ struct FilterBar: View {
   /// a total sitting next to the controls that narrowed the list is
   /// understood to be the total of what they left, and now it is.
   ///
-  /// Currencies stay apart, as everywhere else in Rondo, so this is a list
-  /// of sums and never one.
+  /// One figure where the rates allow it, and the per-currency list where
+  /// they do not - never a converted total that quietly omits rows. When
+  /// some currencies converted and others did not, the figure is shown with
+  /// a marker saying so, because a total missing three subscriptions looks
+  /// exactly like a smaller total.
   @ViewBuilder
   private var levelled: some View {
     let bundle = Localization.bundle
     let locale = Localization.locale
-    if !totals.isEmpty {
+    if let converted, converted.subscriptionCount > 0 {
+      HStack(spacing: Theme.Space.xs) {
+        Text(verbatim: String(localized: "Levelled monthly", bundle: bundle, locale: locale,
+                              comment: "Label on the total beside the filters"))
+          .foregroundStyle(Color.textMuted)
+        Text(verbatim: Formatting.amount(converted.monthly, currency: converted.currency))
+          .fontWeight(.semibold)
+          .monospacedDigit()
+          .foregroundStyle(Color.textPrimary)
+          .lineLimit(1)
+        if !converted.unconverted.isEmpty {
+          Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundStyle(Color.danger)
+            .help(omissionNote(converted))
+        }
+      }
+      .font(Theme.Font.caption)
+    } else if !totals.isEmpty {
       HStack(spacing: Theme.Space.xs) {
         Text(verbatim: String(localized: "Levelled monthly", bundle: bundle, locale: locale,
                               comment: "Label on the total beside the filters"))
@@ -91,6 +116,15 @@ struct FilterBar: View {
       }
       .font(Theme.Font.caption)
     }
+  }
+
+  /// Which currencies the figure beside it leaves out.
+  private func omissionNote(_ converted: ConvertedSpending) -> String {
+    let left = converted.unconverted.reduce(0) { $0 + Int($1.subscriptionCount) }
+    let codes = converted.unconverted.map(\.currency).joined(separator: ", ")
+    return String(localized: "\(left) not included: no rate for \(codes)",
+                  bundle: Localization.bundle, locale: Localization.locale,
+                  comment: "Under a total, naming the currencies it leaves out")
   }
 
   private var channelTitle: String {

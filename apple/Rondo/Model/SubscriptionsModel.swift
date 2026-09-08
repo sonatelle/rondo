@@ -42,6 +42,25 @@ final class SubscriptionsModel {
   /// subscriptions looks exactly like a total that is simply smaller.
   private(set) var converted: ConvertedSpending?
 
+  /// Each subscription's price in the primary currency, by id.
+  ///
+  /// Worked out once per reload rather than per row drawn: a table redraws
+  /// on every scroll and hover, and a rate lookup for each row each time
+  /// would be work repeated for an answer that cannot have changed.
+  ///
+  /// A subscription is absent when no rate reaches its currency. That is
+  /// the case the amount rules care about most - it means one line showing
+  /// what it is really billed at, never a converted-looking figure.
+  private(set) var convertedPrices: [Uuid: DecimalString] = [:]
+
+  /// Each subscription's cumulative total in the primary currency, by id.
+  ///
+  /// Not the same conversion as `convertedPrices`: a cumulative is summed
+  /// charge by charge at the rate each fell due under, so it cannot be got
+  /// by converting the total afterwards at today's rate. The core does
+  /// that walk; this holds the answer.
+  private(set) var convertedTotals: [Uuid: DecimalString] = [:]
+
   /// The most recent day any exchange rate is stored for, or nothing when
   /// none has ever been fetched.
   private(set) var newestRateDay: CivilDate?
@@ -159,6 +178,23 @@ final class SubscriptionsModel {
         .filter { $0.subscription.status == .active }
         .map(\.subscription))
 
+      // Archived rows are converted too: the table still shows what one
+      // cost while it ran, and a row that stops showing both currencies
+      // the day it is archived would look like a bug.
+      var prices: [Uuid: DecimalString] = [:]
+      for renewal in everything {
+        let sub = renewal.subscription
+        if let inPrimary = try rondo.convertAmount(
+          amount: sub.amount,
+          currency: sub.currency,
+          to: Currencies.preferred,
+          on: referenceDay
+        ) {
+          prices[sub.id] = inPrimary
+        }
+      }
+      convertedPrices = prices
+
       // A count for every sidebar entry, including the categories nothing
       // is filed under: a category showing zero is how somebody sees there
       // is a place to file things, and hiding it would make the sidebar
@@ -186,6 +222,7 @@ final class SubscriptionsModel {
       // subscription rather than assembling a ranking here.
       var spending: [(Subscription, SubscriptionTotal)] = []
       var byID: [Uuid: SubscriptionTotal] = [:]
+      var convertedByID: [Uuid: DecimalString] = [:]
       // Archived rows are asked about too. They are left out of the
       // ranking, which is about what is being spent, but the table still
       // shows what one cost while it ran - that is the whole reason for
@@ -197,15 +234,32 @@ final class SubscriptionsModel {
         )
         guard total.chargeCount > 0 else { continue }
         byID[renewal.subscription.id] = total
+        // The same window converted, charge by charge at the rate each fell
+        // due under. A second call rather than converting `total` after the
+        // fact, because converting a sum at one rate is a different figure
+        // from summing amounts each converted at their own.
+        let inPrimary = try rondo.convertedSubscriptionTotal(
+          id: renewal.subscription.id,
+          primary: Currencies.preferred,
+          until: Self.day(after: referenceDay, days: 1),
+          lockHistoricalRates: true
+        )
+        // Only when every charge could be converted. A partial sum shown
+        // beside a whole one would be a smaller number with nothing to say
+        // it covers less.
+        if inPrimary.convertedChargeCount == inPrimary.chargeCount {
+          convertedByID[renewal.subscription.id] = inPrimary.total
+        }
         if renewal.subscription.status == .active {
           spending.append((renewal.subscription, total))
         }
       }
       totals = byID
+      convertedTotals = convertedByID
       // Sorted by the amount as a number, not as text: "9" is more than
-      // "10" to a string comparison. Currencies are never converted, so a
-      // ranking across them is a rough one and the amount beside each name
-      // is what says so.
+      // "10" to a string comparison. Ranked on the billed amount, so the
+      // ranking is the same whether or not rates have been fetched; the
+      // figures beside the names are what carry the conversion.
       spending.sort {
         (Formatting.decimal($0.1.total) ?? 0) > (Formatting.decimal($1.1.total) ?? 0)
       }
@@ -336,6 +390,21 @@ final class SubscriptionsModel {
     codes.insert(Currencies.preferred)
     codes.remove(baseCurrency())
     return codes.sorted()
+  }
+
+  /// One amount in the primary currency at the rate in force on `day`.
+  ///
+  /// For amounts that are not a subscription's current price - a charge
+  /// from two years ago, a cumulative total - where the day that matters
+  /// is not today. Nothing comes back when no rate reaches that day, which
+  /// the caller shows as the billed amount alone.
+  func converted(_ amount: DecimalString, currency: String, on day: CivilDate) -> DecimalString? {
+    try? rondo.convertAmount(
+      amount: amount,
+      currency: currency,
+      to: Currencies.preferred,
+      on: day
+    )
   }
 
   /// Every rate stored for one currency, earliest first.

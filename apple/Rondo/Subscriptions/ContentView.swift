@@ -547,11 +547,24 @@ struct ContentView: View {
       // Trailing, so the amounts line up on their last digit. Led out from
       // the left they cannot: the symbol in front runs from one character
       // to three, and every row starts somewhere else.
-      figure(Formatting.amount(row.renewal.subscription.amount,
-                               currency: row.renewal.subscription.currency),
-             faded: false)
+      //
+      // Sorted on the billed amount, which is `amountValue`, rather than on
+      // the converted one. Two rows in different currencies then sort by
+      // numbers that are not comparable - but sorting on the converted
+      // figure would silently drop every row no rate reaches out of the
+      // ordering, and a column that sorts most of the table is worse than
+      // one that sorts it by a rule the heading can state.
+      figure(
+        Formatting.amount(
+          row.renewal.subscription.amount,
+          currency: row.renewal.subscription.currency,
+          convertedTo: Currencies.preferred,
+          converted: model.convertedPrices[row.renewal.subscription.id]
+        ),
+        faded: false
+      )
     }
-    .width(min: 84, ideal: 100)
+    .width(min: 92, ideal: 108)
     .customizationID("price")
   }
 
@@ -601,6 +614,16 @@ struct ContentView: View {
       .foregroundStyle(faded ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
       .frame(maxWidth: .infinity, alignment: .trailing)
       .lineLimit(1)
+  }
+
+  /// An amount over the currency it is billed in, when the two differ.
+  ///
+  /// Stretched to the column's full width so the figures line up on their
+  /// last digit, which `TwoLineAmount` alone does not do - it sizes to its
+  /// content, which is right everywhere except in a table.
+  private func figure(_ written: Formatting.Amount, faded: Bool) -> some View {
+    TwoLineAmount(written: written, font: .body, faded: faded)
+      .frame(maxWidth: .infinity, alignment: .trailing)
   }
 
   /// When it falls, as the pill the overview draws.

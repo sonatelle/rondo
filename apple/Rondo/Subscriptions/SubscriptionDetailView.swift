@@ -113,10 +113,15 @@ struct SubscriptionDetailView: View {
       }
       Spacer(minLength: Theme.Space.m)
       VStack(alignment: .trailing, spacing: 4) {
-        Text(verbatim: Formatting.amount(subscription.amount, currency: subscription.currency))
-          .font(.system(size: 26, weight: .semibold))
-          .monospacedDigit()
-          .lineLimit(1)
+        TwoLineAmount(
+          written: Formatting.amount(
+            subscription.amount,
+            currency: subscription.currency,
+            convertedTo: Currencies.preferred,
+            converted: model.convertedPrices[subscription.id]
+          ),
+          font: .system(size: 26, weight: .semibold)
+        )
         UrgencyBadge(date: renewal.date, reference: model.referenceDay)
       }
     }
@@ -161,7 +166,16 @@ struct SubscriptionDetailView: View {
   /// What it has cost, and over how many charges - the second half being
   /// what stops the first from reading as a price.
   private func spent(_ total: SubscriptionTotal) -> String {
-    let amount = Formatting.amount(total.total, currency: total.currency)
+    // The converted figure leads when there is one, with the billed
+    // currency after it on the same line - this cell is one line of a
+    // three-across summary and has no room to stack.
+    let written = Formatting.amount(
+      total.total,
+      currency: total.currency,
+      convertedTo: Currencies.preferred,
+      converted: model.convertedTotals[subscription.id]
+    )
+    let amount = written.secondary.map { "\(written.primary) · \($0)" } ?? written.primary
     let count = String(localized: "\(Int(total.chargeCount)) charges",
                        bundle: Localization.bundle, locale: Localization.locale,
                        comment: "How many charges make up a total")
@@ -276,10 +290,19 @@ struct SubscriptionDetailView: View {
         .font(Theme.Font.label)
         .foregroundStyle(Color.textMuted)
         .frame(maxWidth: .infinity, alignment: .leading)
-      Text(verbatim: Formatting.amount(charge.amount, currency: charge.currency))
-        .font(Theme.Font.label)
-        .monospacedDigit()
-        .lineLimit(1)
+      // Converted at the rate of the day this charge fell on, not today's.
+      // That is the whole reason the rates are a history, and it is most
+      // visible here: two charges of the same price years apart can differ
+      // in the primary currency, and that is the truth about them.
+      TwoLineAmount(
+        written: Formatting.amount(
+          charge.amount,
+          currency: charge.currency,
+          convertedTo: Currencies.preferred,
+          converted: model.converted(charge.amount, currency: charge.currency, on: charge.date)
+        ),
+        font: Theme.Font.label
+      )
     }
     .padding(.horizontal, Theme.Space.xl)
     .padding(.vertical, Theme.Space.l)

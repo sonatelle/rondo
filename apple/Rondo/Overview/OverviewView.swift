@@ -141,13 +141,15 @@ private struct NextChargeCard: View {
   }
 
   private func amount(_ next: Renewal) -> some View {
-    Text(verbatim: Formatting.amount(next.subscription.amount,
-                                     currency: next.subscription.currency))
-      .font(Theme.Font.statFigure)
-      .monospacedDigit()
-      // An amount never wraps. Broken across lines it stops being a
-      // number: "₹700.00" came back as "₹70 / 0.0 / 0".
-      .lineLimit(1)
+    TwoLineAmount(
+      written: Formatting.amount(
+        next.subscription.amount,
+        currency: next.subscription.currency,
+        convertedTo: Currencies.preferred,
+        converted: model.convertedPrices[next.subscription.id]
+      ),
+      font: Theme.Font.statFigure
+    )
   }
 }
 
@@ -324,15 +326,15 @@ private struct UpcomingRow: View {
           .lineLimit(1)
       }
       Spacer(minLength: Theme.Space.m)
-      Text(
-        Formatting.amount(
+      TwoLineAmount(
+        written: Formatting.amount(
           renewal.subscription.amount,
-          currency: renewal.subscription.currency
-        )
+          currency: renewal.subscription.currency,
+          convertedTo: Currencies.preferred,
+          converted: model.convertedPrices[renewal.subscription.id]
+        ),
+        font: Theme.Font.rowTitle
       )
-      .font(Theme.Font.rowTitle)
-      .monospacedDigit()
-      .lineLimit(1)
       UrgencyBadge(date: renewal.date, reference: model.referenceDay)
         .frame(width: 74, alignment: .trailing)
     }
@@ -364,7 +366,11 @@ private struct TopSpendingSection: View {
 
       HStack(spacing: Theme.Space.xxl) {
         ForEach(Array(model.topSpending.prefix(limit)), id: \.subscription.id) { entry in
-          TopSpendingCard(subscription: entry.subscription, total: entry.total)
+          TopSpendingCard(
+            subscription: entry.subscription,
+            total: entry.total,
+            converted: model.convertedTotals[entry.subscription.id]
+          )
         }
       }
       .fixedSize(horizontal: false, vertical: true)
@@ -375,6 +381,8 @@ private struct TopSpendingSection: View {
 private struct TopSpendingCard: View {
   let subscription: Subscription
   let total: SubscriptionTotal
+  /// The cumulative in the primary currency, when a rate reaches it.
+  let converted: DecimalString?
 
   var body: some View {
     HStack(spacing: Theme.Space.xl) {
@@ -390,10 +398,18 @@ private struct TopSpendingCard: View {
           .foregroundStyle(Color.textMuted)
       }
       Spacer(minLength: Theme.Space.s)
-      Text(verbatim: Formatting.amount(total.total, currency: total.currency))
-        .font(Theme.Font.rowTitle)
-        .monospacedDigit()
-        .lineLimit(1)
+      // A cumulative, so it is converted at the rate of each charge's own
+      // day rather than at today's - which is why it is asked for by id
+      // rather than formatted from the subscription's current price.
+      TwoLineAmount(
+        written: Formatting.amount(
+          total.total,
+          currency: total.currency,
+          convertedTo: Currencies.preferred,
+          converted: converted
+        ),
+        font: Theme.Font.rowTitle
+      )
     }
     .padding(.horizontal, Theme.Space.card)
     .padding(.vertical, Theme.Space.xxl)

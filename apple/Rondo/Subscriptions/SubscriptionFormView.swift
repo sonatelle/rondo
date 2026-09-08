@@ -353,7 +353,16 @@ struct SubscriptionFormView: View {
       cycleCount: UInt32(cycleCount),
       cycleUnit: cycleUnit
     ) else { return nil }
-    return Formatting.amount(monthly, currency: currency)
+    // Both currencies on one line here rather than stacked: this sits in a
+    // form as a note under the fields, and a second line would push the
+    // controls below it around while somebody is still typing.
+    let written = Formatting.amount(
+      monthly,
+      currency: currency,
+      convertedTo: Currencies.preferred,
+      converted: model.converted(monthly, currency: currency, on: model.referenceDay)
+    )
+    return written.secondary.map { "\(written.primary) · \($0)" } ?? written.primary
   }
 
   /// The cycle count as text, so it can be typed rather than stepped.

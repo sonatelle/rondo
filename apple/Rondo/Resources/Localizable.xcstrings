@@ -2982,17 +2982,6 @@
         }
       }
     },
-    "Converted at today's rates" : {
-      "comment" : "Under a total every currency could be converted into",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按今日汇率换算"
-          }
-        }
-      }
-    },
     "%lld not included: no rate for %@" : {
       "comment" : "Under a total, naming the currencies it leaves out",
       "localizations" : {
@@ -3000,6 +2989,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "有 %lld 项未计入：缺少 %@ 的汇率"
+          }
+        }
+      }
+    },
+    "%@ at %@" : {
+      "comment" : "One currency inside a converted total, and the rate used",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 按 %@ 折算"
+          }
+        }
+      }
+    },
+    "including %@" : {
+      "comment" : "Under a converted total, listing what went into it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "含 %@"
           }
         }
       }

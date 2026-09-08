@@ -90,10 +90,15 @@ struct FilterBar: View {
           .monospacedDigit()
           .foregroundStyle(Color.textPrimary)
           .lineLimit(1)
-        if !converted.unconverted.isEmpty {
-          Image(systemName: "exclamationmark.triangle.fill")
-            .foregroundStyle(Color.danger)
-            .help(omissionNote(converted))
+        // The bar is one line beside the filters, so the whole note goes
+        // in a tooltip rather than on screen. The marker is shown only
+        // when something was left out: a note about which rate was used
+        // is worth having on hover, but it is not a warning.
+        if let note = Formatting.conversionNote(converted) {
+          Image(systemName: converted.unconverted.isEmpty
+            ? "info.circle" : "exclamationmark.triangle.fill")
+            .foregroundStyle(converted.unconverted.isEmpty ? Color.textFaint : Color.danger)
+            .help(note)
         }
       }
       .font(Theme.Font.caption)
@@ -116,15 +121,6 @@ struct FilterBar: View {
       }
       .font(Theme.Font.caption)
     }
-  }
-
-  /// Which currencies the figure beside it leaves out.
-  private func omissionNote(_ converted: ConvertedSpending) -> String {
-    let left = converted.unconverted.reduce(0) { $0 + Int($1.subscriptionCount) }
-    let codes = converted.unconverted.map(\.currency).joined(separator: ", ")
-    return String(localized: "\(left) not included: no rate for \(codes)",
-                  bundle: Localization.bundle, locale: Localization.locale,
-                  comment: "Under a total, naming the currencies it leaves out")
   }
 
   private var channelTitle: String {

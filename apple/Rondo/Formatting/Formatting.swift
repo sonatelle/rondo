@@ -100,6 +100,82 @@ enum Formatting {
     )
   }
 
+  /// An exchange rate, short enough to read.
+  ///
+  /// The core keeps rates at full decimal precision, which is right for
+  /// arithmetic and unreadable on screen: a cross rate is a division, so
+  /// one EUR in rupees arrived as
+  /// "0.0710251274581209031318281136". Four places is what a bank quotes
+  /// and what the design writes, and nothing here is ever computed from
+  /// the rounded form - it is shown and thrown away.
+  static func rate(_ text: DecimalString) -> String {
+    guard let value = decimal(text) else { return text }
+    let formatter = NumberFormatter()
+    formatter.locale = Localization.locale
+    formatter.numberStyle = .decimal
+
+    // The two modes are set in separate branches on purpose. Assigning
+    // `maximumSignificantDigits` switches `usesSignificantDigits` on by
+    // itself, so setting both in sequence quietly put every rate into
+    // significant-digit mode and turned 7.1240 into "7.1".
+    if value < Decimal(string: "0.0001") ?? 0 {
+      // Four decimal places would round this to "0", which reads as free.
+      // Rare - it takes a currency worth ten thousand of another - but "0"
+      // is the one answer that must never appear here.
+      formatter.usesSignificantDigits = true
+      formatter.maximumSignificantDigits = 2
+    } else {
+      formatter.maximumFractionDigits = 4
+    }
+    return formatter.string(from: value as NSDecimalNumber) ?? text
+  }
+
+  /// What a converted total covers, as a line to set under it.
+  ///
+  /// A single figure standing alone says nothing about how it was reached,
+  /// and it is made of amounts in currencies that are not the one printed.
+  /// This names them: what they came to before conversion, and the rate
+  /// used - which comes from the sum that used it, so the sentence and the
+  /// figure above it cannot disagree.
+  ///
+  /// Nothing comes back when there is nothing to say: everything was
+  /// already in the primary currency and nothing was left out. A footnote
+  /// under such a total would be noise on the common case.
+  static func conversionNote(_ spending: ConvertedSpending) -> String? {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+
+    let converted = spending.applied.compactMap { entry -> String? in
+      // The primary currency has no rate and needed none; naming it would
+      // pad the line with the one currency the reader can already see.
+      guard let rate = entry.rate else { return nil }
+      return String(
+        localized: "\(amount(entry.monthly, currency: entry.currency)) at \(self.rate(rate))",
+        bundle: bundle, locale: locale,
+        comment: "One currency inside a converted total, and the rate used"
+      )
+    }
+    let missing = spending.unconverted.reduce(0) { $0 + Int($1.subscriptionCount) }
+
+    var clauses: [String] = []
+    if !converted.isEmpty {
+      clauses.append(String(
+        localized: "including \(converted.joined(separator: ", "))",
+        bundle: bundle, locale: locale,
+        comment: "Under a converted total, listing what went into it"
+      ))
+    }
+    if missing > 0 {
+      let codes = spending.unconverted.map(\.currency).joined(separator: ", ")
+      clauses.append(String(
+        localized: "\(missing) not included: no rate for \(codes)",
+        bundle: bundle, locale: locale,
+        comment: "Under a total, naming the currencies it leaves out"
+      ))
+    }
+    return clauses.isEmpty ? nil : clauses.joined(separator: " · ")
+  }
+
   /// Formats a civil date the way a calendar would show it.
   static func date(_ text: CivilDate) -> String {
     guard let date = parse(text) else { return text }

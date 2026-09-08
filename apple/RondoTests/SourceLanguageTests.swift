@@ -128,6 +128,93 @@ struct SourceLanguageTests {
     )
   }
 
+  @Test("Every phrase with a value in it reaches the catalogue too")
+  func everyInterpolatedKeyIsInTheCatalogue() throws {
+    // The check above cannot see these. Its pattern wants a closing quote
+    // straight after the words, and an interpolated string has a backslash
+    // there instead, so `String(localized: "including \(codes)")` matches
+    // nothing and passes silently. Two footnotes were added that way and
+    // went untranslated with every test green.
+    //
+    // Matching them exactly would mean knowing which specifier each value
+    // becomes - `%@` for a string, `%lld` for an integer - which is type
+    // information a text scan does not have. So this asks something
+    // weaker and still useful: the longest run of actual words in the
+    // phrase has to appear in *some* catalogue key. A new phrase nobody
+    // translated has no such key; a translated one does.
+    let catalogue = try catalogueKeys()
+    let opening = #/String\(\s*\n?\s*localized:\s*\n?\s*"/#
+
+    var offenders: [String] = []
+    for file in try sources() {
+      for match in file.text.matches(of: opening) {
+        let runs = Self.literalRuns(in: file.text, after: match.range.upperBound)
+        // Only phrases with a value in them; the plain ones are the check
+        // above's business and it is exact where this is not.
+        guard runs.count > 1 else { continue }
+
+        // Three characters is the floor: a shorter run - " at ", " · " -
+        // turns up inside some unrelated key and would let this pass on
+        // anything.
+        guard let longest = runs
+          .filter({ $0.count >= 3 })
+          .max(by: { $0.count < $1.count })
+        else { continue }
+
+        if !catalogue.contains(where: { $0.contains(longest) }) {
+          let line = file.text[file.text.startIndex ..< match.range.lowerBound]
+            .count(where: { $0 == "\n" }) + 1
+          offenders.append("\(file.name):\(line) \(longest.debugDescription)")
+        }
+      }
+    }
+    #expect(
+      offenders.isEmpty,
+      "no catalogue key carries these words, so they stay English: \(offenders.sorted())"
+    )
+  }
+
+  /// The runs of plain text in the Swift string literal starting at `start`,
+  /// which is just past its opening quote.
+  ///
+  /// Walked rather than matched with a pattern. An interpolation carries
+  /// its own parentheses and its own quoted strings - `\(a.joined(
+  /// separator: ", "))` has both - and a regex that tries to step over one
+  /// either stops early or swallows the rest of the line. Getting this
+  /// wrong is not harmless: the first attempt reported eight phrases that
+  /// were translated all along, and a check that cries wolf teaches
+  /// everyone to skip it.
+  private static func literalRuns(in text: String, after start: String.Index) -> [String] {
+    var runs: [String] = []
+    var current = ""
+    var index = start
+    var depth = 0
+
+    while index < text.endIndex {
+      let character = text[index]
+      if depth == 0 {
+        if character == "\"" { break }
+        if character == "\\", text.index(after: index) < text.endIndex,
+           text[text.index(after: index)] == "("
+        {
+          runs.append(current)
+          current = ""
+          depth = 1
+          index = text.index(index, offsetBy: 2)
+          continue
+        }
+        current.append(character)
+      } else {
+        // Inside the value. Quotes here belong to it, not to the phrase.
+        if character == "(" { depth += 1 }
+        if character == ")" { depth -= 1 }
+      }
+      index = text.index(after: index)
+    }
+    runs.append(current)
+    return runs
+  }
+
   /// The keys the catalogue carries, read as a document the way
   /// `CatalogueTests` reads it.
   private func catalogueKeys() throws -> Set<String> {

@@ -24,7 +24,7 @@ struct OverviewView: View {
       VStack(alignment: .leading, spacing: Theme.Space.block) {
         HStack(alignment: .top, spacing: Theme.Space.xxl) {
           NextChargeCard(model: model)
-          LevelledCard(summaries: model.summaries)
+          LevelledCard(summaries: model.summaries, converted: model.converted)
           NextThirtyDaysCard(totals: model.next30Days)
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -152,8 +152,14 @@ private struct NextChargeCard: View {
 }
 
 /// What it comes to a month, with every cycle spread evenly.
+///
+/// One figure in the primary currency where the rates allow it, and the
+/// per-currency stack where they do not. The fallback is not a nicety: a
+/// database with no rates converts nothing, and a headline of 0 there would
+/// read as "you spend nothing" rather than "this could not be worked out".
 private struct LevelledCard: View {
   let summaries: [SpendingSummary]
+  let converted: ConvertedSpending?
 
   var body: some View {
     Card {
@@ -161,14 +167,38 @@ private struct LevelledCard: View {
         CardTitle(text: String(localized: "Monthly, levelled", bundle: Localization.bundle,
                                locale: Localization.locale,
                                comment: "Overview card: every cycle spread over months"))
-        Amounts(pairs: summaries.map { ($0.currency, $0.monthly) })
-        Text(verbatim: String(localized: "Currencies are never converted",
-                              bundle: Localization.bundle, locale: Localization.locale,
-                              comment: "Under a total that sums each currency apart"))
+        if let converted, converted.subscriptionCount > 0 {
+          Amounts(pairs: [(converted.currency, converted.monthly)])
+          Text(verbatim: footnote(for: converted))
+            .font(Theme.Font.footnote)
+            .foregroundStyle(converted.unconverted.isEmpty ? Color.textFaint : Color.danger)
+        } else {
+          Amounts(pairs: summaries.map { ($0.currency, $0.monthly) })
+          Text(verbatim: String(
+            localized: "No rates yet, so each currency is counted apart",
+            bundle: Localization.bundle, locale: Localization.locale,
+            comment: "Under a total that could not be converted into one figure"
+          ))
           .font(Theme.Font.footnote)
           .foregroundStyle(Color.textFaint)
+        }
       }
     }
+  }
+
+  /// What the figure covers, and what it does not.
+  private func footnote(for converted: ConvertedSpending) -> String {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    guard !converted.unconverted.isEmpty else {
+      return String(localized: "Converted at today's rates", bundle: bundle, locale: locale,
+                    comment: "Under a total every currency could be converted into")
+    }
+    let left = converted.unconverted.reduce(0) { $0 + Int($1.subscriptionCount) }
+    let codes = converted.unconverted.map(\.currency).joined(separator: ", ")
+    return String(localized: "\(left) not included: no rate for \(codes)",
+                  bundle: bundle, locale: locale,
+                  comment: "Under a total, naming the currencies it leaves out")
   }
 }
 

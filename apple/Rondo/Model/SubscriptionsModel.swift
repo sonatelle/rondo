@@ -29,7 +29,18 @@ final class SubscriptionsModel {
   }
 
   /// Spending totals, one entry per currency.
+  ///
+  /// Still read, and still shown: `converted` is the headline figure now,
+  /// but a database with no rates in it converts nothing, and a screen
+  /// falling back to these is telling the truth where a single 0 would not.
   private(set) var summaries: [SpendingSummary] = []
+
+  /// The same spending as one figure in the primary currency.
+  ///
+  /// `unconverted` names whatever no rate could reach. A screen showing the
+  /// headline must show that too - a total quietly missing three
+  /// subscriptions looks exactly like a total that is simply smaller.
+  private(set) var converted: ConvertedSpending?
 
   /// The most recent day any exchange rate is stored for, or nothing when
   /// none has ever been fetched.
@@ -144,6 +155,9 @@ final class SubscriptionsModel {
       categories = try rondo.categories()
       paymentMethods = try rondo.paymentMethods()
       newestRateDay = try rondo.newestRateDay()
+      converted = convertedTotal(of: everything
+        .filter { $0.subscription.status == .active }
+        .map(\.subscription))
 
       // A count for every sidebar entry, including the categories nothing
       // is filed under: a category showing zero is how somebody sees there
@@ -327,6 +341,23 @@ final class SubscriptionsModel {
   /// Every rate stored for one currency, earliest first.
   func rates(for currency: String) -> [ExchangeRate] {
     (try? rondo.rates(currency: currency)) ?? []
+  }
+
+  /// What a set of subscriptions comes to in the primary currency.
+  ///
+  /// Taken over whatever a window is showing, the same as `levelledTotal`:
+  /// what has been narrowed to is the window's business, and adding the
+  /// money is the core's. Nothing is summed on this side.
+  ///
+  /// Nothing comes back when the call fails, which a screen shows by
+  /// falling back to the per-currency figures rather than by printing a
+  /// zero that would read as "you spend nothing".
+  func convertedTotal(of subscriptions: [Subscription]) -> ConvertedSpending? {
+    try? rondo.convertedTotal(
+      subscriptions: subscriptions,
+      primary: Currencies.preferred,
+      on: referenceDay
+    )
   }
 
   /// Fetches whatever rates are missing and stores them.

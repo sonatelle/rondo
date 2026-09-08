@@ -850,17 +850,6 @@
         }
       }
     },
-    "Currencies are never converted" : {
-      "comment" : "Under a total that sums each currency apart",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "币种不换算"
-          }
-        }
-      }
-    },
     "Currencies in use" : {
       "comment" : "Section listing the currencies subscriptions are billed in",
       "localizations" : {
@@ -2978,6 +2967,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "这条汇率是你自己设定的"
+          }
+        }
+      }
+    },
+    "No rates yet, so each currency is counted apart" : {
+      "comment" : "Under a total that could not be converted into one figure",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚无汇率，各货币分开计算"
+          }
+        }
+      }
+    },
+    "Converted at today's rates" : {
+      "comment" : "Under a total every currency could be converted into",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按今日汇率换算"
+          }
+        }
+      }
+    },
+    "%lld not included: no rate for %@" : {
+      "comment" : "Under a total, naming the currencies it leaves out",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有 %lld 项未计入：缺少 %@ 的汇率"
           }
         }
       }

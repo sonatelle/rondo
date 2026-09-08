@@ -64,8 +64,19 @@ Pushing to the tap needs a token for another repository, held here as the
 still succeeds and the tap quietly stops moving, so `brew install` goes on
 handing people an old version with nothing saying why - the failure is a
 red mark on a workflow nobody is watching. The workflow can be re-run by
-hand against a tag once the token is fixed, and it is safe to re-run: it
-does nothing when the cask already names that version.
+hand against a tag once the token is fixed.
+
+Its input is not a retry button, and this is worth reading before using
+it. **The tap becomes whatever tag is typed there.** Given the current
+version it does nothing, because the cask already says that and there is
+nothing to commit; given an older one it rewrites the cask backwards and
+pushes, all green, and `brew install` starts handing out the old build.
+That is the right behaviour - filling in a release the tap missed is what
+the input is for - but the box looks like "run it again" and means "set it
+to this". It has already been used the wrong way once, on the day v0.5.0
+went out, to check that a repaired token could write; the check worked and
+the tap spent a few minutes on 0.4.0. Re-running the *current* version is
+the harmless way to ask that question.
 
 Two different faults look identical from the outside, and v0.5.0 hit the
 second one:

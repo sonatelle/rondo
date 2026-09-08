@@ -137,7 +137,7 @@ struct MenuBarView: View {
       }
       MenuBarButton(String(localized: "Settings…", bundle: bundle, locale: locale,
                            comment: "Menu bar: opens the settings window"),
-                    symbol: "gearshape", shortcut: "⌘,")
+                    symbol: "gearshape", shortcut: .init(modifiers: "⌘", key: ","))
       {
         dismissPanel()
         NSApp.setActivationPolicy(.regular)
@@ -154,7 +154,7 @@ struct MenuBarView: View {
         .padding(.vertical, Theme.Space.xs)
       MenuBarButton(String(localized: "Quit Rondo", bundle: bundle, locale: locale,
                            comment: "Menu bar: quits the app"),
-                    symbol: "xmark.square", shortcut: "⌘Q")
+                    symbol: "xmark.square", shortcut: .init(modifiers: "⌘", key: "Q"))
       {
         NSApp.terminate(nil)
       }
@@ -262,8 +262,19 @@ private struct MenuBarButton: View {
   /// Shown rather than bound: these are buttons in a window, not menu
   /// items, and the keys they name are handled by the main menu whether
   /// this window is open or not. What they do here is teach - somebody who
-  /// reads "⌘Q" once stops coming to this window to quit.
-  var shortcut: String?
+  /// reads "⌘ Q" once stops coming to this window to quit.
+  ///
+  /// Held in two parts rather than as one string, so they can be set in
+  /// two columns; see the body for why that matters.
+  var shortcut: Shortcut?
+
+  /// A shortcut, split where it has to be to line up down a list.
+  struct Shortcut {
+    /// Everything held down, as glyphs: "⌘", "⇧⌘".
+    let modifiers: String
+    /// The one key pressed: "Q", ",".
+    let key: String
+  }
 
   let action: () -> Void
 
@@ -272,7 +283,7 @@ private struct MenuBarButton: View {
   init(
     _ title: String,
     symbol: String,
-    shortcut: String? = nil,
+    shortcut: Shortcut? = nil,
     action: @escaping () -> Void
   ) {
     self.title = title
@@ -295,10 +306,24 @@ private struct MenuBarButton: View {
           .foregroundStyle(Color.textPrimary)
         Spacer(minLength: Theme.Space.m)
         if let shortcut {
-          Text(verbatim: shortcut)
-            .font(Theme.Font.footnote)
-            .monospacedDigit()
-            .foregroundStyle(Color.textFaint)
+          // Two columns rather than one string, so the modifier lines up
+          // down the list. Set as one right-aligned run, "⌘ ," and "⌘ Q"
+          // put their modifiers at different places, because a comma is
+          // narrower than a Q. A real menu does not have this problem -
+          // `NSMenu` is given the key and the modifier mask separately and
+          // lays them out itself - but this popover is a window rather
+          // than a menu, which is what buys it amounts and colour, so the
+          // columns are arranged here by hand.
+          HStack(spacing: 4) {
+            Text(verbatim: shortcut.modifiers)
+            Text(verbatim: shortcut.key)
+              // Wide enough for the widest key here, so a narrow one does
+              // not pull the modifier along with it.
+              .frame(width: 11, alignment: .leading)
+          }
+          .font(Theme.Font.footnote)
+          .monospacedDigit()
+          .foregroundStyle(Color.textFaint)
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)

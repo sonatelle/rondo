@@ -62,6 +62,27 @@ struct AmountRulesTests {
     #expect(written.primary == "≈ " + plainConverted)
   }
 
+  @Test("A rate is shortened to something a person can read")
+  func rateIsRoundedForReading() {
+    // A cross rate is a division, so the core's exact answer runs to the
+    // end of the decimal type. One EUR in rupees reached the overview as
+    // "0.0710251274581209031318281136" and made four lines of small print
+    // out of a one-line footnote.
+    #expect(Formatting.rate("0.0710251274581209031318281136") == "0.071")
+    #expect(Formatting.rate("7.1240") == "7.124")
+    #expect(Formatting.rate("8") == "8")
+  }
+
+  @Test("A very small rate is never rounded away to zero")
+  func tinyRateKeepsItsDigits() {
+    // Four decimal places would make this "0", which reads as free. It
+    // takes a currency worth ten thousand of another, but that is not a
+    // reason to print the one answer that is certainly wrong.
+    let written = Formatting.rate("0.00001234")
+    #expect(written != "0")
+    #expect(written.contains("1"))
+  }
+
   @Test("An amount the core would not have written comes back readable")
   func unparseableAmountDoesNotVanish() {
     // Defensive rather than expected: the core writes decimals with a dot

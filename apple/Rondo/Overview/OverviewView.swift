@@ -171,9 +171,20 @@ private struct LevelledCard: View {
                                comment: "Overview card: every cycle spread over months"))
         if let converted, converted.subscriptionCount > 0 {
           Amounts(pairs: [(converted.currency, converted.monthly)])
-          Text(verbatim: footnote(for: converted))
-            .font(Theme.Font.footnote)
-            .foregroundStyle(converted.unconverted.isEmpty ? Color.textFaint : Color.danger)
+          // Only the warning. Naming every rate that went into the figure
+          // was tried here and ran to four lines of small print under a
+          // card whose whole job is one number - the explanation was
+          // longer than the thing explained. It lives on the filter bar's
+          // tooltip instead, where it is asked for rather than displayed.
+          //
+          // What stays is the part that is not an explanation: a total
+          // quietly missing three subscriptions looks exactly like a
+          // smaller total, so that has to be on screen.
+          if let missing = footnote(for: converted) {
+            Text(verbatim: missing)
+              .font(Theme.Font.footnote)
+              .foregroundStyle(Color.danger)
+          }
         } else {
           Amounts(pairs: summaries.map { ($0.currency, $0.monthly) })
           Text(verbatim: String(
@@ -188,18 +199,16 @@ private struct LevelledCard: View {
     }
   }
 
-  /// What the figure covers, and what it does not.
-  private func footnote(for converted: ConvertedSpending) -> String {
-    let bundle = Localization.bundle
-    let locale = Localization.locale
-    guard !converted.unconverted.isEmpty else {
-      return String(localized: "Converted at today's rates", bundle: bundle, locale: locale,
-                    comment: "Under a total every currency could be converted into")
-    }
-    let left = converted.unconverted.reduce(0) { $0 + Int($1.subscriptionCount) }
+  /// What the figure does *not* cover, or nothing when it covers everything.
+  ///
+  /// Deliberately not `Formatting.conversionNote`, which also names the
+  /// rates: that belongs on hover, not under a card.
+  private func footnote(for converted: ConvertedSpending) -> String? {
+    guard !converted.unconverted.isEmpty else { return nil }
+    let missing = converted.unconverted.reduce(0) { $0 + Int($1.subscriptionCount) }
     let codes = converted.unconverted.map(\.currency).joined(separator: ", ")
-    return String(localized: "\(left) not included: no rate for \(codes)",
-                  bundle: bundle, locale: locale,
+    return String(localized: "\(missing) not included: no rate for \(codes)",
+                  bundle: Localization.bundle, locale: Localization.locale,
                   comment: "Under a total, naming the currencies it leaves out")
   }
 }

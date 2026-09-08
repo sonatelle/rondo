@@ -6,6 +6,19 @@ import SwiftUI
 /// to add to. The line at the foot says why it is kept: charges are counted
 /// at the price in force on their own day, so a total across a rise is the
 /// real number rather than today's price multiplied out.
+///
+/// **Amounts here stay in the currency they are billed in**, alone, which
+/// is the one place in the app that departs from the two-line rule. A price
+/// is a term of the arrangement rather than money that moved: this list
+/// answers "did they put it up, and by how much", and that question is only
+/// answerable within one currency. Converting each entry at its own
+/// effective date would fold two different movements - the price and the
+/// exchange rate - into one column of numbers, and a price that never
+/// changed would appear to.
+///
+/// The charges list on the detail page is the opposite case and is
+/// converted: a charge is money that actually left an account, so what it
+/// cost in the currency somebody counts in is the point of it.
 struct PriceHistoryCard: View {
   let model: SubscriptionsModel
   let subscription: Subscription

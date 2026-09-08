@@ -55,7 +55,12 @@ struct MenuBarView: View {
           .padding(.vertical, Theme.Space.s)
       } else {
         ForEach(upcoming) { renewal in
-          UpcomingRow(renewal: renewal, today: model.referenceDay)
+          UpcomingRow(
+            renewal: renewal,
+            today: model.referenceDay,
+            primaryCurrency: model.primaryCurrency,
+            converted: model.convertedPrices[renewal.subscription.id]
+          )
         }
         if remaining > 0 {
           Text(verbatim: String(localized: "and \(remaining) more", bundle: bundle,
@@ -189,6 +194,10 @@ struct MenuBarView: View {
 private struct UpcomingRow: View {
   let renewal: Renewal
   let today: CivilDate
+  /// The currency the total below this list is in.
+  let primaryCurrency: String
+  /// This charge in that currency, when a rate reaches it.
+  let converted: DecimalString?
 
   var body: some View {
     HStack(spacing: Theme.Space.l) {
@@ -199,15 +208,24 @@ private struct UpcomingRow: View {
         .lineLimit(1)
       Spacer(minLength: Theme.Space.m)
       VStack(alignment: .trailing, spacing: 1) {
-        Text(
-          Formatting.amount(
-            renewal.subscription.amount,
-            currency: renewal.subscription.currency
-          )
-        )
-        .font(Theme.Font.label)
-        .foregroundStyle(Color.textPrimary)
-        .monospacedDigit()
+        // The converted figure only, where every other screen shows the
+        // billed currency under it. This popover is a glance and the design
+        // gives the row two lines, one of which the urgency needs; a third
+        // would make three rows of it. Left as it was, though, the row said
+        // "₹700.00" directly above a total saying "¥273.15" with nothing
+        // joining them, and a foreign amount alone tells somebody counting
+        // in yuan nothing about whether it is large. What is billed is one
+        // click away in the window.
+        Text(verbatim: Formatting.amount(
+          renewal.subscription.amount,
+          currency: renewal.subscription.currency,
+          convertedTo: primaryCurrency,
+          converted: converted
+        ).primary)
+          .font(Theme.Font.label)
+          .foregroundStyle(Color.textPrimary)
+          .monospacedDigit()
+          .lineLimit(1)
 
         // The one place a glance carries colour: how soon this lands.
         Text(Formatting.relative(renewal.date, from: today))

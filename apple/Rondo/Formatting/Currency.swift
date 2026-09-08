@@ -8,8 +8,9 @@ import Foundation
 ///
 /// The core only checks that a code is three uppercase letters and never
 /// looks at the list itself, so which codes exist is a question for this
-/// side - the same split as the rest of `Formatting`. Rondo never converts
-/// between currencies, so a code is a label on an amount and nothing more.
+/// side - the same split as the rest of `Formatting`. Whether a code can
+/// be *converted* is a different question with a different answer, and the
+/// core owns that one: it depends on which rates are stored.
 enum Currencies {
   /// Every code the system considers current, in alphabetical order.
   static let all: [String] = Locale.commonISOCurrencyCodes
@@ -32,9 +33,10 @@ enum Currencies {
   /// to. Naming one in code would be right for whoever picked it and wrong
   /// for everyone else.
   ///
-  /// This does **not** make one currency the one everything is measured
-  /// in. Rondo never converts between currencies: a primary currency only
-  /// decides where a form starts and which total is listed first.
+  /// Since v0.5.0 this *is* the currency everything is measured in: every
+  /// total is converted into it. It was only a starting point for a form
+  /// before that, and the wording here said so - worth remembering if an
+  /// older comment elsewhere still claims currencies are never converted.
   static var preferred: String {
     let chosen = UserDefaults.standard.string(forKey: Preference.primaryCurrency) ?? ""
     if !chosen.isEmpty {

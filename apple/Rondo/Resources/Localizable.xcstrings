@@ -839,6 +839,17 @@
         }
       }
     },
+    "Could not reach the rate source. Check your connection and try again." : {
+      "comment" : "Rate fetch failed: offline or the host did not answer",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法连接汇率来源。请检查网络后重试。"
+          }
+        }
+      }
+    },
     "Currencies are never converted" : {
       "comment" : "Under a total that sums each currency apart",
       "localizations" : {
@@ -846,6 +857,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "币种不换算"
+          }
+        }
+      }
+    },
+    "Currencies in use" : {
+      "comment" : "Section listing the currencies subscriptions are billed in",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用中的货币"
+          }
+        }
+      }
+    },
+    "Currency" : {
+      "comment" : "Settings tab: which currency totals are in, and exchange rates",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "货币"
           }
         }
       }
@@ -1186,6 +1219,17 @@
         }
       }
     },
+    "Every total is converted into this currency, at the rate of the day each charge fell on. Amounts are still recorded in the currency they are billed in." : {
+      "comment" : "Under the primary currency setting",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有合计都会换算成这个货币，按每笔扣款当天的汇率。金额本身仍按各自计费的货币记录。"
+          }
+        }
+      }
+    },
     "Everything here is archived. Show it to restore or remove it." : {
       "comment" : "Under the empty active list",
       "localizations" : {
@@ -1193,6 +1237,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "现有的都已归档。切到「已归档」可以恢复或删除。"
+          }
+        }
+      }
+    },
+    "Everything is already in %@, so no rates are needed." : {
+      "comment" : "Shown when no subscription is in a currency needing conversion",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有金额已经是 %@，不需要汇率。"
           }
         }
       }
@@ -1579,6 +1634,17 @@
         }
       }
     },
+    "Never fetched" : {
+      "comment" : "No exchange rate has ever been stored",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从未获取"
+          }
+        }
+      }
+    },
     "New payment method" : {
       "comment" : "Title of the sheet that names a card or account",
       "localizations" : {
@@ -1663,6 +1729,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下个月"
+          }
+        }
+      }
+    },
+    "No rate" : {
+      "comment" : "Shown for a currency nothing can be converted from yet",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无汇率"
           }
         }
       }
@@ -1854,6 +1931,17 @@
         }
       }
     },
+    "One %@ buys this many %@. A rate you set here is never overwritten by an update." : {
+      "comment" : "Explaining what a hand-entered rate means",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 %@ 可兑换这么多 %@。你在这里设定的汇率不会被更新覆盖。"
+          }
+        }
+      }
+    },
     "Open Rondo" : {
       "comment" : "Menu bar: brings the main window back",
       "localizations" : {
@@ -1976,7 +2064,7 @@
       }
     },
     "Primary currency" : {
-      "comment" : "Setting: the currency a new subscription starts in",
+      "comment" : "Setting: the currency every total is shown in",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2004,6 +2092,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "关闭窗口时退出"
+          }
+        }
+      }
+    },
+    "Rate" : {
+      "comment" : "Field for typing an exchange rate by hand",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "汇率"
+          }
+        }
+      }
+    },
+    "Rates" : {
+      "comment" : "Label for when exchange rates were last brought up to date",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "汇率"
+          }
+        }
+      }
+    },
+    "Rates are unavailable because the database could not be opened." : {
+      "comment" : "Shown in the currency tab when the database failed to open",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据库无法打开，汇率暂不可用。"
           }
         }
       }
@@ -2172,6 +2293,17 @@
         }
       }
     },
+    "Rondo asks frankfurter.dev for rates against %@ and nothing else. It sends nothing about you, and works offline on what it has already stored." : {
+      "comment" : "Under the rates section: what the one network request is",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rondo 只向 frankfurter.dev 查询以 %@ 为基准的汇率，别无其他。它不发送任何关于你的信息，离线时依据已存下的数据工作。"
+          }
+        }
+      }
+    },
     "Rondo cannot open its database" : {
       "comment" : "Shown instead of the window",
       "localizations" : {
@@ -2289,6 +2421,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "服务商"
+          }
+        }
+      }
+    },
+    "Set" : {
+      "comment" : "Button: store the rate just typed",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设定"
           }
         }
       }
@@ -2501,6 +2644,28 @@
         }
       }
     },
+    "The rate source answered with %lld." : {
+      "comment" : "Rate fetch failed: an HTTP status other than success",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "汇率来源返回了 %lld。"
+          }
+        }
+      }
+    },
+    "The rate source sent something Rondo could not read." : {
+      "comment" : "Rate fetch failed: the answer was not the expected shape",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "汇率来源返回了 Rondo 无法解析的内容。"
+          }
+        }
+      }
+    },
     "There are subscriptions here, but none of this kind." : {
       "comment" : "Under the filtered-to-nothing state",
       "localizations" : {
@@ -2622,6 +2787,28 @@
         }
       }
     },
+    "Update now" : {
+      "comment" : "Button: fetch the latest exchange rates",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即更新"
+          }
+        }
+      }
+    },
+    "Use the fetched rate" : {
+      "comment" : "Button: drop a hand-entered rate so a fetch can fill it in again",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改用获取的汇率"
+          }
+        }
+      }
+    },
     "Version %@ (%@)" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2721,6 +2908,7 @@
     },
     "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies." : {
       "comment" : "Under the primary currency setting",
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2779,6 +2967,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "年"
+          }
+        }
+      }
+    },
+    "You set this rate yourself" : {
+      "comment" : "Tooltip on the marker beside a hand-entered rate",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这条汇率是你自己设定的"
           }
         }
       }

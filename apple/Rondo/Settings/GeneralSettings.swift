@@ -5,7 +5,6 @@ struct GeneralSettings: View {
   @AppStorage(Preference.appLanguage) private var appLanguage = ""
   @AppStorage(Preference.showsMenuBarItem) private var showsMenuBarItem = true
   @AppStorage(Preference.quitsOnWindowClose) private var quitsOnWindowClose = false
-  @AppStorage(Preference.primaryCurrency) private var primaryCurrency = ""
   @AppStorage(Preference.firstWeekday) private var firstWeekday = 2
 
   /// Read from the system rather than stored, so it cannot disagree with
@@ -74,24 +73,6 @@ struct GeneralSettings: View {
         .onChange(of: appearance) { _, chosen in
           chosen.apply()
         }
-
-        Picker(String(localized: "Primary currency", bundle: bundle, locale: locale,
-                      comment: "Setting: the currency a new subscription starts in"),
-               selection: $primaryCurrency)
-        {
-          Text(verbatim: String(localized: "Follow the system", bundle: bundle, locale: locale,
-                                comment: "Take this setting from the Mac's own")).tag("")
-          Divider()
-          ForEach(Currencies.all, id: \.self) { code in
-            Text(verbatim: code).tag(code)
-          }
-        }
-        Text(verbatim: String(
-          localized: "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies.",
-          bundle: bundle, locale: locale, comment: "Under the primary currency setting"
-        ))
-        .font(.caption)
-        .foregroundStyle(.secondary)
 
         Picker(String(localized: "Weeks start on", bundle: bundle, locale: locale,
                       comment: "Setting: which day a calendar week begins on"),

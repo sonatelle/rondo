@@ -154,7 +154,7 @@ struct MenuBarView: View {
         .padding(.vertical, Theme.Space.xs)
       MenuBarButton(String(localized: "Quit Rondo", bundle: bundle, locale: locale,
                            comment: "Menu bar: quits the app"),
-                    symbol: "xmark.square", shortcut: "⌘Q", tint: Color.textTertiary)
+                    symbol: "xmark.square", shortcut: "⌘Q")
       {
         NSApp.terminate(nil)
       }
@@ -265,7 +265,6 @@ private struct MenuBarButton: View {
   /// reads "⌘Q" once stops coming to this window to quit.
   var shortcut: String?
 
-  var tint: Color = .textPrimary
   let action: () -> Void
 
   @State private var isHovering = false
@@ -274,13 +273,11 @@ private struct MenuBarButton: View {
     _ title: String,
     symbol: String,
     shortcut: String? = nil,
-    tint: Color = .textPrimary,
     action: @escaping () -> Void
   ) {
     self.title = title
     self.symbol = symbol
     self.shortcut = shortcut
-    self.tint = tint
     self.action = action
   }
 
@@ -289,13 +286,13 @@ private struct MenuBarButton: View {
       HStack(spacing: Theme.Space.m) {
         Image(systemName: symbol)
           .font(.system(size: 12))
-          .foregroundStyle(tint)
+          .foregroundStyle(Color.textPrimary)
           // A fixed column, so the words beside them line up however wide
           // each glyph happens to be.
           .frame(width: 16)
         Text(verbatim: title)
           .font(Theme.Font.body)
-          .foregroundStyle(tint)
+          .foregroundStyle(Color.textPrimary)
         Spacer(minLength: Theme.Space.m)
         if let shortcut {
           Text(verbatim: shortcut)

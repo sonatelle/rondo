@@ -51,6 +51,55 @@ enum Formatting {
     return formatter.string(from: value as NSDecimalNumber) ?? "\(currency) \(text)"
   }
 
+  /// One amount written the way the design asks for it: what it comes to
+  /// in the currency totals are shown in, and what it is actually billed in.
+  ///
+  /// Two strings rather than one, because the two lines are set differently
+  /// - the converted figure at the body size, the billed one smaller and
+  /// muted - and joining them here would take that decision away from the
+  /// view that has to lay them out.
+  struct Amount {
+    /// The line to show first. Carries `≈` when it is a conversion.
+    let primary: String
+    /// What it is billed in, or nothing when there is only one line.
+    let secondary: String?
+    /// Whether `primary` is a converted figure rather than the real one.
+    ///
+    /// Views that colour or align the two lines differently read this
+    /// rather than looking for the `≈`.
+    let isConverted: Bool
+  }
+
+  /// Writes `billed` as an [`Amount`], converted into `primaryCurrency`.
+  ///
+  /// Three cases, and the third is the one worth being careful about:
+  ///
+  /// - Billed in the primary currency already: one line, and **no `≈`**.
+  ///   The sign means "converted", so putting it on an amount that was not
+  ///   is a small untruth repeated on every row.
+  /// - Billed elsewhere and `converted` supplied: the converted figure on
+  ///   top with `≈`, the billed amount beneath it.
+  /// - Billed elsewhere and no rate reaches it: **one line, the billed
+  ///   amount, no `≈`**. Not a zero, not the billed number relabelled as
+  ///   the primary currency, and not 1:1. What is shown is the only thing
+  ///   known to be true.
+  static func amount(
+    _ billed: DecimalString,
+    currency: String,
+    convertedTo primaryCurrency: String,
+    converted: DecimalString?
+  ) -> Amount {
+    let billedText = amount(billed, currency: currency)
+    guard currency != primaryCurrency, let converted else {
+      return Amount(primary: billedText, secondary: nil, isConverted: false)
+    }
+    return Amount(
+      primary: "≈ " + amount(converted, currency: primaryCurrency),
+      secondary: billedText,
+      isConverted: true
+    )
+  }
+
   /// Formats a civil date the way a calendar would show it.
   static func date(_ text: CivilDate) -> String {
     guard let date = parse(text) else { return text }

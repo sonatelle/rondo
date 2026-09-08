@@ -518,14 +518,24 @@ impl Rondo {
 
     /// What one subscription has cost in `primary`, charge by charge.
     ///
-    /// Each charge is converted at the rate of the day it fell due, so the
-    /// figure does not move when today's rate does. Charges older than the
-    /// rate history are counted in `charge_count` and left out of `total`.
+    /// With `lock_historical_rates` on - which is the setting's default -
+    /// each charge is converted at the rate of the day it fell due, so the
+    /// figure does not move when today's rate does. Off, every charge uses
+    /// the rate in force on `until`, which answers "what would all of this
+    /// cost at today's rate" and *will* drift as rates move.
+    ///
+    /// Turning it off can also change how many charges convert at all: a
+    /// charge older than the rate history has no rate of its own, but the
+    /// day being asked about may well have one.
+    ///
+    /// Charges that still cannot be converted are counted in `charge_count`
+    /// and left out of `total`.
     pub fn converted_subscription_total(
         &self,
         id: Uuid,
         primary: String,
         until: Date,
+        lock_historical_rates: bool,
     ) -> Result<ConvertedTotal> {
         let store = self.store()?;
         let sub = store
@@ -535,13 +545,13 @@ impl Rondo {
             })?;
         let history = store.price_history(id)?;
         let rates = store.all_rates()?;
+        let basis = if lock_historical_rates {
+            rondo_core::summary::RateBasis::OwnDay
+        } else {
+            rondo_core::summary::RateBasis::OneDay
+        };
         Ok(rondo_core::summary::subscription_total_in(
-            &sub,
-            &history,
-            &rates,
-            &primary,
-            until,
-            rondo_core::summary::RateBasis::OwnDay,
+            &sub, &history, &rates, &primary, until, basis,
         )?
         .into())
     }
@@ -1103,10 +1113,47 @@ mod tests {
 
         // Charges on Jan 31 and Feb 28 are at 1.00; Mar 31 is at 2.00.
         let total = rondo
-            .converted_subscription_total(sub.id, base_currency(), Date::constant(2026, 4, 1))
+            .converted_subscription_total(sub.id, base_currency(), Date::constant(2026, 4, 1), true)
             .unwrap();
         assert_eq!(total.charge_count, 3);
         assert_eq!(total.converted_charge_count, 3);
         assert_eq!(total.total.to_string(), "39.75");
+
+        // Unlocked, all three use the rate in force on 1 April - March's
+        // 2.00 - so the same charges come to half as much. Two answers to
+        // two different questions, and the switch says which is being
+        // asked; it is on the caller to make that visible.
+        let unlocked = rondo
+            .converted_subscription_total(
+                sub.id,
+                base_currency(),
+                Date::constant(2026, 4, 1),
+                false,
+            )
+            .unwrap();
+        assert_eq!(unlocked.charge_count, 3);
+        assert_eq!(unlocked.total.to_string(), "23.85");
+    }
+
+    #[test]
+    fn a_converted_total_carries_the_rate_it_used() {
+        let rondo = open();
+        let day = Date::constant(2026, 1, 1);
+        rondo.record_rates(vec![rate("USD", day, "1.10")]).unwrap();
+        rondo.add_subscription(draft("Netflix")).unwrap();
+
+        let subs = rondo.subscriptions(TODAY, false).unwrap();
+        let total = rondo.converted_total(subs, base_currency(), TODAY).unwrap();
+
+        // One entry, naming USD and the pair rate a person reads - not the
+        // 1.10 stored against the base.
+        assert_eq!(total.applied.len(), 1);
+        assert_eq!(total.applied[0].currency, "USD");
+        assert_eq!(
+            total.applied[0].rate.map(|r| r.to_string()),
+            Some("0.9090909090909090909090909091".to_owned())
+        );
+        // And the amount before conversion, which the footnote prints.
+        assert_eq!(total.applied[0].monthly.to_string(), "15.90");
     }
 }

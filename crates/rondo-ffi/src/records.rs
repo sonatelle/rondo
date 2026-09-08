@@ -280,6 +280,38 @@ impl From<rondo_core::summary::Unconverted> for Unconverted {
     }
 }
 
+/// One currency that went into a converted total, and at what rate.
+///
+/// What a footnote reading "including US$73.90 at 7.1240" is built from.
+/// The rate comes from the sum that used it rather than being worked back
+/// out here, so the sentence cannot disagree with the figure above it.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct Applied {
+    pub currency: String,
+    pub subscription_count: u32,
+    /// Monthly total before conversion, in this currency.
+    pub monthly: Decimal,
+    /// Yearly total before conversion, in this currency.
+    pub yearly: Decimal,
+    /// How many of the primary currency one unit of this one bought.
+    ///
+    /// Absent for the primary currency itself, which was not converted.
+    /// Showing 1 there would claim a rate was looked up when none was.
+    pub rate: Option<Decimal>,
+}
+
+impl From<rondo_core::summary::Applied> for Applied {
+    fn from(applied: rondo_core::summary::Applied) -> Self {
+        Self {
+            currency: applied.currency,
+            subscription_count: applied.subscription_count,
+            monthly: applied.monthly,
+            yearly: applied.yearly,
+            rate: applied.rate,
+        }
+    }
+}
+
 /// Normalized spending as one figure, plus what would not convert.
 ///
 /// `unconverted` being non-empty is not an error and must not be hidden:
@@ -292,6 +324,8 @@ pub struct ConvertedSpending {
     pub subscription_count: u32,
     pub monthly: Decimal,
     pub yearly: Decimal,
+    /// What went into the total, by currency, each with the rate used.
+    pub applied: Vec<Applied>,
     pub unconverted: Vec<Unconverted>,
 }
 
@@ -302,6 +336,7 @@ impl From<rondo_core::summary::ConvertedSpending> for ConvertedSpending {
             subscription_count: spending.subscription_count,
             monthly: spending.monthly,
             yearly: spending.yearly,
+            applied: spending.applied.into_iter().map(Into::into).collect(),
             unconverted: spending.unconverted.into_iter().map(Into::into).collect(),
         }
     }

@@ -214,6 +214,54 @@ expect(
   "and what could not be converted is named rather than dropped"
 )
 
+/// What a total was built from, which the footnote "including US$… at …"
+/// is printed from. The rate has to arrive as the pair a person reads, not
+/// as the value stored against the base.
+let intoBase = try rondo.convertedTotal(
+  subscriptions: rondo.subscriptions(on: span.to, includeArchived: false),
+  primary: baseCurrency(),
+  on: span.to
+)
+expect(intoBase.applied.count == 1, "a total names the currencies that went into it")
+expect(intoBase.applied.first?.currency == "USD", "by their own code")
+// Compared as a number, not as text: a Decimal has more than one spelling
+// and which one arrives is not what this is about.
+//
+// Half, not a quarter. The rate typed above is January's, and this asks
+// about May, where March's 2.00 is the one in force - so the pair is 1/2.
+// Getting 0.25 here would mean a hand-entered rate had been treated as
+// standing for every day after it rather than until the next entry.
+expect(
+  intoBase.applied.first.flatMap { Decimal(string: $0.rate ?? "") } == Decimal(string: "0.5"),
+  "at the pair rate in force, not the 2.00 stored against the base"
+    + " — got \(intoBase.applied.first?.rate ?? "nil")"
+)
+/// Tied to the subscription's own price rather than written out: it rose to
+/// 19.90 in April, and a literal here would have to be remembered every time
+/// the fixture above changes. It is a monthly cycle, so the levelled month
+/// is exactly the price.
+let priced = try rondo.subscription(id: added.id, on: span.to)!
+expect(
+  intoBase.applied.first.flatMap { Decimal(string: $0.monthly) }
+    == Decimal(string: priced.amount),
+  "and carrying the amount before conversion, which the footnote prints"
+    + " — got \(intoBase.applied.first?.monthly ?? "nil"), priced at \(priced.amount)"
+)
+
+/// The switch the design offers: locked, each charge uses its own day's
+/// rate; unlocked, all of them use one day's. Two answers to two questions.
+let locked = try rondo.convertedSubscriptionTotal(
+  id: added.id, primary: baseCurrency(), until: span.to, lockHistoricalRates: true
+)
+let unlocked = try rondo.convertedSubscriptionTotal(
+  id: added.id, primary: baseCurrency(), until: span.to, lockHistoricalRates: false
+)
+expect(locked.chargeCount == unlocked.chargeCount, "the same charges are counted either way")
+expect(
+  Decimal(string: locked.total)! != Decimal(string: unlocked.total)!,
+  "and a rate that moved makes the two totals differ, which is the whole point"
+)
+
 expect(!serviceTemplates().isEmpty, "the bundled templates are readable without a database")
 
 /// A nickname sharing no characters with the name it finds: proof the query

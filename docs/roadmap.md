@@ -60,10 +60,27 @@ without asking. Signing and notarizing would undo both the exclusion and the
 waiver; it needs a paid Developer ID.
 
 Pushing to the tap needs a token for another repository, held here as the
-`HOMEBREW_TAP_TOKEN` secret. When it expires the release still succeeds and
-the tap quietly stops moving, so `brew install` goes on handing people an
-old version with nothing saying why. The workflow can be re-run by hand
-against a tag once a new token is in place.
+`HOMEBREW_TAP_TOKEN` secret. When anything is wrong with it the release
+still succeeds and the tap quietly stops moving, so `brew install` goes on
+handing people an old version with nothing saying why - the failure is a
+red mark on a workflow nobody is watching. The workflow can be re-run by
+hand against a tag once the token is fixed, and it is safe to re-run: it
+does nothing when the cask already names that version.
+
+Two different faults look identical from the outside, and v0.5.0 hit the
+second one:
+
+- **Expired**, which is what this note used to say and only say. The
+  checkout fails, and the message is a 401.
+- **Readable but not writable.** The checkout *succeeds* - the token is
+  valid and the repository is public to it - and the push comes back
+  `Permission to sonatelle/homebrew-tap.git denied`, a 403. A fine-grained
+  token that was never given `contents: write` on the tap behaves exactly
+  like this, and reads perfectly well right up to the last step.
+
+The distinction is worth keeping because the fix is not the same: one
+needs a new token, the other needs a permission added to the one already
+there.
 
 ## M6 - The design handoff (in progress)
 

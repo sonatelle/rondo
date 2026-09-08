@@ -31,27 +31,35 @@ that is the only thing it asks the network for.
 
 ## What's new
 
-Every total is now one figure in a currency you pick, rather than a list of
-one per currency. Each amount shows what it comes to over what it is
-actually billed at, and a total names what went into it.
+Four corrections to the menu bar window, which v0.5.0 left behind when every
+other screen learned to convert.
 
-Charges are converted at the rate of the day they fell on, so a total over
-past months does not move when today's rate does. There is a switch if you
-would rather price everything at today's rate, and its description says what
-that costs.
+Its list of what renews next still showed each charge in the currency it is
+billed in, sitting directly above a total in yours with nothing joining them.
+Those rows are converted now.
 
-Rates come from frankfurter.dev, once a day if you let it. You can type a
-rate in yourself and no update will overwrite it. Anything Rondo has no rate
-for is shown in the currency it is billed in — never converted at a number
-nobody checked, and never at 1:1.
+Settings did not open from that window at all, and the shortcut printed
+beside the row did nothing when pressed. Both work. The keys named in this
+window are bound to it now, which is what they needed: with no main window
+open Rondo is an accessory and has no menu bar of its own for them to come
+from.
 
-Settings gains a Currency tab: which currency to total in, when rates were
-last brought up to date, and a rate per currency you can overrule.
+The shortcuts also line up down the list rather than sitting wherever the
+last character left them, and no row is drawn fainter than the ones above
+it.
+
+Nothing about your data changed in this release.
+
+## Known
+
+Opening Rondo from the menu bar can leave the File menu drawn as though it
+were open. Clicking anywhere clears it, and no menu is really open — it is
+the menu bar left unrepainted. It is not fixed here.
 
 ## Before you upgrade
 
-**A backup written by v0.5.0 cannot be read by v0.4.0 or earlier.** The
-format carries hand-entered exchange rates now, and a build refuses a format
+**A backup written by v0.5.0 or later cannot be read by v0.4.0 or earlier.**
+The format carries hand-entered exchange rates, and a build refuses a format
 newer than its own by design. Backups from older versions restore here as
 they always did.
 

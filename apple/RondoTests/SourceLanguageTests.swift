@@ -27,7 +27,7 @@ struct SourceLanguageTests {
     try #require(!files.isEmpty, "no Swift sources under \(root.path)")
     return try files
       .sorted { $0.path < $1.path }
-      .map { (name: $0.lastPathComponent, text: try String(contentsOf: $0, encoding: .utf8)) }
+      .map { try (name: $0.lastPathComponent, text: String(contentsOf: $0, encoding: .utf8)) }
   }
 
   /// The initialisers that take a `LocalizedStringKey`, written with a
@@ -161,7 +161,17 @@ struct SourceLanguageTests {
           .max(by: { $0.count < $1.count })
         else { continue }
 
-        if !catalogue.contains(where: { $0.contains(longest) }) {
+        // When the phrase opens with words, the key opens with the same
+        // words, so the match can be anchored. Left unanchored this let
+        // "no rate for \(codes)" pass on a *different* key that happened
+        // to contain "no rate for " in its middle, and the phrase went
+        // out untranslated.
+        let first = runs[0]
+        let matches: (String) -> Bool = first.count >= 3
+          ? { $0.hasPrefix(first) }
+          : { $0.contains(longest) }
+
+        if !catalogue.contains(where: matches) {
           let line = file.text[file.text.startIndex ..< match.range.lowerBound]
             .count(where: { $0 == "\n" }) + 1
           offenders.append("\(file.name):\(line) \(longest.debugDescription)")
@@ -193,7 +203,9 @@ struct SourceLanguageTests {
     while index < text.endIndex {
       let character = text[index]
       if depth == 0 {
-        if character == "\"" { break }
+        if character == "\"" {
+          break
+        }
         if character == "\\", text.index(after: index) < text.endIndex,
            text[text.index(after: index)] == "("
         {
@@ -206,8 +218,12 @@ struct SourceLanguageTests {
         current.append(character)
       } else {
         // Inside the value. Quotes here belong to it, not to the phrase.
-        if character == "(" { depth += 1 }
-        if character == ")" { depth -= 1 }
+        if character == "(" {
+          depth += 1
+        }
+        if character == ")" {
+          depth -= 1
+        }
       }
       index = text.index(after: index)
     }

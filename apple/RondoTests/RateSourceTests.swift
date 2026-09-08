@@ -1,7 +1,6 @@
 import Foundation
-import Testing
-
 @testable import Rondo
+import Testing
 
 /// Tests for reading what the rate source sends back.
 ///
@@ -11,14 +10,15 @@ struct RateSourceTests {
   /// A real answer, copied from `api.frankfurter.dev/v2/rates` rather than
   /// invented, so a change in the source's shape shows up here.
   static let sample = #"""
-    [{"date":"2026-01-05","base":"EUR","quote":"CNY","rate":7.8044},
-     {"date":"2026-01-05","base":"EUR","quote":"USD","rate":1.1705}]
-    """#
+  [{"date":"2026-01-05","base":"EUR","quote":"CNY","rate":7.8044},
+   {"date":"2026-01-05","base":"EUR","quote":"USD","rate":1.1705}]
+  """#
 
   @Test("The flat v2 records decode into quotes")
   func decodesTheAnswer() throws {
     let quotes = try JSONDecoder().decode(
-      [RateSource.Quote].self, from: Data(Self.sample.utf8))
+      [RateSource.Quote].self, from: Data(Self.sample.utf8)
+    )
 
     #expect(quotes.count == 2)
     #expect(quotes[0].quote == "CNY")
@@ -29,7 +29,8 @@ struct RateSourceTests {
   @Test("A rate arrives exactly, never rounded through a double")
   func ratesDecodeExactly() throws {
     let quotes = try JSONDecoder().decode(
-      [RateSource.Quote].self, from: Data(Self.sample.utf8))
+      [RateSource.Quote].self, from: Data(Self.sample.utf8)
+    )
     #expect("\(quotes[0].rate)" == "7.8044")
     #expect("\(quotes[1].rate)" == "1.1705")
 
@@ -41,14 +42,16 @@ struct RateSourceTests {
     // is 1.0000000000999999488.
     let long = try JSONDecoder().decode(
       [RateSource.Quote].self,
-      from: Data(#"[{"date":"2026-01-05","base":"EUR","quote":"X","rate":1.0000000001}]"#.utf8))
+      from: Data(#"[{"date":"2026-01-05","base":"EUR","quote":"X","rate":1.0000000001}]"#.utf8)
+    )
     #expect("\(long[0].rate)" == "1.0000000001")
   }
 
   @Test("A quote becomes a rate the core will accept")
   func quoteConvertsToStoredRate() throws {
     let quotes = try JSONDecoder().decode(
-      [RateSource.Quote].self, from: Data(Self.sample.utf8))
+      [RateSource.Quote].self, from: Data(Self.sample.utf8)
+    )
     let stored = quotes[1].stored
 
     // The currency stored is the *quote*, not the base: the row says how
@@ -67,7 +70,8 @@ struct RateSourceTests {
     // Swift: hand it to a real core and read it back.
     let rondo = try Rondo.openInMemory()
     let quotes = try JSONDecoder().decode(
-      [RateSource.Quote].self, from: Data(Self.sample.utf8))
+      [RateSource.Quote].self, from: Data(Self.sample.utf8)
+    )
 
     #expect(try rondo.recordRates(rates: quotes.map(\.stored)) == 2)
     let back = try rondo.rateInForce(currency: "USD", on: "2026-01-05")
@@ -78,7 +82,8 @@ struct RateSourceTests {
   func malformedAnswerIsAFailure() {
     #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(
-        [RateSource.Quote].self, from: Data(#"{"rates":{"USD":1.17}}"#.utf8))
+        [RateSource.Quote].self, from: Data(#"{"rates":{"USD":1.17}}"#.utf8)
+      )
     }
   }
 

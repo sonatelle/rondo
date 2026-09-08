@@ -14,9 +14,9 @@ use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
 use crate::records::{
-    Category, CategoryShare, Charge, ConvertedSpending, ConvertedTotal, ExchangeRate,
-    MonthlySpending, PaymentMethod, Price, SpendingSummary, Subscription, SubscriptionTotal,
-    WindowTotal,
+    Category, CategoryShare, Charge, ConvertedSpending, ConvertedTotal, ConvertedWindow,
+    ExchangeRate, MonthlySpending, PaymentMethod, Price, SpendingSummary, Subscription,
+    SubscriptionTotal, WindowTotal,
 };
 
 /// An open Rondo database.
@@ -494,6 +494,47 @@ impl Rondo {
             rondo_core::convert::convert(&rates, &Money::new(amount, &currency)?, &to, on)?
                 .map(|money| money.amount()),
         )
+    }
+
+    /// Totals every charge in `[from, to)` as one figure in `primary`.
+    ///
+    /// `forecast` says which window this is, and the two want different
+    /// rates. A window over the past is not a forecast: each charge is
+    /// converted at the rate of the day it fell on, which is what it cost.
+    /// A window over the future is: nothing is published for next month,
+    /// so every charge takes the rate in force on `on` - today's, carried
+    /// forward, which is the only honest way to price what has not
+    /// happened.
+    pub fn converted_window_total(
+        &self,
+        from: Date,
+        to: Date,
+        primary: String,
+        on: Date,
+        forecast: bool,
+    ) -> Result<ConvertedWindow> {
+        let store = self.store()?;
+        let subs = store.subscriptions(None, on)?;
+        let histories = store.all_price_histories()?;
+        let rates = store.all_rates()?;
+        let basis = if forecast {
+            rondo_core::summary::RateBasis::OneDay
+        } else {
+            rondo_core::summary::RateBasis::OwnDay
+        };
+        Ok(rondo_core::summary::window_totals_in(
+            &subs,
+            &histories,
+            from,
+            to,
+            rondo_core::summary::Conversion {
+                rates: &rates,
+                primary: &primary,
+                on,
+                basis,
+            },
+        )?
+        .into())
     }
 
     /// Totals the subscriptions handed in as one figure in `primary`.

@@ -120,6 +120,12 @@ final class SubscriptionsModel {
   /// rather than a twelfth.
   private(set) var next30Days: [WindowTotal] = []
 
+  /// The same window as one figure in the primary currency.
+  ///
+  /// Nothing when the call failed. A screen falls back to `next30Days`
+  /// rather than showing a zero, the same as everywhere else.
+  private(set) var next30DaysConverted: ConvertedWindow?
+
   /// What each subscription has cost since its first charge, most first.
   ///
   /// Cumulative, at the prices each charge was made at - which is what the
@@ -212,9 +218,20 @@ final class SubscriptionsModel {
 
       // Tomorrow, not today: the window is half-open, so a charge falling
       // today has to be inside it.
-      next30Days = try rondo.windowTotals(
+      let soon = (
         from: Self.day(after: referenceDay, days: 1),
         to: Self.day(after: referenceDay, days: 31)
+      )
+      next30Days = try rondo.windowTotals(from: soon.from, to: soon.to)
+      // A forecast, so every charge takes today's rate: nothing is
+      // published for next month, and pretending otherwise would be
+      // inventing a number.
+      next30DaysConverted = try rondo.convertedWindowTotal(
+        from: soon.from,
+        to: soon.to,
+        primary: Currencies.preferred,
+        on: referenceDay,
+        forecast: true
       )
 
       // One call per subscription rather than one for all of them: there

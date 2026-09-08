@@ -3014,6 +3014,17 @@
           }
         }
       }
+    },
+    "no rate for %@" : {
+      "comment" : "Under a window total, naming what it leaves out",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少 %@ 的汇率"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

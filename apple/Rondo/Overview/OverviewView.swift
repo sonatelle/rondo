@@ -25,7 +25,7 @@ struct OverviewView: View {
         HStack(alignment: .top, spacing: Theme.Space.xxl) {
           NextChargeCard(model: model)
           LevelledCard(summaries: model.summaries, converted: model.converted)
-          NextThirtyDaysCard(totals: model.next30Days)
+          NextThirtyDaysCard(totals: model.next30Days, converted: model.next30DaysConverted)
         }
         .fixedSize(horizontal: false, vertical: true)
 
@@ -214,8 +214,13 @@ private struct LevelledCard: View {
 }
 
 /// What actually falls due in the next thirty days.
+///
+/// A forecast, so every charge is priced at today's rate rather than at
+/// one from the day it falls on - there is no such rate yet. The figure
+/// therefore moves as rates do, which is honest about what it is.
 private struct NextThirtyDaysCard: View {
   let totals: [WindowTotal]
+  let converted: ConvertedWindow?
 
   var body: some View {
     Card {
@@ -223,12 +228,32 @@ private struct NextThirtyDaysCard: View {
         CardTitle(text: String(localized: "Next 30 days", bundle: Localization.bundle,
                                locale: Localization.locale,
                                comment: "Overview card: what actually falls due soon"))
-        Amounts(pairs: totals.map { ($0.currency, $0.total) })
-        Text(verbatim: String(localized: "\(totals.reduce(0) { $0 + Int($1.chargeCount) }) charges",
-                              bundle: Localization.bundle, locale: Localization.locale,
-                              comment: "How many charges make up a total"))
-          .font(Theme.Font.footnote)
-          .foregroundStyle(Color.textFaint)
+        if let converted, converted.convertedChargeCount > 0 {
+          Amounts(pairs: [(converted.currency, converted.total)])
+          Text(verbatim: String(localized: "\(Int(converted.chargeCount)) charges",
+                                bundle: Localization.bundle, locale: Localization.locale,
+                                comment: "How many charges make up a total"))
+            .font(Theme.Font.footnote)
+            .foregroundStyle(Color.textFaint)
+          // Only when the figure covers less than the count above it says
+          // it does, which is the one case a reader cannot spot alone.
+          if !converted.unconvertedCurrencies.isEmpty {
+            Text(verbatim: String(
+              localized: "no rate for \(converted.unconvertedCurrencies.joined(separator: ", "))",
+              bundle: Localization.bundle, locale: Localization.locale,
+              comment: "Under a window total, naming what it leaves out"
+            ))
+            .font(Theme.Font.footnote)
+            .foregroundStyle(Color.danger)
+          }
+        } else {
+          Amounts(pairs: totals.map { ($0.currency, $0.total) })
+          Text(verbatim: String(localized: "\(totals.reduce(0) { $0 + Int($1.chargeCount) }) charges",
+                                bundle: Localization.bundle, locale: Localization.locale,
+                                comment: "How many charges make up a total"))
+            .font(Theme.Font.footnote)
+            .foregroundStyle(Color.textFaint)
+        }
       }
     }
   }

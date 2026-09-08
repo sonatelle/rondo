@@ -6,6 +6,13 @@ import UniformTypeIdentifiers
 struct ContentView: View {
   @Bindable var model: SubscriptionsModel
 
+  /// The currency every figure here is converted into.
+  ///
+  /// Held so the window notices when it changes. Not used for anything
+  /// else - the amounts themselves come from the model, which reads the
+  /// same preference when it reloads.
+  @AppStorage(Preference.primaryCurrency) private var primaryCurrency = ""
+
   /// Which rows are selected, so the menus and the toolbar have something
   /// to act on instead of every row carrying its own controls.
   @State private var selection: Set<Uuid> = []
@@ -144,6 +151,12 @@ struct ContentView: View {
     } detail: {
       detail
     }
+    // Every figure in this window is converted into the currency this
+    // names, so the window watches the setting itself rather than waiting
+    // to be told. Settings is a separate scene, and having it reach across
+    // and call `reload` was not enough on its own - the numbers here stayed
+    // as they were until something else made the view redraw.
+    .onChange(of: primaryCurrency) { _, _ in model.reload() }
     // One sheet with three faces rather than three sheets. The detail page
     // opens the form, and two `.sheet` modifiers racing - one dismissing as
     // the other presents - is how that goes wrong. With one, the change is
@@ -558,7 +571,7 @@ struct ContentView: View {
         Formatting.amount(
           row.renewal.subscription.amount,
           currency: row.renewal.subscription.currency,
-          convertedTo: Currencies.preferred,
+          convertedTo: model.primaryCurrency,
           converted: model.convertedPrices[row.renewal.subscription.id]
         ),
         faded: false

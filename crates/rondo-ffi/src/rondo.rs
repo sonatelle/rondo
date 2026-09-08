@@ -436,6 +436,48 @@ impl Rondo {
         Ok(self.store()?.set_manual_rate(&currency, on, rate)?.into())
     }
 
+    /// Records a rate somebody typed as the pair they read it in: one unit
+    /// of `from` buys `rate` of `to`.
+    ///
+    /// What the settings row writes back. It shows "1 USD = 7.1240 CNY"
+    /// because that is the quote somebody compares against their bank,
+    /// while storage is against a fixed base - the core turns one into the
+    /// other rather than a frontend dividing.
+    ///
+    /// Fails when neither side is the base and `to` has no rate on that
+    /// day, which cannot be worked around here: without it there is no way
+    /// to say what the pair means in stored terms. The message names the
+    /// missing currency.
+    pub fn set_manual_pair_rate(
+        &self,
+        from: String,
+        to: String,
+        on: Date,
+        rate: Decimal,
+    ) -> Result<ExchangeRate> {
+        Ok(self
+            .store()?
+            .set_manual_pair_rate(&from, &to, on, rate)?
+            .into())
+    }
+
+    /// The rate for `currency` as a pair against `primary`, in force on
+    /// `on`: how many of `primary` one unit of `currency` buys.
+    ///
+    /// The number the settings row shows. Nothing when no rate reaches
+    /// that day, which the row shows as an empty field rather than a zero.
+    pub fn pair_rate(
+        &self,
+        currency: String,
+        primary: String,
+        on: Date,
+    ) -> Result<Option<Decimal>> {
+        let rates = self.store()?.all_rates()?;
+        Ok(rondo_core::convert::pair_rate(
+            &rates, &currency, &primary, on,
+        )?)
+    }
+
     /// Removes one rate; reports whether one was there.
     ///
     /// A currency may end up with none, which simply means amounts in it

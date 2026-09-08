@@ -634,6 +634,63 @@ impl Store {
         Ok(rate)
     }
 
+    /// Records a rate somebody typed as the pair they think in: one unit
+    /// of `from` buys `rate` of `to`, on `on`.
+    ///
+    /// The settings screen shows "1 USD = 7.1240 CNY" because that is the
+    /// quote a person compares against their bank. Storage is against a
+    /// fixed base, so the pair has to be turned back into it, and doing
+    /// that division here rather than in a frontend is the same rule as
+    /// everywhere else: money arithmetic lives in the core.
+    ///
+    /// Three cases, and the third can fail:
+    ///
+    /// - `from` is the base: the pair *is* the stored form of `to`.
+    /// - `to` is the base: the stored form of `from` is one over the pair.
+    /// - Neither is: the stored form of `from` is `to`'s own rate divided
+    ///   by the pair - and `to` must already have a rate on that day.
+    ///   Fails with [`Error::InvalidRate`] when it does not, which is a
+    ///   real situation rather than a corner: somebody types a rate in
+    ///   precisely because a fetch did not reach them. The message says
+    ///   which currency is missing so the interface can say it too.
+    pub fn set_manual_pair_rate(
+        &self,
+        from: &str,
+        to: &str,
+        on: Date,
+        rate: Decimal,
+    ) -> Result<ExchangeRate> {
+        if rate <= Decimal::ZERO {
+            return Err(Error::InvalidRate(format!(
+                "rate must be greater than zero, got {rate}"
+            )));
+        }
+        if from == to {
+            return Err(Error::InvalidRate(format!(
+                "{from} against itself is one, and is not stored"
+            )));
+        }
+
+        if from == model::BASE_CURRENCY {
+            return self.set_manual_rate(to, on, rate);
+        }
+        let against_base = if to == model::BASE_CURRENCY {
+            Decimal::ONE
+        } else {
+            self.rate_in_force(to, on)?
+                .ok_or_else(|| {
+                    Error::InvalidRate(format!(
+                        "no rate for {to} on {on}, so a {from}/{to} pair cannot be stored"
+                    ))
+                })?
+                .rate
+        };
+        let stored = against_base.checked_div(rate).ok_or_else(|| {
+            Error::InvalidRate(format!("{from}/{to} at {rate} left the decimal range"))
+        })?;
+        self.set_manual_rate(from, on, stored)
+    }
+
     /// Writes a rate as given, inserting or overwriting by currency and day.
     ///
     /// Preserves timestamps and the manual flag exactly, which is what
@@ -1737,6 +1794,99 @@ mod tests {
         assert!(store.delete_rate("CNY", day).unwrap());
         assert!(!store.delete_rate("CNY", day).unwrap());
         assert!(store.rates("CNY").unwrap().is_empty());
+    }
+
+    // -- rates typed as a pair --
+
+    #[test]
+    fn a_pair_against_the_base_is_stored_as_one_over_it() {
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+
+        // "1 USD = 0.25 EUR", so a EUR buys four USD.
+        store
+            .set_manual_pair_rate("USD", "EUR", day, Decimal::from_str("0.25").unwrap())
+            .unwrap();
+
+        let stored = store.rate_in_force("USD", day).unwrap().unwrap();
+        assert_eq!(stored.rate, Decimal::from_str("4").unwrap());
+        assert!(stored.is_manual);
+    }
+
+    #[test]
+    fn a_pair_from_the_base_stores_the_other_side() {
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+
+        // "1 EUR = 8.25 CNY" is already the stored form, of CNY.
+        store
+            .set_manual_pair_rate("EUR", "CNY", day, Decimal::from_str("8.25").unwrap())
+            .unwrap();
+
+        assert_eq!(
+            store.rate_in_force("CNY", day).unwrap().unwrap().rate,
+            Decimal::from_str("8.25").unwrap()
+        );
+        // And nothing was invented for the base itself.
+        assert!(store.rates("EUR").unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_pair_between_two_other_currencies_goes_through_the_one_that_is_known() {
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+        store
+            .record_fetched_rates(&[rate("CNY", (2026, 9, 4), "8.25")])
+            .unwrap();
+
+        // "1 USD = 7.5 CNY", and a EUR buys 8.25 CNY, so a EUR buys 1.1 USD.
+        store
+            .set_manual_pair_rate("USD", "CNY", day, Decimal::from_str("7.5").unwrap())
+            .unwrap();
+
+        assert_eq!(
+            store.rate_in_force("USD", day).unwrap().unwrap().rate,
+            Decimal::from_str("1.1").unwrap()
+        );
+    }
+
+    #[test]
+    fn a_pair_cannot_be_stored_when_the_other_side_is_unknown() {
+        // The case that matters most: somebody types a rate *because* the
+        // fetch did not reach them, and the currency they total in is one
+        // of the ones it did not reach. Refused with the missing code in
+        // the message rather than stored as some other number.
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+
+        let refused = store.set_manual_pair_rate("USD", "CNY", day, Decimal::ONE);
+        let Err(Error::InvalidRate(message)) = refused else {
+            panic!("a pair with no known side should be refused");
+        };
+        assert!(
+            message.contains("CNY"),
+            "the message names what is missing: {message}"
+        );
+        assert!(store.rates("USD").unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_pair_refuses_nonsense_before_it_divides_by_it() {
+        let store = Store::open_in_memory().unwrap();
+        let day = Date::constant(2026, 9, 4);
+
+        assert!(
+            store
+                .set_manual_pair_rate("USD", "EUR", day, Decimal::ZERO)
+                .is_err(),
+            "zero would be a division by zero and means nothing as a rate"
+        );
+        assert!(
+            store
+                .set_manual_pair_rate("EUR", "EUR", day, Decimal::ONE)
+                .is_err(),
+            "a currency against itself is one, and storing it would be a row that means nothing"
+        );
     }
 
     #[test]

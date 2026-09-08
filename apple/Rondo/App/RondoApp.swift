@@ -66,6 +66,17 @@ struct RondoApp: App {
       // Back into the Dock whenever a window is on screen; the delegate
       // takes it out again when the last one closes.
       .onAppear { NSApp.setActivationPolicy(.regular) }
+      // Rates, once a day, if the switch is on and today is not covered.
+      // In `task` rather than `onAppear` so it can await, and guarded by
+      // the day already held so opening the window ten times does not ask
+      // ten times.
+      .task {
+        guard case let .success(model) = launch,
+              UserDefaults.standard.object(forKey: Preference.autoUpdateRates) as? Bool ?? true,
+              model.newestRateDay != model.referenceDay
+        else { return }
+        await model.refreshRates()
+      }
       .environment(\.locale, Localization.locale(for: appLanguage))
       // Rebuilt rather than merely re-supplied. Handing the scene a new
       // locale is not enough on its own: text already on screen keeps the

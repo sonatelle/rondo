@@ -359,7 +359,7 @@ struct SubscriptionFormView: View {
     let written = Formatting.amount(
       monthly,
       currency: currency,
-      convertedTo: Currencies.preferred,
+      convertedTo: model.primaryCurrency,
       converted: model.converted(monthly, currency: currency, on: model.referenceDay)
     )
     return written.secondary.map { "\(written.primary) · \($0)" } ?? written.primary

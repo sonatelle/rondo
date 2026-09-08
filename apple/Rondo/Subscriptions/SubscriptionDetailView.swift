@@ -117,7 +117,7 @@ struct SubscriptionDetailView: View {
           written: Formatting.amount(
             subscription.amount,
             currency: subscription.currency,
-            convertedTo: Currencies.preferred,
+            convertedTo: model.primaryCurrency,
             converted: model.convertedPrices[subscription.id]
           ),
           font: .system(size: 26, weight: .semibold)
@@ -172,7 +172,7 @@ struct SubscriptionDetailView: View {
     let written = Formatting.amount(
       total.total,
       currency: total.currency,
-      convertedTo: Currencies.preferred,
+      convertedTo: model.primaryCurrency,
       converted: model.convertedTotals[subscription.id]
     )
     let amount = written.secondary.map { "\(written.primary) · \($0)" } ?? written.primary
@@ -298,7 +298,7 @@ struct SubscriptionDetailView: View {
         written: Formatting.amount(
           charge.amount,
           currency: charge.currency,
-          convertedTo: Currencies.preferred,
+          convertedTo: model.primaryCurrency,
           converted: model.converted(charge.amount, currency: charge.currency, on: charge.date)
         ),
         font: Theme.Font.label

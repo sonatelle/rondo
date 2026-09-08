@@ -145,7 +145,7 @@ private struct NextChargeCard: View {
       written: Formatting.amount(
         next.subscription.amount,
         currency: next.subscription.currency,
-        convertedTo: Currencies.preferred,
+        convertedTo: model.primaryCurrency,
         converted: model.convertedPrices[next.subscription.id]
       ),
       font: Theme.Font.statFigure
@@ -364,7 +364,7 @@ private struct UpcomingRow: View {
         written: Formatting.amount(
           renewal.subscription.amount,
           currency: renewal.subscription.currency,
-          convertedTo: Currencies.preferred,
+          convertedTo: model.primaryCurrency,
           converted: model.convertedPrices[renewal.subscription.id]
         ),
         font: Theme.Font.rowTitle
@@ -403,7 +403,8 @@ private struct TopSpendingSection: View {
           TopSpendingCard(
             subscription: entry.subscription,
             total: entry.total,
-            converted: model.convertedTotals[entry.subscription.id]
+            converted: model.convertedTotals[entry.subscription.id],
+            primaryCurrency: model.primaryCurrency
           )
         }
       }
@@ -417,6 +418,8 @@ private struct TopSpendingCard: View {
   let total: SubscriptionTotal
   /// The cumulative in the primary currency, when a rate reaches it.
   let converted: DecimalString?
+  /// The currency `converted` is in, handed in rather than looked up.
+  let primaryCurrency: String
 
   var body: some View {
     HStack(spacing: Theme.Space.xl) {
@@ -439,7 +442,7 @@ private struct TopSpendingCard: View {
         written: Formatting.amount(
           total.total,
           currency: total.currency,
-          convertedTo: Currencies.preferred,
+          convertedTo: primaryCurrency,
           converted: converted
         ),
         font: Theme.Font.rowTitle

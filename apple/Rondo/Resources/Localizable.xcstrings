@@ -12,6 +12,17 @@
         }
       }
     },
+    "%@ at %@" : {
+      "comment" : "One currency inside a converted total, and the rate used",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 按 %@ 折算"
+          }
+        }
+      }
+    },
     "%@." : {
       "comment" : "A restore's clauses, made into a sentence",
       "localizations" : {
@@ -175,6 +186,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "另有 %lld 期"
+          }
+        }
+      }
+    },
+    "%lld not included: no rate for %@" : {
+      "comment" : "Under a total, naming the currencies it leaves out",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有 %lld 项未计入：缺少 %@ 的汇率"
           }
         }
       }
@@ -1208,13 +1230,13 @@
         }
       }
     },
-    "Every total is converted into this currency, at the rate of the day each charge fell on. Amounts are still recorded in the currency they are billed in." : {
+    "Every total is converted into this currency. Amounts are still recorded in the currency they are billed in." : {
       "comment" : "Under the primary currency setting",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "所有合计都会换算成这个货币，按每笔扣款当天的汇率。金额本身仍按各自计费的货币记录。"
+            "value" : "所有合计都会换算成这个货币。金额本身仍按各自计费的货币记录。"
           }
         }
       }
@@ -1237,6 +1259,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所有金额已经是 %@，不需要汇率。"
+          }
+        }
+      }
+    },
+    "Everything is priced at today's rate, so past totals move as rates do." : {
+      "comment" : "Under the historical rate setting, while it is off",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部按今天汇率折算，历史累计会随汇率浮动。"
           }
         }
       }
@@ -1281,6 +1314,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "导出备份…"
+          }
+        }
+      }
+    },
+    "Fetched" : {
+      "comment" : "Beside a rate that came from the source",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动"
           }
         }
       }
@@ -1455,6 +1499,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "生效日期"
+          }
+        }
+      }
+    },
+    "including %@" : {
+      "comment" : "Under a converted total, listing what went into it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "含 %@"
           }
         }
       }
@@ -1733,6 +1788,28 @@
         }
       }
     },
+    "no rate for %@" : {
+      "comment" : "Under a window total, naming what it leaves out",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少 %@ 的汇率"
+          }
+        }
+      }
+    },
+    "No rates yet, so each currency is counted apart" : {
+      "comment" : "Under a total that could not be converted into one figure",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚无汇率，各货币分开计算"
+          }
+        }
+      }
+    },
     "No reminders yet" : {
       "comment" : "The reminders tab, which is empty until they exist",
       "localizations" : {
@@ -1920,13 +1997,13 @@
         }
       }
     },
-    "One %@ buys this many %@. A rate you set here is never overwritten by an update." : {
-      "comment" : "Explaining what a hand-entered rate means",
+    "Once a day, when there is a connection." : {
+      "comment" : "Under the automatic rate update setting",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 %@ 可兑换这么多 %@。你在这里设定的汇率不会被更新覆盖。"
+            "value" : "每天一次，联网时更新。"
           }
         }
       }
@@ -2048,6 +2125,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "价格历史"
+          }
+        }
+      }
+    },
+    "Price past charges at the rate of their day" : {
+      "comment" : "Setting: whether history is converted at the rates of the time",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史扣款用当时汇率"
           }
         }
       }
@@ -2416,6 +2504,7 @@
     },
     "Set" : {
       "comment" : "Button: store the rate just typed",
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2787,6 +2876,17 @@
         }
       }
     },
+    "Update rates automatically" : {
+      "comment" : "Setting: fetch new exchange rates without being asked",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动更新汇率"
+          }
+        }
+      }
+    },
     "Use the fetched rate" : {
       "comment" : "Button: drop a hand-entered rate so a fetch can fill it in again",
       "localizations" : {
@@ -2895,6 +2995,17 @@
         }
       }
     },
+    "What you have already been charged does not change when rates do." : {
+      "comment" : "Under the historical rate setting, while it is on",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经扣过的款不会因汇率变动而改变。"
+          }
+        }
+      }
+    },
     "Where a new subscription starts, and which total is listed first. Rondo never converts between currencies." : {
       "comment" : "Under the primary currency setting",
       "extractionState" : "stale",
@@ -2962,6 +3073,7 @@
     },
     "You set this rate yourself" : {
       "comment" : "Tooltip on the marker beside a hand-entered rate",
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2971,57 +3083,46 @@
         }
       }
     },
-    "No rates yet, so each currency is counted apart" : {
-      "comment" : "Under a total that could not be converted into one figure",
+    "Yours" : {
+      "comment" : "Beside a rate the person typed themselves",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "尚无汇率，各货币分开计算"
+            "value" : "手动"
           }
         }
       }
     },
-    "%lld not included: no rate for %@" : {
-      "comment" : "Under a total, naming the currencies it leaves out",
+    "Rates updated." : {
+      "comment" : "After a fetch that brought something back",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有 %lld 项未计入：缺少 %@ 的汇率"
+            "value" : "汇率已更新。"
           }
         }
       }
     },
-    "%@ at %@" : {
-      "comment" : "One currency inside a converted total, and the rate used",
+    "Already up to date." : {
+      "comment" : "After a fetch that found nothing to ask for",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ 按 %@ 折算"
+            "value" : "已是最新。"
           }
         }
       }
     },
-    "including %@" : {
-      "comment" : "Under a converted total, listing what went into it",
+    "Nothing to convert, so no rates are needed." : {
+      "comment" : "After pressing update with everything already in one currency",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "含 %@"
-          }
-        }
-      }
-    },
-    "no rate for %@" : {
-      "comment" : "Under a window total, naming what it leaves out",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "缺少 %@ 的汇率"
+            "value" : "没有需要换算的内容，用不上汇率。"
           }
         }
       }

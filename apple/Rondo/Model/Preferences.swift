@@ -13,6 +13,14 @@ enum Preference {
   static let showsMenuBarItem = "showsMenuBarItem"
   static let quitsOnWindowClose = "quitsOnWindowClose"
   static let primaryCurrency = "primaryCurrency"
+  /// Whether rates are fetched without being asked, once a day.
+  static let autoUpdateRates = "autoUpdateRates"
+  /// Whether a past charge is converted at the rate of the day it fell on.
+  ///
+  /// On by default, which is the answer that does not move: off, every
+  /// total is recomputed at today's rate and last year's spending changes
+  /// whenever the market does.
+  static let lockHistoricalRates = "lockHistoricalRates"
   /// A language code the bundle carries, or empty to follow the system.
   static let appLanguage = "appLanguage"
   /// A weekday index in `Calendar`'s numbering, where Sunday is 1.

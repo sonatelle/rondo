@@ -42,6 +42,36 @@ final class SubscriptionsModel {
   /// subscriptions looks exactly like a total that is simply smaller.
   private(set) var converted: ConvertedSpending?
 
+  /// The currency every converted figure here is in.
+  ///
+  /// Held rather than read from the defaults at each use, and this is the
+  /// whole reason: `Currencies.preferred` is a plain lookup, so a view
+  /// that calls it gives SwiftUI nothing to notice when it changes. Rates
+  /// on screen went on saying "USD" after the setting moved to CNY, and
+  /// the window only caught up when something else forced a redraw.
+  ///
+  /// Read from the same place as before, once, on every reload. Views ask
+  /// the model, which they are already observing.
+  private(set) var primaryCurrency: String = Currencies.preferred
+
+  /// What the settings list shows for one currency.
+  struct RateReading: Equatable {
+    /// What one unit of it buys of the primary currency, or nothing when
+    /// no rate reaches today.
+    let pair: DecimalString?
+    /// Whether the rate behind it was typed rather than fetched.
+    let isManual: Bool
+  }
+
+  /// A reading for every currency the settings list shows.
+  ///
+  /// Held here for the same reason `primaryCurrency` is. A row that called
+  /// `rates(for:)` in its body was making an FFI call, not reading
+  /// observable state, so a fetch landing a second later changed nothing
+  /// on screen: switching to a currency never seen before left every field
+  /// blank under a note saying the rates had just been updated.
+  private(set) var rateReadings: [String: RateReading] = [:]
+
   /// Each subscription's price in the primary currency, by id.
   ///
   /// Worked out once per reload rather than per row drawn: a table redraws
@@ -74,6 +104,14 @@ final class SubscriptionsModel {
   /// failing is ordinary - laptops go offline - and must not read like the
   /// person's data is in trouble.
   var rateFailure: String?
+
+  /// How the last fetch went when it did not fail.
+  ///
+  /// A fetch that finds nothing to do is the *common* case - press Update
+  /// twice and the second one has nothing left to ask for - and it used to
+  /// return in silence. Pressing a button and having nothing whatever
+  /// happen reads as a broken button, and it was reported as one.
+  var rateNote: String?
 
   /// The day the loaded renewals were reckoned against.
   ///
@@ -173,6 +211,7 @@ final class SubscriptionsModel {
   func reload() {
     do {
       referenceDay = Self.today()
+      primaryCurrency = Currencies.preferred
       allRenewals = try rondo.renewals(from: referenceDay, includeArchived: true)
       let everything = allRenewals
       renewals = everything.filter(navigation.matches)
@@ -180,6 +219,14 @@ final class SubscriptionsModel {
       categories = try rondo.categories()
       paymentMethods = try rondo.paymentMethods()
       newestRateDay = try rondo.newestRateDay()
+      var readings: [String: RateReading] = [:]
+      for code in currenciesInUse {
+        readings[code] = try RateReading(
+          pair: rondo.pairRate(currency: code, primary: primaryCurrency, on: referenceDay),
+          isManual: rondo.rateInForce(currency: code, on: referenceDay)?.isManual ?? false
+        )
+      }
+      rateReadings = readings
       converted = convertedTotal(of: everything
         .filter { $0.subscription.status == .active }
         .map(\.subscription))
@@ -259,7 +306,7 @@ final class SubscriptionsModel {
           id: renewal.subscription.id,
           primary: Currencies.preferred,
           until: Self.day(after: referenceDay, days: 1),
-          lockHistoricalRates: true
+          lockHistoricalRates: Self.locksHistoricalRates
         )
         // Only when every charge could be converted. A partial sum shown
         // beside a whole one would be a smaller number with nothing to say
@@ -396,15 +443,31 @@ final class SubscriptionsModel {
   // Today in the person's own calendar, as `YYYY-MM-DD`.
   // -- exchange rates --
 
-  /// The currencies amounts are actually recorded in, plus the one totals
-  /// are shown in, minus the base.
+  /// The currencies a fetch has to ask for.
   ///
-  /// What a fetch asks for. The base is left out because it is never
-  /// stored - it is 1 against itself - and asking for 200 currencies to
-  /// discard 190 of them would be slower for nothing.
-  var currenciesInUse: [String] {
+  /// Every currency something is billed in, **plus the one totals are
+  /// shown in** - converting rupees into Hong Kong dollars needs a rate
+  /// for both - and minus the base, which is never stored because it is 1
+  /// against itself. Asking for all 200 to discard 190 would be slower for
+  /// nothing.
+  var currenciesToFetch: [String] {
     var codes = Set(allRenewals.map(\.subscription.currency))
     codes.insert(Currencies.preferred)
+    codes.remove(baseCurrency())
+    return codes.sorted()
+  }
+
+  /// The currencies the settings list shows a rate for.
+  ///
+  /// Deliberately *not* `currenciesToFetch`. Each row reads "1 X = n Y"
+  /// against the primary currency, and the primary against itself is a row
+  /// saying "1 HKD = 1 HKD" - which appeared on screen, with a status of
+  /// "no rate" beside it, because one set was being used for both jobs.
+  /// The base is excluded for the same reason it always was: there is
+  /// nothing stored to show or to overrule.
+  var currenciesInUse: [String] {
+    var codes = Set(allRenewals.map(\.subscription.currency))
+    codes.remove(Currencies.preferred)
     codes.remove(baseCurrency())
     return codes.sorted()
   }
@@ -459,42 +522,99 @@ final class SubscriptionsModel {
   @MainActor
   func refreshRates() async {
     guard !isRefreshingRates else { return }
-    let quotes = currenciesInUse
+    let quotes = currenciesToFetch
     guard !quotes.isEmpty else {
       // Everything is already in the base currency, so there is nothing a
       // rate could be needed for. Not a failure, and not worth a request.
       rateFailure = nil
+      rateNote = Self.word("Nothing to convert, so no rates are needed.")
       return
     }
 
     isRefreshingRates = true
     defer { isRefreshingRates = false }
     rateFailure = nil
+    rateNote = nil
 
     let today = Self.today()
-    let start: CivilDate
-    if let newest = newestRateDay {
-      start = Self.day(after: newest, days: 1)
-    } else {
-      // `earliestCharge` is doubly optional here: the call can fail, and it
-      // answers with nothing when there are no charges at all. Both mean
-      // the same thing to us, so both land on today.
-      start = ((try? rondo.earliestCharge(on: today)) ?? nil) ?? today
-    }
+    // `earliestCharge` is doubly optional here: the call can fail, and it
+    // answers with nothing when there are no charges at all. Both mean the
+    // same thing to us, so both land on today.
+    let beginning = ((try? rondo.earliestCharge(on: today)) ?? nil) ?? today
+
+    // Where to resume from is asked *per currency*, not once. Asked once,
+    // a currency that has never been fetched is skipped entirely whenever
+    // any other currency already has today's rate - which is exactly what
+    // happens the moment somebody changes the currency they total in, or
+    // adds a subscription billed in a new one. The settings list filled
+    // with empty rates that way and no amount of pressing Update fixed it.
+    let start = quotes
+      .map { code in
+        rates(for: code).last.map { Self.day(after: $0.effectiveOn, days: 1) } ?? beginning
+      }
+      .min() ?? beginning
+
     guard start <= today else {
       // Already up to date. Nothing to ask for, and asking for a backwards
-      // span would be an error rather than an empty answer.
+      // span would be an error rather than an empty answer - but saying so
+      // is the whole point: this is the case that made the button look
+      // broken, because pressing it did nothing anybody could see.
+      rateNote = Self.word("Already up to date.")
       return
     }
 
     do {
       let fetched = try await RateSource.rates(from: start, to: today, quotes: quotes)
-      _ = try rondo.recordRates(rates: fetched.map(\.stored))
+      let written = try rondo.recordRates(rates: fetched.map(\.stored))
       reload()
+      rateNote = written > 0
+        ? Self.word("Rates updated.")
+        : Self.word("Already up to date.")
     } catch let failure as RateSource.Failure {
       rateFailure = Self.describe(failure)
     } catch {
       rateFailure = error.localizedDescription
+    }
+  }
+
+  /// Whether a past charge is converted at the rate of its own day.
+  ///
+  /// Read from the defaults rather than held as a property, for the same
+  /// reason `Currencies.preferred` is: the model is rebuilt from them on
+  /// every reload, and a second copy could disagree with the switch.
+  /// Absent means on, which is the answer that does not move.
+  static var locksHistoricalRates: Bool {
+    UserDefaults.standard.object(forKey: Preference.lockHistoricalRates) as? Bool ?? true
+  }
+
+  /// What one unit of `currency` buys of `primary` on `day`.
+  ///
+  /// The pair the settings row shows. Nothing when no rate reaches that
+  /// day, which the row shows as an empty field rather than a zero.
+  func pairRate(of currency: String, against primary: String, on day: CivilDate) -> DecimalString? {
+    try? rondo.pairRate(currency: currency, primary: primary, on: day)
+  }
+
+  /// Stores a rate typed as a pair; returns why it could not be, or nothing.
+  ///
+  /// Returning the message rather than a bool because this one *can* fail
+  /// for a reason worth reading: a pair between two currencies neither of
+  /// which is the stored base needs the other side's rate, and somebody
+  /// typing a rate by hand is often exactly the person who does not have
+  /// it. A field that silently kept a value the core refused would be
+  /// worse than one that says why.
+  func setManualPairRate(
+    of currency: String,
+    against primary: String,
+    on day: CivilDate,
+    rate: DecimalString
+  ) -> String? {
+    do {
+      _ = try rondo.setManualPairRate(from: currency, to: primary, on: day, rate: rate)
+      reload()
+      return nil
+    } catch {
+      return error.localizedDescription
     }
   }
 
@@ -519,6 +639,28 @@ final class SubscriptionsModel {
   func deleteRate(currency: String, on day: CivilDate) {
     _ = try? rondo.deleteRate(currency: currency, on: day)
     reload()
+  }
+
+  /// One of the short outcomes a fetch reports, looked up.
+  ///
+  /// A `switch` rather than passing the text through, because the checks
+  /// that keep the interface translated read literals in the source and
+  /// cannot follow a string that was handed in.
+  private static func word(_ outcome: String) -> String {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return switch outcome {
+    case "Rates updated.":
+      String(localized: "Rates updated.", bundle: bundle, locale: locale,
+             comment: "After a fetch that brought something back")
+    case "Nothing to convert, so no rates are needed.":
+      String(localized: "Nothing to convert, so no rates are needed.",
+             bundle: bundle, locale: locale,
+             comment: "After pressing update with everything already in one currency")
+    default:
+      String(localized: "Already up to date.", bundle: bundle, locale: locale,
+             comment: "After a fetch that found nothing to ask for")
+    }
   }
 
   /// What went wrong with a fetch, in words rather than a case name.

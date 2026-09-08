@@ -31,6 +31,20 @@ final class SubscriptionsModel {
   /// Spending totals, one entry per currency.
   private(set) var summaries: [SpendingSummary] = []
 
+  /// The most recent day any exchange rate is stored for, or nothing when
+  /// none has ever been fetched.
+  private(set) var newestRateDay: CivilDate?
+
+  /// True while a fetch is in flight, so the button can say so.
+  private(set) var isRefreshingRates = false
+
+  /// Why the last rate fetch failed, in words a settings screen can show.
+  ///
+  /// Kept apart from `failure`, which is about the database. A rate fetch
+  /// failing is ordinary - laptops go offline - and must not read like the
+  /// person's data is in trouble.
+  var rateFailure: String?
+
   /// The day the loaded renewals were reckoned against.
   ///
   /// Kept rather than re-read from the clock, because "in 3 days" has to
@@ -129,6 +143,7 @@ final class SubscriptionsModel {
       summaries = try Self.ordered(rondo.spendingSummary(on: referenceDay))
       categories = try rondo.categories()
       paymentMethods = try rondo.paymentMethods()
+      newestRateDay = try rondo.newestRateDay()
 
       // A count for every sidebar entry, including the categories nothing
       // is filed under: a category showing zero is how somebody sees there
@@ -293,7 +308,122 @@ final class SubscriptionsModel {
     }
   }
 
-  /// Today in the person's own calendar, as `YYYY-MM-DD`.
+  // Today in the person's own calendar, as `YYYY-MM-DD`.
+  // -- exchange rates --
+
+  /// The currencies amounts are actually recorded in, plus the one totals
+  /// are shown in, minus the base.
+  ///
+  /// What a fetch asks for. The base is left out because it is never
+  /// stored - it is 1 against itself - and asking for 200 currencies to
+  /// discard 190 of them would be slower for nothing.
+  var currenciesInUse: [String] {
+    var codes = Set(allRenewals.map(\.subscription.currency))
+    codes.insert(Currencies.preferred)
+    codes.remove(baseCurrency())
+    return codes.sorted()
+  }
+
+  /// Every rate stored for one currency, earliest first.
+  func rates(for currency: String) -> [ExchangeRate] {
+    (try? rondo.rates(currency: currency)) ?? []
+  }
+
+  /// Fetches whatever rates are missing and stores them.
+  ///
+  /// The span starts at the day after the newest rate already held, so a
+  /// refresh asks only for what it does not have. With nothing held at
+  /// all it starts at the earliest charge instead, which is the oldest day
+  /// any total could need - fetching from today would leave every past
+  /// charge unconvertible.
+  ///
+  /// Nothing here decides what a rate means or what it converts to. This
+  /// is the frontend's whole share of the job: ask, and hand over.
+  @MainActor
+  func refreshRates() async {
+    guard !isRefreshingRates else { return }
+    let quotes = currenciesInUse
+    guard !quotes.isEmpty else {
+      // Everything is already in the base currency, so there is nothing a
+      // rate could be needed for. Not a failure, and not worth a request.
+      rateFailure = nil
+      return
+    }
+
+    isRefreshingRates = true
+    defer { isRefreshingRates = false }
+    rateFailure = nil
+
+    let today = Self.today()
+    let start: CivilDate
+    if let newest = newestRateDay {
+      start = Self.day(after: newest, days: 1)
+    } else {
+      // `earliestCharge` is doubly optional here: the call can fail, and it
+      // answers with nothing when there are no charges at all. Both mean
+      // the same thing to us, so both land on today.
+      start = ((try? rondo.earliestCharge(on: today)) ?? nil) ?? today
+    }
+    guard start <= today else {
+      // Already up to date. Nothing to ask for, and asking for a backwards
+      // span would be an error rather than an empty answer.
+      return
+    }
+
+    do {
+      let fetched = try await RateSource.rates(from: start, to: today, quotes: quotes)
+      _ = try rondo.recordRates(rates: fetched.map(\.stored))
+      reload()
+    } catch let failure as RateSource.Failure {
+      rateFailure = Self.describe(failure)
+    } catch {
+      rateFailure = error.localizedDescription
+    }
+  }
+
+  /// Records a rate somebody typed, which no later fetch will overwrite.
+  ///
+  /// Returns whether it was accepted; the core refuses anything that is
+  /// not a positive number, and a field that silently keeps a bad value
+  /// would be worse than one that says no.
+  @discardableResult
+  func setManualRate(currency: String, on day: CivilDate, rate: String) -> Bool {
+    do {
+      _ = try rondo.setManualRate(currency: currency, on: day, rate: rate)
+      reload()
+      return true
+    } catch {
+      rateFailure = error.localizedDescription
+      return false
+    }
+  }
+
+  /// Removes one stored rate.
+  func deleteRate(currency: String, on day: CivilDate) {
+    _ = try? rondo.deleteRate(currency: currency, on: day)
+    reload()
+  }
+
+  /// What went wrong with a fetch, in words rather than a case name.
+  private static func describe(_ failure: RateSource.Failure) -> String {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return switch failure {
+    case .unreachable:
+      String(localized: "Could not reach the rate source. Check your connection and try again.",
+             bundle: bundle, locale: locale,
+             comment: "Rate fetch failed: offline or the host did not answer")
+    case let .refused(status):
+      String(localized: "The rate source answered with \(status).",
+             bundle: bundle, locale: locale,
+             comment: "Rate fetch failed: an HTTP status other than success")
+    case .unreadable:
+      String(localized: "The rate source sent something Rondo could not read.",
+             bundle: bundle, locale: locale,
+             comment: "Rate fetch failed: the answer was not the expected shape")
+    }
+  }
+
   static func today() -> CivilDate {
     Formatting.civilDate(from: Date())
   }

@@ -114,7 +114,11 @@ struct RondoApp: App {
     .menuBarExtraStyle(.window)
 
     Settings {
-      SettingsView()
+      // The model is handed over rather than reached for through the
+      // environment, the same as every other view here. It is optional
+      // because settings must still open when the database did not: the
+      // one tab that needs it says so, and the other four are unaffected.
+      SettingsView(model: try? launch.get())
         .environment(\.locale, Localization.locale(for: appLanguage))
         .id(appLanguage)
     }

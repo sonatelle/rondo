@@ -2,10 +2,22 @@ import SwiftUI
 
 /// Where the app's own preferences live, reached with ⌘,.
 ///
-/// Four tabs, the shape macOS uses for preferences. Anything that varies
+/// Five tabs, the shape macOS uses for preferences. Anything that varies
 /// per subscription belongs on the subscription and is not here: a reminder
 /// lead time is the app's, a reminder is the subscription's.
+///
+/// Currency earns a tab of its own rather than a row under General. It is
+/// the only setting that reaches the network, and somebody deciding
+/// whether they are comfortable with that is owed the whole picture in one
+/// place: what was fetched, when, and how to overrule it.
 struct SettingsView: View {
+  /// The open database, or nothing when it could not be opened.
+  ///
+  /// Only the currency tab needs it, to read rates and fetch them. Settings
+  /// still opens without one: somebody whose database failed may well be
+  /// coming here to find where the file lives.
+  let model: SubscriptionsModel?
+
   var body: some View {
     let bundle = Localization.bundle
     let locale = Localization.locale
@@ -15,6 +27,12 @@ struct SettingsView: View {
           tab(String(localized: "General", bundle: bundle, locale: locale,
                      comment: "Settings tab: appearance, language, and the like"),
               symbol: "gearshape")
+        }
+      CurrencySettings(model: model)
+        .tabItem {
+          tab(String(localized: "Currency", bundle: bundle, locale: locale,
+                     comment: "Settings tab: which currency totals are in, and exchange rates"),
+              symbol: "coloncurrencysign.circle")
         }
       ReminderSettings()
         .tabItem {

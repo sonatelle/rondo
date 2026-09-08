@@ -135,18 +135,11 @@ struct MenuBarView: View {
         openWindow(id: RondoApp.mainWindowID)
         raiseWindow()
       }
-      MenuBarButton(String(localized: "Settings…", bundle: bundle, locale: locale,
-                           comment: "Menu bar: opens the settings window"),
-                    symbol: "gearshape", shortcut: .init(modifiers: "⌘", key: ","))
-      {
-        dismissPanel()
-        NSApp.setActivationPolicy(.regular)
-        // The selector the Settings scene answers to. There is no SwiftUI
-        // action for it that works from a status item, where no window of
-        // the app is key and `openSettings` has nothing to hang off.
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        raiseWindow()
-      }
+      SettingsRow(
+        title: String(localized: "Settings…", bundle: bundle, locale: locale,
+                      comment: "Menu bar: opens the settings window"),
+        dismissPanel: dismissPanel
+      )
       // Grouped as a menu groups: what opens something, then what ends
       // the session. A rule between them is how every other app says it.
       Divider()
@@ -154,7 +147,7 @@ struct MenuBarView: View {
         .padding(.vertical, Theme.Space.xs)
       MenuBarButton(String(localized: "Quit Rondo", bundle: bundle, locale: locale,
                            comment: "Menu bar: quits the app"),
-                    symbol: "xmark.square", shortcut: .init(modifiers: "⌘", key: "Q"))
+                    symbol: "xmark.square", shortcut: .init(modifiers: "⌘", key: "Q", equivalent: "q", modifierKeys: .command))
       {
         NSApp.terminate(nil)
       }
@@ -259,10 +252,11 @@ private struct MenuBarButton: View {
 
   /// The shortcut, written out on the trailing edge.
   ///
-  /// Shown rather than bound: these are buttons in a window, not menu
-  /// items, and the keys they name are handled by the main menu whether
-  /// this window is open or not. What they do here is teach - somebody who
-  /// reads "⌘ Q" once stops coming to this window to quit.
+  /// Bound as well as shown. It used to be shown only, on the grounds
+  /// that "the main menu handles these whether this window is open or
+  /// not" - which is untrue for most of this window's life: with no main
+  /// window open the app is an accessory, has no menu bar at all, and
+  /// pressing the keys printed here did nothing.
   ///
   /// Held in two parts rather than as one string, so they can be set in
   /// two columns; see the body for why that matters.
@@ -272,8 +266,13 @@ private struct MenuBarButton: View {
   struct Shortcut {
     /// Everything held down, as glyphs: "⌘", "⇧⌘".
     let modifiers: String
-    /// The one key pressed: "Q", ",".
+    /// The one key pressed, as it is drawn: "Q", ",".
     let key: String
+    /// The same key as SwiftUI binds it. Given rather than derived from
+    /// `key`, which is a label: "Q" is drawn upper case and pressed lower.
+    let equivalent: KeyEquivalent
+    /// What is held down, as SwiftUI binds it.
+    let modifierKeys: EventModifiers
   }
 
   let action: () -> Void
@@ -294,48 +293,126 @@ private struct MenuBarButton: View {
 
   var body: some View {
     Button(action: action) {
-      HStack(spacing: Theme.Space.m) {
-        Image(systemName: symbol)
-          .font(.system(size: 12))
-          .foregroundStyle(Color.textPrimary)
-          // A fixed column, so the words beside them line up however wide
-          // each glyph happens to be.
-          .frame(width: 16)
-        Text(verbatim: title)
-          .font(Theme.Font.body)
-          .foregroundStyle(Color.textPrimary)
-        Spacer(minLength: Theme.Space.m)
-        if let shortcut {
-          // Two columns rather than one string, so the modifier lines up
-          // down the list. Set as one right-aligned run, "⌘ ," and "⌘ Q"
-          // put their modifiers at different places, because a comma is
-          // narrower than a Q. A real menu does not have this problem -
-          // `NSMenu` is given the key and the modifier mask separately and
-          // lays them out itself - but this popover is a window rather
-          // than a menu, which is what buys it amounts and colour, so the
-          // columns are arranged here by hand.
-          HStack(spacing: 4) {
-            Text(verbatim: shortcut.modifiers)
-            Text(verbatim: shortcut.key)
-              // Wide enough for the widest key here, so a narrow one does
-              // not pull the modifier along with it.
-              .frame(width: 11, alignment: .leading)
-          }
-          .font(Theme.Font.footnote)
-          .monospacedDigit()
-          .foregroundStyle(Color.textFaint)
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(.horizontal, Theme.Space.m)
-      .padding(.vertical, Theme.Space.s)
-      .background(
-        RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
-          .fill(isHovering ? Color.sidebarHover : .clear)
-      )
-      .contentShape(Rectangle())
+      MenuBarRowLabel(title: title, symbol: symbol, shortcut: shortcut, isHovering: isHovering)
     }
     .buttonStyle(.plain)
+    .modifier(BoundShortcut(shortcut: shortcut))
     .onHover { isHovering = $0 }
+  }
+}
+
+/// How a row in this window looks.
+///
+/// Apart from the button so that `SettingsLink` can wear the same face:
+/// opening settings is the one row that must not be an ordinary button,
+/// and it would otherwise have to draw itself a second time.
+private struct MenuBarRowLabel: View {
+  let title: String
+  let symbol: String
+  let shortcut: MenuBarButton.Shortcut?
+  let isHovering: Bool
+
+  var body: some View {
+    HStack(spacing: Theme.Space.m) {
+      Image(systemName: symbol)
+        .font(.system(size: 12))
+        .foregroundStyle(Color.textPrimary)
+        // A fixed column, so the words beside them line up however wide
+        // each glyph happens to be.
+        .frame(width: 16)
+      Text(verbatim: title)
+        .font(Theme.Font.body)
+        .foregroundStyle(Color.textPrimary)
+      Spacer(minLength: Theme.Space.m)
+      if let shortcut {
+        // Two columns rather than one string, so the modifier lines up
+        // down the list. Set as one right-aligned run, "⌘ ," and "⌘ Q"
+        // put their modifiers at different places, because a comma is
+        // narrower than a Q. A real menu does not have this problem -
+        // `NSMenu` is given the key and the modifier mask separately and
+        // lays them out itself - but this popover is a window rather
+        // than a menu, which is what buys it amounts and colour, so the
+        // columns are arranged here by hand.
+        HStack(spacing: 4) {
+          Text(verbatim: shortcut.modifiers)
+          Text(verbatim: shortcut.key)
+            // Wide enough for the widest key here, so a narrow one does
+            // not pull the modifier along with it.
+            .frame(width: 11, alignment: .leading)
+        }
+        .font(Theme.Font.footnote)
+        .monospacedDigit()
+        .foregroundStyle(Color.textFaint)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, Theme.Space.m)
+    .padding(.vertical, Theme.Space.s)
+    .background(
+      RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
+        .fill(isHovering ? Color.sidebarHover : .clear)
+    )
+    .contentShape(Rectangle())
+  }
+}
+
+/// Binds a row's printed shortcut, when it has one.
+///
+/// A modifier rather than an `if` around `.keyboardShortcut`, because that
+/// would give the button two different types and SwiftUI would rebuild it
+/// as a different view whenever the shortcut appeared or went away.
+private struct BoundShortcut: ViewModifier {
+  let shortcut: MenuBarButton.Shortcut?
+
+  func body(content: Content) -> some View {
+    if let shortcut {
+      content.keyboardShortcut(shortcut.equivalent, modifiers: shortcut.modifierKeys)
+    } else {
+      content
+    }
+  }
+}
+
+/// The row that opens settings.
+///
+/// A view of its own for one reason: it is a `SettingsLink` rather than a
+/// button, and so it has to carry the hover state that `MenuBarButton`
+/// keeps for every other row. Lifted out of that button without this, the
+/// row was handed a constant `false` and stopped lighting up under the
+/// pointer.
+///
+/// `SettingsLink` rather than an action, because what this did before was
+/// send `showSettingsWindow:` down the responder chain - a private
+/// selector, aimed at a chain with no target once this panel closes. The
+/// window came up behind everything and arrived only when something else
+/// activated the app, and deferring the send by a turn stopped it arriving
+/// at all. This is the API meant for the job, and it does not care which
+/// window is key.
+private struct SettingsRow: View {
+  let title: String
+  let dismissPanel: DismissAction
+
+  @State private var isHovering = false
+
+  var body: some View {
+    SettingsLink {
+      MenuBarRowLabel(
+        title: title,
+        symbol: "gearshape",
+        shortcut: .init(modifiers: "⌘", key: ",", equivalent: ",", modifierKeys: .command),
+        isHovering: isHovering
+      )
+    }
+    .buttonStyle(.plain)
+    .keyboardShortcut(",", modifiers: .command)
+    .onHover { isHovering = $0 }
+    // The link opens the window; these are the things around it that still
+    // have to happen - dropping the panel, and coming back into the Dock so
+    // the window belongs to an app with an icon.
+    .simultaneousGesture(TapGesture().onEnded {
+      dismissPanel()
+      NSApp.setActivationPolicy(.regular)
+      NSApp.activate()
+    })
   }
 }

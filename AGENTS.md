@@ -96,6 +96,14 @@ organization conventions; where the two differ, this file wins here.
 
 - All work lands through pull requests, even solo. Use one short-lived
   branch per independent change; `main` stays stable.
+- **Cutting a release is not an exception.** Raising `MARKETING_VERSION`,
+  recording the version in the README and the roadmap, and writing the
+  notes are ordinary changes and go through a branch and a pull request
+  like everything else. Only the tag is pushed straight, and only after
+  the pull request has landed on `main` - the tag has to name a commit
+  that is already there. Five commits went directly to `main` on the day
+  v0.5.0 shipped because "release" felt like a different kind of work; it
+  is not, and nothing in this rule ever said it was.
 - Use Conventional Commits subjects (e.g. `feat(core): add cycle math`).
 - The workspace version in the root `Cargo.toml` is the core's own, and it
   moves on its own schedule rather than with the app's. Raise it in the

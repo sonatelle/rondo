@@ -50,6 +50,8 @@ its own before the next begins.
 - [x] v0.4.0 published, 2026-09-06 - the release the main window arrived in
 - [x] v0.5.0 published, 2026-09-08 - the release that converts currencies,
       and the first that reaches the network
+- [x] v0.5.1 published, 2026-09-08 - the menu bar window, which v0.5.0 had
+      converted every screen but
 
 The tap is `sonatelle/homebrew-tap`, and it has to be a tap of our own:
 homebrew-cask stopped taking casks that fail Gatekeeper on 2026-09-01, and
@@ -130,6 +132,27 @@ exchange rates, so a file written by v0.5.0 is refused by v0.4.0 and
 earlier. Only rates somebody typed are carried: a fetched one can be had
 from the source again, while a hand-entered one exists nowhere else and
 would be lost with the machine.
+
+v0.5.1 is four corrections to the menu bar window, which had been left
+behind by the round that converted every other screen. A fifth fault is
+still open and worth writing down, because five attempts went into it and
+each ruled something out.
+
+Opening the main window from the status item can leave the File menu drawn
+as though it were open. Every piece of state is already right by the time
+it happens - the app is active, the window is key and main, and
+`NSApp.mainMenu?.highlightedItem` is nil throughout - so this is the menu
+bar left unrepainted rather than a menu that is really open, which is also
+why any click clears it. What did not fix it: reordering the open path so
+the app never goes inactive, raising the window by identifier rather than
+by whatever `NSApp.windows` listed first, `cancelTrackingWithoutAnimation`
+followed by `update`, and deferring the activation by a turn. What it is
+not: the rate fetch that round 10 hung on the main window's appearance
+(turning the switch off changes nothing), and anything in `MenuBarView`'s
+open path, which was restored byte-for-byte to v0.4.0's and still showed
+it. Whatever this is, it is not in that file, and the next attempt should
+start by building a real v0.4.0 to check the belief that it ever worked -
+against a copied database, since v0.5.0 has run migration 005.
 
 v0.4.0 carried three rounds rather than two: the fields v0.3.0 added got
 their whole interface at once, so recording a price change and seeing the

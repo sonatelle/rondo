@@ -83,7 +83,7 @@ changes the backup format and that needs a boundary a reader can point at.
 - [x] The form, picking a provider, and the full table - v0.4.0
 - [x] Subscription detail, and where to cancel by channel - v0.4.0
 - [x] Exchange rates, conversion, and the currency settings - v0.5.0
-- [ ] The amount display rules, across every screen that prints money -
+- [x] The amount display rules, across every screen that prints money -
       v0.5.0
 - [ ] The calendar and its year view - v0.6.0
 - [ ] Analytics - v0.7.0
@@ -218,6 +218,31 @@ look first.
 The handoff itself lives outside the repository, which is worth knowing
 when one of these entries turns out to be too short: it is a folder of
 HTML and a long README, not something a later reader can find from here.
+
+Round 10 did all six, and found a seventh thing nobody had written down.
+Four of the six were straightforward; the settings rate row was not,
+because it is editable. It reads "1 USD = 7.1240 CNY", which is the quote
+a person checks against their bank, while storage is against a fixed base
+neither of them may be - so writing one back is a division, and when
+neither side is the base it needs the *other* currency's rate to do it.
+That rate is often exactly what is missing, since somebody types a rate by
+hand precisely when a fetch did not reach them. The core refuses that case
+by name rather than storing a number it cannot justify.
+
+The seventh is a rule about this app rather than about money, and it cost
+three attempts to see. **A view must read state SwiftUI can observe.**
+`Currencies.preferred` is a `UserDefaults` lookup and `model.rates(for:)`
+is a call across the FFI; neither registers a dependency, so a view built
+on them keeps whatever it drew first. It looked like a refresh problem
+every time - the currency changed and the screen did not, a fetch landed
+and the fields stayed blank - and the giveaway was subtle: rows that
+happened to be newly created came out right, so the bug appeared to be
+about timing rather than about a dependency that was never declared.
+
+The primary currency and the rate readings now live on the model, and the
+three rate-derived queries read an observable counter so that calling one
+from a view body is itself the dependency. `ModelWiringTests` holds both
+halves, because nothing about either would fail to compile.
 
 ## Later, undated
 

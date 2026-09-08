@@ -327,6 +327,100 @@ pub fn window_totals(
     Ok(by_currency.into_values().collect())
 }
 
+/// Everything needed to turn amounts into one currency.
+///
+/// Four values that always travel together, gathered so the call that
+/// takes them reads as "this window, converted like *this*" rather than as
+/// a row of eight positional arguments where two are dates and either
+/// could be passed for the other.
+#[derive(Debug, Clone, Copy)]
+pub struct Conversion<'a> {
+    /// The rate histories to look up in.
+    pub rates: &'a RateHistories,
+    /// The currency to convert into.
+    pub primary: &'a str,
+    /// The day whose rates to use, when `basis` says one day is used.
+    pub on: Date,
+    /// Which day's rate each amount takes.
+    pub basis: RateBasis,
+}
+
+/// What has been spent over a window, as one figure.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConvertedWindow {
+    /// The currency `total` is in.
+    pub currency: String,
+    /// Sum of every charge that could be converted.
+    pub total: Decimal,
+    /// How many charges fell in the window.
+    pub charge_count: u32,
+    /// How many of those `total` covers. Fewer when a rate was missing.
+    pub converted_charge_count: u32,
+    /// Currencies no rate reached, by code, sorted. A screen showing the
+    /// figure has to say these were left out of it.
+    pub unconverted_currencies: Vec<String>,
+}
+
+/// Totals every charge in `[from, to)` as one figure in `primary`.
+///
+/// The converting counterpart of [`window_totals`]. `basis` decides which
+/// day's rate each charge uses, and the two windows this serves want
+/// different answers: a window over the past is [`RateBasis::OwnDay`],
+/// what the money actually cost. A window over the *future* has no rates
+/// yet - nothing is published for next month - so a forecast is
+/// [`RateBasis::OneDay`] against `on`, today's rate carried forward, which
+/// is the only honest way to price a charge that has not happened.
+pub fn window_totals_in(
+    subscriptions: &[Subscription],
+    histories: &HashMap<Uuid, Vec<Price>>,
+    from: Date,
+    to: Date,
+    into: Conversion<'_>,
+) -> Result<ConvertedWindow> {
+    let Conversion {
+        rates,
+        primary,
+        on,
+        basis,
+    } = into;
+    let mut window = ConvertedWindow {
+        currency: primary.to_owned(),
+        total: Decimal::ZERO,
+        charge_count: 0,
+        converted_charge_count: 0,
+        unconverted_currencies: Vec::new(),
+    };
+    let mut missing: BTreeMap<String, ()> = BTreeMap::new();
+
+    for sub in subscriptions {
+        if sub.status != SubscriptionStatus::Active {
+            continue;
+        }
+        let history = histories
+            .get(&sub.id)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        for charge in charges(sub, history, from, to)? {
+            window.charge_count += 1;
+            let day = match basis {
+                RateBasis::OwnDay => charge.date,
+                RateBasis::OneDay => on,
+            };
+            match convert(rates, &charge.amount, primary, day)? {
+                Some(amount) => {
+                    window.total += amount.amount();
+                    window.converted_charge_count += 1;
+                }
+                None => {
+                    missing.insert(charge.amount.currency().to_owned(), ());
+                }
+            }
+        }
+    }
+    window.unconverted_currencies = missing.into_keys().collect();
+    Ok(window)
+}
+
 /// The earliest day any of these subscriptions was first charged.
 ///
 /// The natural start of an all-time window; `None` when there is nothing
@@ -1181,6 +1275,119 @@ mod tests {
     }
 
     // -- what a total was built from --
+
+    #[test]
+    fn a_forecast_window_prices_every_charge_at_one_day() {
+        // Nothing is published for next month, so a window over the future
+        // has no rate of its own to use. Today's, carried forward, is the
+        // only honest answer - and every charge gets the same one.
+        let s = sub("A", money("11", "USD"), cycle(1, CycleUnit::Month));
+        let history = [Price::new(
+            s.id,
+            money("11", "USD"),
+            Date::constant(2026, 1, 1),
+        )];
+        let histories = HashMap::from([(s.id, history.to_vec())]);
+
+        let window = window_totals_in(
+            &[s],
+            &histories,
+            Date::constant(2026, 6, 1),
+            Date::constant(2026, 8, 1),
+            Conversion {
+                rates: &rates(),
+                primary: "EUR",
+                on: RATE_DAY,
+                basis: RateBasis::OneDay,
+            },
+        )
+        .unwrap();
+
+        // Two charges at 11 USD, each 10 EUR.
+        assert_eq!(window.charge_count, 2);
+        assert_eq!(window.converted_charge_count, 2);
+        assert_eq!(window.total, Decimal::from_str("20").unwrap());
+        assert!(window.unconverted_currencies.is_empty());
+    }
+
+    #[test]
+    fn a_window_names_the_currencies_it_could_not_convert() {
+        let yen = sub("B", money("1000", "JPY"), cycle(1, CycleUnit::Month));
+        let history = [Price::new(
+            yen.id,
+            money("1000", "JPY"),
+            Date::constant(2026, 1, 1),
+        )];
+        let histories = HashMap::from([(yen.id, history.to_vec())]);
+
+        let window = window_totals_in(
+            &[yen],
+            &histories,
+            Date::constant(2026, 6, 1),
+            Date::constant(2026, 8, 1),
+            Conversion {
+                rates: &rates(),
+                primary: "EUR",
+                on: RATE_DAY,
+                basis: RateBasis::OneDay,
+            },
+        )
+        .unwrap();
+
+        // The charges are counted, the total covers none of them, and the
+        // currency is named - a screen must not show 0 and stop there.
+        assert_eq!(window.charge_count, 2);
+        assert_eq!(window.converted_charge_count, 0);
+        assert_eq!(window.total, Decimal::ZERO);
+        assert_eq!(window.unconverted_currencies, vec!["JPY".to_owned()]);
+    }
+
+    #[test]
+    fn a_past_window_prices_each_charge_at_its_own_day() {
+        let mut moving = RateHistories::new();
+        moving.insert(
+            "USD".to_owned(),
+            vec![
+                crate::model::ExchangeRate::new(
+                    "USD",
+                    Date::constant(2026, 1, 1),
+                    Decimal::from_str("1.00").unwrap(),
+                    false,
+                )
+                .unwrap(),
+                crate::model::ExchangeRate::new(
+                    "USD",
+                    Date::constant(2026, 2, 1),
+                    Decimal::from_str("2.00").unwrap(),
+                    false,
+                )
+                .unwrap(),
+            ],
+        );
+        let s = sub("A", money("10", "USD"), cycle(1, CycleUnit::Month));
+        let history = [Price::new(
+            s.id,
+            money("10", "USD"),
+            Date::constant(2026, 1, 1),
+        )];
+        let histories = HashMap::from([(s.id, history.to_vec())]);
+
+        // January at 1.00 is 10; February at 2.00 is 5.
+        let window = window_totals_in(
+            &[s],
+            &histories,
+            Date::constant(2026, 1, 1),
+            Date::constant(2026, 3, 1),
+            Conversion {
+                rates: &moving,
+                primary: "EUR",
+                on: Date::constant(2026, 3, 1),
+                basis: RateBasis::OwnDay,
+            },
+        )
+        .unwrap();
+        assert_eq!(window.total, Decimal::from_str("15").unwrap());
+    }
 
     #[test]
     fn a_total_names_the_rate_each_currency_went_in_at() {

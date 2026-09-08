@@ -1,7 +1,6 @@
 import Foundation
-import Testing
-
 @testable import Rondo
+import Testing
 
 /// Tests that the model reaches the views the only way this app supplies it.
 ///
@@ -32,7 +31,7 @@ struct ModelWiringTests {
     try #require(!files.isEmpty, "no Swift sources under \(root.path)")
     return try files
       .sorted { $0.path < $1.path }
-      .map { (name: $0.lastPathComponent, text: try String(contentsOf: $0, encoding: .utf8)) }
+      .map { try (name: $0.lastPathComponent, text: String(contentsOf: $0, encoding: .utf8)) }
   }
 
   @Test("No view reaches for the model through the environment")

@@ -1,7 +1,6 @@
 import Foundation
-import Testing
-
 @testable import Rondo
+import Testing
 
 /// Tests for how an amount is written when there are two currencies in play.
 ///
@@ -11,7 +10,8 @@ struct AmountRulesTests {
   @Test("An amount already in the primary currency is one line without a sign")
   func sameCurrencyIsPlain() {
     let written = Formatting.amount(
-      "15.90", currency: "USD", convertedTo: "USD", converted: nil)
+      "15.90", currency: "USD", convertedTo: "USD", converted: nil
+    )
 
     #expect(written.secondary == nil)
     #expect(written.isConverted == false)
@@ -23,7 +23,8 @@ struct AmountRulesTests {
   @Test("A converted amount leads with the primary currency and keeps the billed one")
   func conversionShowsBothLines() {
     let written = Formatting.amount(
-      "10.00", currency: "USD", convertedTo: "CNY", converted: "71.24")
+      "10.00", currency: "USD", convertedTo: "CNY", converted: "71.24"
+    )
 
     #expect(written.isConverted)
     #expect(written.primary.hasPrefix("≈ "))
@@ -36,7 +37,8 @@ struct AmountRulesTests {
   @Test("An amount no rate reaches is shown billed, not converted or blanked")
   func noRateShowsTheBilledAmountOnly() {
     let written = Formatting.amount(
-      "10.00", currency: "USD", convertedTo: "CNY", converted: nil)
+      "10.00", currency: "USD", convertedTo: "CNY", converted: nil
+    )
 
     // One line, and it is the real one. Not a zero, not "10.00" relabelled
     // as CNY, and not the billed figure dressed up with a `≈` it has not
@@ -54,7 +56,8 @@ struct AmountRulesTests {
     // going through the two-line entry point: a column mixing "₺1.499,99"
     // and "¥1,499.99" cannot be read down.
     let written = Formatting.amount(
-      "1499.99", currency: "USD", convertedTo: "CNY", converted: "10685.93")
+      "1499.99", currency: "USD", convertedTo: "CNY", converted: "10685.93"
+    )
 
     let plainBilled = Formatting.amount("1499.99", currency: "USD")
     let plainConverted = Formatting.amount("10685.93", currency: "CNY")
@@ -89,7 +92,8 @@ struct AmountRulesTests {
     // and nothing else. If one ever arrived malformed, showing the raw text
     // beats showing an empty cell where money should be.
     let written = Formatting.amount(
-      "not a number", currency: "USD", convertedTo: "USD", converted: nil)
+      "not a number", currency: "USD", convertedTo: "USD", converted: nil
+    )
 
     #expect(written.primary.contains("not a number"))
   }

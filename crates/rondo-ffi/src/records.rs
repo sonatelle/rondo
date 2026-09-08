@@ -312,6 +312,33 @@ impl From<rondo_core::summary::Applied> for Applied {
     }
 }
 
+/// What falls due over a window, as one figure.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ConvertedWindow {
+    /// The currency `total` is in.
+    pub currency: String,
+    pub total: Decimal,
+    /// How many charges fell in the window.
+    pub charge_count: u32,
+    /// How many of those `total` covers.
+    pub converted_charge_count: u32,
+    /// Currencies no rate reached. A screen showing the figure has to say
+    /// these were left out rather than let it read as the whole answer.
+    pub unconverted_currencies: Vec<String>,
+}
+
+impl From<rondo_core::summary::ConvertedWindow> for ConvertedWindow {
+    fn from(window: rondo_core::summary::ConvertedWindow) -> Self {
+        Self {
+            currency: window.currency,
+            total: window.total,
+            charge_count: window.charge_count,
+            converted_charge_count: window.converted_charge_count,
+            unconverted_currencies: window.unconverted_currencies,
+        }
+    }
+}
+
 /// Normalized spending as one figure, plus what would not convert.
 ///
 /// `unconverted` being non-empty is not an error and must not be hidden:

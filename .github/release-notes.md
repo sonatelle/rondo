@@ -31,22 +31,25 @@ that is the only thing it asks the network for.
 
 ## What's new
 
-Four corrections to the menu bar window, which v0.5.0 left behind when every
-other screen learned to convert.
+A calendar, which answers the question the lists do not: not what you are
+paying for, but which day it leaves.
 
-Its list of what renews next still showed each charge in the currency it is
-billed in, sitting directly above a total in yours with nothing joining them.
-Those rows are converted now.
+A month is six rows of days with each charge drawn in the day it falls on,
+coloured by how soon that is — the same red and amber the rest of Rondo
+uses and nothing else. Above the grid, what the month comes to and how many
+charges make it. That figure is those chips added up, not a second sum that
+could disagree with them.
 
-Settings did not open from that window at all, and the shortcut printed
-beside the row did nothing when pressed. Both work. The keys named in this
-window are bound to it now, which is what they needed: with no main window
-open Rondo is an accessory and has no menu bar of its own for them to come
-from.
+There is a year view too, and it exists for one reason. A yearly plan lands
+its whole price in one month and nothing in the other eleven, and from
+inside any single month you cannot see that coming. So the year shows
+twelve cards with what each costs, names the yearly plan landing in each,
+and marks the month that turns out to be the most expensive. Under every
+card is a strip of thirty-one marks saying only *whether* a day carries a
+charge — a yearly one picked out from the rest. Click a month to open it.
 
-The shortcuts also line up down the list rather than sitting wherever the
-last character left them, and no row is drawn fainter than the ones above
-it.
+Amounts follow the same rules as everywhere else: the converted figure
+where a rate reaches it, what it is really billed at where none does.
 
 Nothing about your data changed in this release.
 

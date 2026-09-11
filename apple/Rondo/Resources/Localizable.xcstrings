@@ -45,6 +45,47 @@
         }
       }
     },
+    "%lld already charged" : {
+      "comment" : "Year view: some of this month's charges have happened",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld already charged"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld already charged"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已扣 %lld 笔"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已扣 %lld 笔"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld archived" : {
       "comment" : "Beside the title: how many subscriptions were stopped",
       "localizations" : {
@@ -235,6 +276,47 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld 项订阅的付款方式会变回未记录。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld yearly plans" : {
+      "comment" : "Year view: this month carries more than one yearly plan",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld yearly plan"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld yearly plans"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 笔年费"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 笔年费"
                 }
               }
             }
@@ -592,6 +674,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "金额"
+          }
+        }
+      }
+    },
+    "already charged" : {
+      "comment" : "Year view: every charge in this month has happened",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已发生"
           }
         }
       }
@@ -1547,6 +1640,17 @@
         }
       }
     },
+    "includes yearly %@" : {
+      "comment" : "Year view: this month carries a yearly plan, and which",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "含年费 %@"
+          }
+        }
+      }
+    },
     "including %@" : {
       "comment" : "Under a converted total, listing what went into it",
       "localizations" : {
@@ -1674,6 +1778,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每月"
+          }
+        }
+      }
+    },
+    "Monthly charges" : {
+      "comment" : "Year view legend: the ordinary run of charges",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月扣款"
           }
         }
       }
@@ -2217,6 +2332,17 @@
         }
       }
     },
+    "Priciest month" : {
+      "comment" : "Calendar strip, year view: the month that costs the most",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最贵的一个月"
+          }
+        }
+      }
+    },
     "Primary currency" : {
       "comment" : "Setting: the currency every total is shown in",
       "localizations" : {
@@ -2690,6 +2816,17 @@
         }
       }
     },
+    "Show this month" : {
+      "comment" : "Clicking a month card in the year view",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看这个月"
+          }
+        }
+      }
+    },
     "Sign in to the service and cancel there. Rondo has no account with them and cannot do it for you." : {
       "comment" : "The generic cancellation guidance",
       "localizations" : {
@@ -2861,6 +2998,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此操作不可撤销。只是想不再计入总额、但保留记录的话，请改用归档。"
+          }
+        }
+      }
+    },
+    "This month" : {
+      "comment" : "Marks the current month in the year view",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月"
           }
         }
       }
@@ -3188,6 +3336,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每年"
+          }
+        }
+      }
+    },
+    "Yearly plans" : {
+      "comment" : "Year view legend: a plan billed once a year",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年费"
           }
         }
       }

@@ -183,6 +183,13 @@ extension Color {
   static let warnMarker = Color("warnMarker")
   static let distantMarker = Color("distantMarker")
 
+  /// A day the money leaves, in the year view's strip of 31.
+  ///
+  /// Pale, because that strip says only *whether* a day has a charge -
+  /// never how much. A yearly plan is marked in `brand` instead, which is
+  /// the whole point of the view: it shows which months turn expensive.
+  static let chargeMark = Color("chargeMark")
+
   static let iconBlueBackground = Color("iconBlueBackground")
   static let iconBlueForeground = Color("iconBlueForeground")
   static let iconNeutralBackground = Color("iconNeutralBackground")

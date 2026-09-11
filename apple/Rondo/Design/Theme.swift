@@ -132,6 +132,21 @@ enum Urgency {
     case .distant: .textMuted
     }
   }
+
+  /// The solid colour that stands for this band on its own.
+  ///
+  /// A third colour, and it has to be: `background` is pale enough to set
+  /// text on and `foreground` is dark enough to be read as text, and
+  /// neither works as an 8pt square in a legend - one disappears, the
+  /// other reads as brown. This is the swatch in the legend and the dot on
+  /// a chip, which must be the same colour or the legend explains nothing.
+  var marker: Color {
+    switch self {
+    case .urgent: .urgentMarker
+    case .soon: .warnMarker
+    case .distant: .distantMarker
+    }
+  }
 }
 
 /// The design's palette, resolved from the asset catalogue.
@@ -162,8 +177,11 @@ extension Color {
 
   static let urgentBackground = Color("urgentBackground")
   static let urgentForeground = Color("urgentForeground")
+  static let urgentMarker = Color("urgentMarker")
   static let warnBackground = Color("warnBackground")
   static let warnForeground = Color("warnForeground")
+  static let warnMarker = Color("warnMarker")
+  static let distantMarker = Color("distantMarker")
 
   static let iconBlueBackground = Color("iconBlueBackground")
   static let iconBlueForeground = Color("iconBlueForeground")

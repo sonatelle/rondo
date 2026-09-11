@@ -184,6 +184,21 @@ enum Formatting {
     )
   }
 
+  /// Names the span a calendar is showing: "March 2026", or "2026".
+  ///
+  /// Asked of Foundation rather than assembled from a month name and a
+  /// year, because the order is not the same everywhere - Chinese writes
+  /// the year first and marks both with characters - and joining them here
+  /// would bake one language's word order into every other.
+  static func span(_ text: CivilDate, scale: CalendarScale) -> String {
+    guard let date = parse(text) else { return text }
+    let locale = Localization.locale
+    return switch scale {
+    case .month: date.formatted(.dateTime.year().month(.wide).locale(locale))
+    case .year: date.formatted(.dateTime.year().locale(locale))
+    }
+  }
+
   /// Says how far off a date is, counted in days: "today", "tomorrow",
   /// "in 14 days".
   ///

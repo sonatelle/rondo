@@ -574,6 +574,17 @@
         }
       }
     },
+    "Already up to date." : {
+      "comment" : "After a fetch that found nothing to ask for",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已是最新。"
+          }
+        }
+      }
+    },
     "Amount" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -586,7 +597,7 @@
       }
     },
     "and %lld more" : {
-      "comment" : "How many charges the menu bar did not list",
+      "comment" : "A day with more charges than the cell can show\nHow many charges the menu bar did not list",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -674,6 +685,17 @@
         }
       }
     },
+    "Back" : {
+      "comment" : "Pages the calendar to the previous month or year",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一个"
+          }
+        }
+      }
+    },
     "Backup restored" : {
       "comment" : "Title of the alert after an import",
       "localizations" : {
@@ -729,6 +751,17 @@
         }
       }
     },
+    "Calendar" : {
+      "comment" : "Sidebar page showing which day each charge falls on",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日历"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "comment" : "Closes the form without saving\nCloses the sheet without saving",
       "localizations" : {
@@ -774,7 +807,7 @@
       }
     },
     "Charges" : {
-      "comment" : "Heading over the list of charges",
+      "comment" : "Calendar strip: how many charges fall in the span\nHeading over the list of charges",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1373,6 +1406,17 @@
         }
       }
     },
+    "Forward" : {
+      "comment" : "Pages the calendar to the next month or year",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一个"
+          }
+        }
+      }
+    },
     "Games" : {
       "comment" : "Built-in category",
       "localizations" : {
@@ -1543,6 +1587,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "语言"
+          }
+        }
+      }
+    },
+    "Later" : {
+      "comment" : "Calendar legend: everything further off",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "之后"
           }
         }
       }
@@ -1976,6 +2031,17 @@
         }
       }
     },
+    "Nothing to convert, so no rates are needed." : {
+      "comment" : "After pressing update with everything already in one currency",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有需要换算的内容，用不上汇率。"
+          }
+        }
+      }
+    },
     "Off, closing the window leaves Rondo in the menu bar and out of the Dock." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2217,6 +2283,17 @@
         }
       }
     },
+    "Rates updated." : {
+      "comment" : "After a fetch that brought something back",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "汇率已更新。"
+          }
+        }
+      }
+    },
     "Reading" : {
       "comment" : "Built-in category for books and articles",
       "localizations" : {
@@ -2454,6 +2531,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存"
+          }
+        }
+      }
+    },
+    "Scale" : {
+      "comment" : "Accessibility label for the month/year switch",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视图粒度"
           }
         }
       }
@@ -2855,7 +2943,7 @@
       }
     },
     "Total" : {
-      "comment" : "Table column: what it has cost since the first charge",
+      "comment" : "Calendar strip: what the span on screen comes to",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3050,6 +3138,28 @@
         }
       }
     },
+    "Within 3 days" : {
+      "comment" : "Calendar legend: the most urgent band",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 天内"
+          }
+        }
+      }
+    },
+    "Within 7 days" : {
+      "comment" : "Calendar legend: the middle band",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 天内"
+          }
+        }
+      }
+    },
     "year" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3123,39 +3233,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "手动"
-          }
-        }
-      }
-    },
-    "Rates updated." : {
-      "comment" : "After a fetch that brought something back",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "汇率已更新。"
-          }
-        }
-      }
-    },
-    "Already up to date." : {
-      "comment" : "After a fetch that found nothing to ask for",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已是最新。"
-          }
-        }
-      }
-    },
-    "Nothing to convert, so no rates are needed." : {
-      "comment" : "After pressing update with everything already in one currency",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没有需要换算的内容，用不上汇率。"
           }
         }
       }

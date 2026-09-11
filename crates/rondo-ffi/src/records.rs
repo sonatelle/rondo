@@ -470,6 +470,39 @@ impl From<rondo_core::summary::Charge> for Charge {
     }
 }
 
+/// One charge on its day, in what it is billed in and in the primary.
+///
+/// The unit a calendar is drawn from. Carries the subscription's id because
+/// a chip in a day has to name what it is for, and the amounts twice over
+/// because a day showing an unconverted charge has to show it in the
+/// currency it really is.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct DatedCharge {
+    /// The subscription this charge belongs to.
+    pub subscription_id: Uuid,
+    /// The day it falls due.
+    pub date: Date,
+    /// What is billed, at the price in force on that day.
+    pub amount: Decimal,
+    pub currency: String,
+    /// The same charge in the primary currency, or `None` when no rate
+    /// reaches it. Never 1:1 and never a guess - a frontend showing this
+    /// draws the billed amount instead and says the total left it out.
+    pub converted: Option<Decimal>,
+}
+
+impl From<rondo_core::summary::DatedCharge> for DatedCharge {
+    fn from(charge: rondo_core::summary::DatedCharge) -> Self {
+        Self {
+            subscription_id: charge.subscription_id,
+            date: charge.date,
+            amount: charge.amount.amount(),
+            currency: charge.amount.currency().to_owned(),
+            converted: charge.converted,
+        }
+    }
+}
+
 /// What was spent over some window, in one currency.
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct WindowTotal {

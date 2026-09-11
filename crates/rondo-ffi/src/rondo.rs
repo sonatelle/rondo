@@ -15,8 +15,8 @@ use uuid::Uuid;
 use crate::error::{Result, RondoError};
 use crate::records::{
     Category, CategoryShare, Charge, ConvertedSpending, ConvertedTotal, ConvertedWindow,
-    ExchangeRate, MonthlySpending, PaymentMethod, Price, SpendingSummary, Subscription,
-    SubscriptionTotal, WindowTotal,
+    DatedCharge, ExchangeRate, MonthlySpending, PaymentMethod, Price, SpendingSummary,
+    Subscription, SubscriptionTotal, WindowTotal,
 };
 
 /// An open Rondo database.
@@ -577,6 +577,54 @@ impl Rondo {
             },
         )?
         .into())
+    }
+
+    /// Every charge of every active subscription in `[from, to)`,
+    /// converted.
+    ///
+    /// One call for a month of calendar or a whole year of it. The figure
+    /// [`Self::converted_window_total`] gives for the same window is folded
+    /// from this same list inside the core, so a strip above a grid and the
+    /// grid beneath it cannot disagree about what the month cost.
+    ///
+    /// `forecast` picks the rates exactly as it does for that total: a
+    /// window over the past converts each charge at the rate of the day it
+    /// fell on, and one over the future carries today's forward, since
+    /// nothing is published for next month.
+    ///
+    /// Ordered by day, and within a day by subscription id.
+    pub fn converted_charges(
+        &self,
+        from: Date,
+        to: Date,
+        primary: String,
+        on: Date,
+        forecast: bool,
+    ) -> Result<Vec<DatedCharge>> {
+        let store = self.store()?;
+        let subs = store.subscriptions(None, on)?;
+        let histories = store.all_price_histories()?;
+        let rates = store.all_rates()?;
+        let basis = if forecast {
+            rondo_core::summary::RateBasis::OneDay
+        } else {
+            rondo_core::summary::RateBasis::OwnDay
+        };
+        Ok(rondo_core::summary::charges_between(
+            &subs,
+            &histories,
+            from,
+            to,
+            rondo_core::summary::Conversion {
+                rates: &rates,
+                primary: &primary,
+                on,
+                basis,
+            },
+        )?
+        .into_iter()
+        .map(DatedCharge::from)
+        .collect())
     }
 
     /// Totals the subscriptions handed in as one figure in `primary`.
@@ -1238,5 +1286,52 @@ mod tests {
         );
         // And the amount before conversion, which the footnote prints.
         assert_eq!(total.applied[0].monthly.to_string(), "15.90");
+    }
+
+    #[test]
+    fn a_calendar_gets_both_amounts_and_a_total_that_agrees_with_them() {
+        let rondo = open();
+        let dollars = rondo.add_subscription(draft("Netflix")).unwrap();
+        let mut in_yen = draft("Niconico");
+        in_yen.amount = Decimal::from_str("1000").unwrap();
+        in_yen.currency = "JPY".into();
+        let yen = rondo.add_subscription(in_yen).unwrap();
+
+        // Totalled in USD: one of them is billed in it already, and the
+        // other has no rate that reaches it.
+        let (from, to) = (Date::constant(2026, 3, 1), Date::constant(2026, 4, 1));
+        let charges = rondo
+            .converted_charges(from, to, "USD".to_owned(), TODAY, false)
+            .unwrap();
+        let window = rondo
+            .converted_window_total(from, to, "USD".to_owned(), TODAY, false)
+            .unwrap();
+
+        // Both charges cross, each naming its subscription and carrying the
+        // amount in the currency it is billed in.
+        assert_eq!(charges.len(), 2);
+        assert_eq!(charges[0].subscription_id, dollars.id);
+        assert_eq!(charges[0].date, Date::constant(2026, 3, 31));
+        assert_eq!(charges[0].currency, "USD");
+        assert_eq!(charges[0].amount.to_string(), "15.90");
+        assert_eq!(
+            charges[0].converted.map(|amount| amount.to_string()),
+            Some("15.90".to_owned())
+        );
+
+        // The one no rate reaches is present with its own amount and
+        // nothing converted, rather than absent from its day.
+        assert_eq!(charges[1].subscription_id, yen.id);
+        assert_eq!(charges[1].currency, "JPY");
+        assert_eq!(charges[1].amount.to_string(), "1000");
+        assert_eq!(charges[1].converted, None);
+
+        // And the strip a calendar draws above the grid is what the grid
+        // adds up to, across the boundary as well as inside the core.
+        let summed: Decimal = charges.iter().filter_map(|charge| charge.converted).sum();
+        assert_eq!(window.total, summed);
+        assert_eq!(window.charge_count as usize, charges.len());
+        assert_eq!(window.converted_charge_count, 1);
+        assert_eq!(window.unconverted_currencies, vec!["JPY".to_owned()]);
     }
 }

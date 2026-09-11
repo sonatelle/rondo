@@ -13,7 +13,7 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-v0.5.1 is out. The macOS app runs and keeps real data.
+v0.6.0 is out. The macOS app runs and keeps real data.
 
 **Backups written by v0.5.0 or later cannot be read by v0.4.0 or earlier**,
 and those written by v0.3.0 and later cannot be read by v0.1.0 or v0.2.0.
@@ -35,6 +35,9 @@ What works:
   What is left is totalled per month at the top.
 - Open one subscription to see what it has cost since its first charge,
   every charge it has fallen due for, and where a price rose.
+- See which day the money leaves, as a month of charges in their own days
+  or as a year of twelve cards - which says which months turn expensive,
+  since a yearly plan lands its whole price in one of them.
 - Be told where to go to cancel it, which depends on where it was bought.
 - Keep a price history: correcting a price is not the same as recording a
   rise, so totals across a rise are the real number rather than today's
@@ -57,6 +60,10 @@ What works:
   network for is exchange rates, from a single host, sending nothing about
   you - and it works offline on what it already has.
 
+v0.6.0 adds the calendar: a month with each charge drawn in the day it falls
+on, and a year that shows which months turn expensive - a yearly plan lands
+its whole price in one of them, which no single month can show you.
+
 v0.5.1 corrects the menu bar window, which v0.5.0 left showing each charge in
 the currency it is billed in under a total in yours, and from which settings
 could not be opened at all.
@@ -74,7 +81,7 @@ subscription.
 
 Still to come:
 
-- A calendar of what falls due, and an analytics page.
+- An analytics page.
 - Spending grouped by payment method, and the archive as a page of its own.
 - First run, and renewal reminders through local notifications.
 

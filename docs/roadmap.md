@@ -52,6 +52,8 @@ its own before the next begins.
       and the first that reaches the network
 - [x] v0.5.1 published, 2026-09-08 - the menu bar window, which v0.5.0 had
       converted every screen but
+- [x] v0.6.0 published, 2026-09-11 - the calendar, and the year that says
+      which months a yearly plan makes expensive
 
 The tap is `sonatelle/homebrew-tap`, and it has to be a tap of our own:
 homebrew-cask stopped taking casks that fail Gatekeeper on 2026-09-01, and
@@ -117,7 +119,7 @@ changes the backup format and that needs a boundary a reader can point at.
 - [x] Exchange rates, conversion, and the currency settings - v0.5.0
 - [x] The amount display rules, across every screen that prints money -
       v0.5.0
-- [ ] The calendar and its year view - v0.6.0
+- [x] The calendar and its year view - v0.6.0
 - [ ] Analytics - v0.7.0
 - [ ] Spending grouped by payment method, and the archive - v0.8.0
 - [ ] First run, and local notifications - which also closes M4 - v0.9.0

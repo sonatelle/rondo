@@ -128,6 +128,27 @@ final class SubscriptionsModel {
   /// happen reads as a broken button, and it was reported as one.
   var rateNote: String?
 
+  /// Whether the calendar is drawn as one month or as a whole year.
+  private(set) var calendarScale: CalendarScale = .month
+
+  /// The first day of the month the calendar is anchored on.
+  ///
+  /// One anchor serves both scales: the year view shows the year this day
+  /// falls in, so switching between them keeps the person where they were.
+  private(set) var calendarAnchor: CivilDate = SubscriptionsModel.startOfMonth(
+    SubscriptionsModel.today()
+  )
+
+  /// Every charge falling in the span on screen, in day order.
+  private(set) var calendarCharges: [DatedCharge] = []
+
+  /// What that span comes to, folded by the core from the charges above.
+  ///
+  /// `unconvertedCurrencies` names whatever no rate reached, which the
+  /// strip has to say: a month quietly missing two charges looks exactly
+  /// like a cheaper month.
+  private(set) var calendarTotal: ConvertedWindow?
+
   /// The day the loaded renewals were reckoned against.
   ///
   /// Kept rather than re-read from the clock, because "in 3 days" has to
@@ -344,9 +365,120 @@ final class SubscriptionsModel {
         (Formatting.decimal($0.1.total) ?? 0) > (Formatting.decimal($1.1.total) ?? 0)
       }
       topSpending = spending.map { (subscription: $0.0, total: $0.1) }
+      loadCalendar()
     } catch {
       report(error)
     }
+  }
+
+  /// Reads the charges the calendar is showing, and what they come to.
+  ///
+  /// Held rather than asked for while drawing. A grid redraws on every
+  /// hover and resize, and an FFI call in a view's body is not observable
+  /// state anyway - it registers no dependency, so a fetch landing later
+  /// would leave the month on screen unchanged. Both problems go away by
+  /// reading here and letting views observe the result.
+  ///
+  /// The total comes from the core beside the charges rather than being
+  /// summed here: it is folded from this very list, so the strip above the
+  /// grid is what the grid adds up to. Adding these figures on this side
+  /// would be a second calculation free to disagree with the first.
+  private func loadCalendar() {
+    let span = calendarSpan
+    // Off means the person asked for everything at today's rate; on, each
+    // charge takes the rate of its own day - and one still to come takes
+    // the newest there is, since nothing is published for next month.
+    let forecast = !Self.locksHistoricalRates
+    do {
+      calendarCharges = try rondo.convertedCharges(
+        from: span.from,
+        to: span.to,
+        primary: primaryCurrency,
+        on: referenceDay,
+        forecast: forecast
+      )
+      calendarTotal = try rondo.convertedWindowTotal(
+        from: span.from,
+        to: span.to,
+        primary: primaryCurrency,
+        on: referenceDay,
+        forecast: forecast
+      )
+    } catch {
+      report(error)
+      calendarCharges = []
+      calendarTotal = nil
+    }
+  }
+
+  /// Shows the calendar at a different scale, over the same anchor.
+  ///
+  /// Switching between a month and the year around it keeps where you were
+  /// rather than jumping to today: somebody looking at next March who
+  /// presses Year means "the year next March is in".
+  func setCalendarScale(_ scale: CalendarScale) {
+    guard scale != calendarScale else { return }
+    calendarScale = scale
+    loadCalendar()
+  }
+
+  /// Pages the calendar by whole months or whole years, whichever it is
+  /// showing.
+  func stepCalendar(by count: Int) {
+    guard let date = Formatting.parseCivilDate(calendarAnchor),
+          let moved = Calendar.current.date(
+            byAdding: calendarScale.component,
+            value: count,
+            to: date
+          )
+    else { return }
+    calendarAnchor = Self.startOfMonth(Formatting.civilDate(from: moved))
+    loadCalendar()
+  }
+
+  /// Brings the calendar back to the month the person is living in.
+  func showCalendarToday() {
+    calendarAnchor = Self.startOfMonth(referenceDay)
+    loadCalendar()
+  }
+
+  /// Shows one month, at month scale. What a month card in the year view
+  /// does when it is clicked.
+  func showCalendarMonth(containing day: CivilDate) {
+    calendarAnchor = Self.startOfMonth(day)
+    calendarScale = .month
+    loadCalendar()
+  }
+
+  /// The half-open span on screen, in the form the core takes.
+  ///
+  /// From `DateInterval`, which is half-open already, so the last day of
+  /// the month is inside it and the first of the next is not.
+  var calendarSpan: (from: CivilDate, to: CivilDate) {
+    guard let date = Formatting.parseCivilDate(calendarAnchor),
+          let interval = Calendar.current.dateInterval(
+            of: calendarScale.component,
+            for: date
+          )
+    else { return (calendarAnchor, calendarAnchor) }
+    return (
+      Formatting.civilDate(from: interval.start),
+      Formatting.civilDate(from: interval.end)
+    )
+  }
+
+  /// The first of the month `day` falls in.
+  ///
+  /// The anchor is kept here and nowhere else in the month, because paging
+  /// from a day near the end of one would drift: a month added to 31 March
+  /// is 30 April, and a month taken off that is 30 March. Anchoring on the
+  /// first makes every step exact and reversible.
+  static func startOfMonth(_ day: CivilDate) -> CivilDate {
+    let calendar = Calendar.current
+    guard let date = Formatting.parseCivilDate(day),
+          let first = calendar.date(from: calendar.dateComponents([.year, .month], from: date))
+    else { return day }
+    return Formatting.civilDate(from: first)
   }
 
   /// Records a subscription and refreshes what the window shows.

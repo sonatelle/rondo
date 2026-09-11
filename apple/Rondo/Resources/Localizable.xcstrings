@@ -1602,6 +1602,17 @@
         }
       }
     },
+    "Month" : {
+      "comment" : "Calendar scale: one month at a time",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "月"
+          }
+        }
+      }
+    },
     "Monthly" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2799,6 +2810,17 @@
         }
       }
     },
+    "This Year" : {
+      "comment" : "Brings the calendar back to the current year",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今年"
+          }
+        }
+      }
+    },
     "Today" : {
       "comment" : "Brings the calendar back to this month\nHow soon a charge falls",
       "localizations" : {
@@ -3030,6 +3052,17 @@
     },
     "year" : {
       "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年"
+          }
+        }
+      }
+    },
+    "Year" : {
+      "comment" : "Calendar scale: twelve months at once",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

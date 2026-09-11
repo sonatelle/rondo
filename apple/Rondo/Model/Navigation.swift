@@ -8,14 +8,16 @@ import SwiftUI
 /// paid for, because a list of what you subscribe to is not a place to be
 /// reminded of what you cancelled.
 ///
-/// Calendar and analytics are deliberately absent until the rounds that
-/// build them. An entry that does nothing when clicked is worse than one
-/// that has not arrived.
+/// Analytics is deliberately absent until the round that builds it. An
+/// entry that does nothing when clicked is worse than one that has not
+/// arrived.
 enum Navigation: Hashable, Identifiable {
   /// The three cards and what is charged next.
   case overview
   /// Everything still being paid for.
   case subscriptions
+  /// Which day the money leaves on.
+  case calendar
   /// Only what is filed under one category.
   case category(Uuid)
   /// What has been stopped, kept out of every total.
@@ -44,6 +46,9 @@ enum Navigation: Hashable, Identifiable {
     case .subscriptions:
       String(localized: "All Subscriptions", bundle: bundle, locale: locale,
              comment: "Sidebar page listing everything still being paid for")
+    case .calendar:
+      String(localized: "Calendar", bundle: bundle, locale: locale,
+             comment: "Sidebar page showing which day each charge falls on")
     case .category: nil
     case .archived:
       String(localized: "Archived", bundle: bundle, locale: locale,
@@ -55,6 +60,7 @@ enum Navigation: Hashable, Identifiable {
     switch self {
     case .overview: "square.grid.2x2.fill"
     case .subscriptions: "list.bullet"
+    case .calendar: "calendar"
     case .category: "tag.fill"
     case .archived: "archivebox.fill"
     }
@@ -69,6 +75,7 @@ enum Navigation: Hashable, Identifiable {
     switch self {
     case .overview: .navOverview
     case .subscriptions: .navAll
+    case .calendar: .navCalendar
     case .category: .brand
     case .archived: .navArchived
     }
@@ -77,7 +84,10 @@ enum Navigation: Hashable, Identifiable {
   /// Which subscriptions this page is about, once the core has answered.
   func matches(_ renewal: Renewal) -> Bool {
     switch self {
-    case .overview, .subscriptions:
+    // The calendar draws its own charges rather than these renewals, but
+    // it is still a page about what is being paid for: the count beside
+    // it in the sidebar has to mean the same as the one beside the list.
+    case .overview, .subscriptions, .calendar:
       renewal.subscription.status == .active
     case let .category(id):
       renewal.subscription.status == .active && renewal.subscription.categoryId == id

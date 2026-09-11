@@ -29,6 +29,12 @@ struct ContentView: View {
       guard let category = model.categories.first(where: { $0.id == id }) else { return "" }
       return Categories.name(category.name, iconKey: category.iconKey)
     }
+    // The calendar names the span it is showing rather than itself. The
+    // sidebar already says which page this is, and which month is on
+    // screen is the thing a reader needs the title for.
+    if model.navigation == .calendar {
+      return Formatting.span(model.calendarAnchor, scale: model.calendarScale)
+    }
     return model.navigation.title ?? ""
   }
 
@@ -113,6 +119,11 @@ struct ContentView: View {
     let count = matching.count
     return switch model.navigation {
     case .overview: ""
+    // Charges, not subscriptions: one subscription can fall due twice in
+    // a month, and none of the rows here is a subscription anyway.
+    case .calendar:
+      String(localized: "\(model.calendarCharges.count) charges", bundle: bundle, locale: locale,
+             comment: "How many charges make up a total")
     case .archived:
       String(localized: "\(count) archived", bundle: bundle, locale: locale,
              comment: "Beside the title: how many subscriptions were stopped")
@@ -283,6 +294,8 @@ struct ContentView: View {
         // and does nothing is worse than no field at all. Searching is on
         // the pages that have something to search.
         OverviewView(model: model)
+      } else if model.navigation == .calendar {
+        CalendarView(model: model)
       } else {
         list
       }
@@ -290,9 +303,24 @@ struct ContentView: View {
     .navigationTitle(pageTitle)
     .navigationSubtitle(pageCount)
     .toolbar {
-      // The search field first, so it sits where the design puts it: to the
-      // left of the button that adds one.
-      if model.navigation != .overview {
+      // Which span is on screen, and how to move between them. First in
+      // the bar, where the design puts them: they are what this page is
+      // navigated by, the way the search field is on the list pages.
+      if model.navigation == .calendar {
+        ToolbarItem {
+          CalendarStepper(model: model)
+        }
+        .plainToolbarItem()
+        ToolbarItem {
+          CalendarScalePicker(model: model)
+        }
+        .plainToolbarItem()
+      }
+
+      // The search field, where the design puts it: to the left of the
+      // button that adds one. The calendar has no list to narrow, so it
+      // gets the controls above instead.
+      if model.navigation != .overview, model.navigation != .calendar {
         ToolbarItem {
           SearchField(text: $searchText, isFocused: $searchFocused)
         }

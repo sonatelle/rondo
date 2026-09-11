@@ -262,6 +262,38 @@ expect(
   "and a rate that moved makes the two totals differ, which is the whole point"
 )
 
+/// What a calendar is drawn from, and the strip above it. The core folds
+/// the second out of the first, so they cannot disagree - this checks the
+/// property survives the boundary, where two calls could otherwise be wired
+/// to two different things without anything noticing.
+let dated = try rondo.convertedCharges(
+  from: span.from, to: span.to, primary: baseCurrency(), on: span.to, forecast: false
+)
+let strip = try rondo.convertedWindowTotal(
+  from: span.from, to: span.to, primary: baseCurrency(), on: span.to, forecast: false
+)
+expect(
+  dated.count == Int(strip.chargeCount),
+  "every charge in the window reaches the calendar — got \(dated.count) of \(strip.chargeCount)"
+)
+expect(
+  dated.compactMap { $0.converted }.reduce(Decimal.zero) { $0 + Decimal(string: $1)! }
+    == Decimal(string: strip.total)!,
+  "and the strip above the grid is what the grid adds up to — got \(strip.total)"
+)
+expect(
+  dated.allSatisfy { $0.subscriptionId == added.id },
+  "a charge names the subscription it belongs to"
+)
+// Dates are ISO, so lexical order is chronological order.
+expect(dated.map(\.date) == dated.map(\.date).sorted(), "and they arrive in day order")
+// Tied to the subscription's own history rather than a literal: the same
+// charges the cumulative counted, priced the same way.
+expect(
+  dated.map(\.amount) == listed.map(\.amount),
+  "priced exactly as the charge list prices them"
+)
+
 expect(!serviceTemplates().isEmpty, "the bundled templates are readable without a database")
 
 /// A nickname sharing no characters with the name it finds: proof the query

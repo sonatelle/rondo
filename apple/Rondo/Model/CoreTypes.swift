@@ -21,6 +21,18 @@ extension Renewal: Identifiable {
   }
 }
 
+extension DatedCharge: Identifiable {
+  /// The subscription and the day together.
+  ///
+  /// Unique within any span the calendar draws: occurrences are `first + k
+  /// * cycle`, so one subscription falls due at most once on a given day -
+  /// even the shortest cycle there is, a daily one, lands on distinct days.
+  /// Public because `DatedCharge` is.
+  public var id: String {
+    "\(subscriptionId) \(date)"
+  }
+}
+
 extension Channel {
   /// Where it was bought, in words.
   ///

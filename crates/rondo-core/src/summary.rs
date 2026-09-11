@@ -361,36 +361,56 @@ pub struct ConvertedWindow {
     pub unconverted_currencies: Vec<String>,
 }
 
-/// Totals every charge in `[from, to)` as one figure in `primary`.
+/// One charge, priced in the currency it is billed in and in the primary.
 ///
-/// The converting counterpart of [`window_totals`]. `basis` decides which
-/// day's rate each charge uses, and the two windows this serves want
-/// different answers: a window over the past is [`RateBasis::OwnDay`],
-/// what the money actually cost. A window over the *future* has no rates
-/// yet - nothing is published for next month - so a forecast is
-/// [`RateBasis::OneDay`] against `on`, today's rate carried forward, which
-/// is the only honest way to price a charge that has not happened.
-pub fn window_totals_in(
+/// The unit a calendar is drawn from. The subscription's id travels with
+/// the charge because a chip in a day has to name what it is for, and
+/// working that back out from the date would mean re-deriving the schedule
+/// the core has just walked.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DatedCharge {
+    /// The subscription this charge belongs to.
+    pub subscription_id: Uuid,
+    /// The day it falls due.
+    pub date: Date,
+    /// What is billed, at the price in force on that day.
+    pub amount: Money,
+    /// The same charge in the primary currency, or `None` when no rate
+    /// reaches it. Never 1:1 and never a guess: a charge that would not
+    /// convert is shown in its own currency and counted among the ones a
+    /// total says it left out.
+    pub converted: Option<Decimal>,
+}
+
+/// Every charge of every active subscription in `[from, to)`, converted.
+///
+/// One call for a whole month or a whole year, because a calendar needs
+/// each charge on its own day *and* needs the strip above the grid to be
+/// exactly what the grid adds up to. [`window_totals_in`] is folded from
+/// this list rather than computed beside it, so the two cannot drift: the
+/// total is the chips added up, by construction rather than by agreement.
+///
+/// Ordered by day, and within a day by subscription id. Ids are UUIDv7 and
+/// so sort in creation order, which gives a day's chips a stable order
+/// without the core deciding how a frontend would rather arrange them.
+///
+/// `basis` decides which day's rate each charge takes; see
+/// [`window_totals_in`] for why a past window and a forecast want
+/// different answers.
+pub fn charges_between(
     subscriptions: &[Subscription],
     histories: &HashMap<Uuid, Vec<Price>>,
     from: Date,
     to: Date,
     into: Conversion<'_>,
-) -> Result<ConvertedWindow> {
+) -> Result<Vec<DatedCharge>> {
     let Conversion {
         rates,
         primary,
         on,
         basis,
     } = into;
-    let mut window = ConvertedWindow {
-        currency: primary.to_owned(),
-        total: Decimal::ZERO,
-        charge_count: 0,
-        converted_charge_count: 0,
-        unconverted_currencies: Vec::new(),
-    };
-    let mut missing: BTreeMap<String, ()> = BTreeMap::new();
+    let mut dated = Vec::new();
 
     for sub in subscriptions {
         if sub.status != SubscriptionStatus::Active {
@@ -401,19 +421,62 @@ pub fn window_totals_in(
             .map(Vec::as_slice)
             .unwrap_or_default();
         for charge in charges(sub, history, from, to)? {
-            window.charge_count += 1;
             let day = match basis {
                 RateBasis::OwnDay => charge.date,
                 RateBasis::OneDay => on,
             };
-            match convert(rates, &charge.amount, primary, day)? {
-                Some(amount) => {
-                    window.total += amount.amount();
-                    window.converted_charge_count += 1;
-                }
-                None => {
-                    missing.insert(charge.amount.currency().to_owned(), ());
-                }
+            let converted =
+                convert(rates, &charge.amount, primary, day)?.map(|money| money.amount());
+            dated.push(DatedCharge {
+                subscription_id: sub.id,
+                date: charge.date,
+                amount: charge.amount,
+                converted,
+            });
+        }
+    }
+    dated.sort_by_key(|charge| (charge.date, charge.subscription_id));
+    Ok(dated)
+}
+
+/// Totals every charge in `[from, to)` as one figure in `primary`.
+///
+/// The converting counterpart of [`window_totals`]. `basis` decides which
+/// day's rate each charge uses, and the two windows this serves want
+/// different answers: a window over the past is [`RateBasis::OwnDay`],
+/// what the money actually cost. A window over the *future* has no rates
+/// yet - nothing is published for next month - so a forecast is
+/// [`RateBasis::OneDay`] against `on`, today's rate carried forward, which
+/// is the only honest way to price a charge that has not happened.
+///
+/// Folded from [`charges_between`], so a screen showing both this figure
+/// and the charges behind it is showing one calculation twice rather than
+/// two calculations that have to agree.
+pub fn window_totals_in(
+    subscriptions: &[Subscription],
+    histories: &HashMap<Uuid, Vec<Price>>,
+    from: Date,
+    to: Date,
+    into: Conversion<'_>,
+) -> Result<ConvertedWindow> {
+    let mut window = ConvertedWindow {
+        currency: into.primary.to_owned(),
+        total: Decimal::ZERO,
+        charge_count: 0,
+        converted_charge_count: 0,
+        unconverted_currencies: Vec::new(),
+    };
+    let mut missing: BTreeMap<String, ()> = BTreeMap::new();
+
+    for charge in charges_between(subscriptions, histories, from, to, into)? {
+        window.charge_count += 1;
+        match charge.converted {
+            Some(amount) => {
+                window.total += amount;
+                window.converted_charge_count += 1;
+            }
+            None => {
+                missing.insert(charge.amount.currency().to_owned(), ());
             }
         }
     }
@@ -1387,6 +1450,148 @@ mod tests {
         )
         .unwrap();
         assert_eq!(window.total, Decimal::from_str("15").unwrap());
+    }
+
+    /// A monthly subscription anchored on `day`, with a price history
+    /// starting the same day - the shape every calendar test needs.
+    fn anchored(name: &str, price: Money, day: Date) -> (Subscription, Vec<Price>) {
+        let sub = Subscription::new(name, price.clone(), cycle(1, CycleUnit::Month), day).unwrap();
+        let history = vec![Price::new(sub.id, price, day)];
+        (sub, history)
+    }
+
+    #[test]
+    fn charges_come_back_in_day_order_carrying_whose_they_are() {
+        let (early, early_prices) =
+            anchored("Early", money("11", "USD"), Date::constant(2026, 1, 3));
+        let (late, late_prices) =
+            anchored("Late", money("82.50", "CNY"), Date::constant(2026, 1, 20));
+        let (early_id, late_id) = (early.id, late.id);
+        let histories = HashMap::from([(early_id, early_prices), (late_id, late_prices)]);
+        let rates = rates();
+
+        // Handed over in the wrong order on purpose: the ordering is the
+        // function's to establish, not the caller's to have got right.
+        let found = charges_between(
+            &[late, early],
+            &histories,
+            Date::constant(2026, 3, 1),
+            Date::constant(2026, 4, 1),
+            Conversion {
+                rates: &rates,
+                primary: "EUR",
+                on: RATE_DAY,
+                basis: RateBasis::OwnDay,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(found.len(), 2);
+        assert_eq!(found[0].date, Date::constant(2026, 3, 3));
+        assert_eq!(found[0].subscription_id, early_id);
+        assert_eq!(found[1].date, Date::constant(2026, 3, 20));
+        assert_eq!(found[1].subscription_id, late_id);
+        // 11 USD at 1.10 and 82.50 CNY at 8.25 are both 10 EUR.
+        assert_eq!(found[0].converted, Some(Decimal::from_str("10").unwrap()));
+        assert_eq!(found[1].converted, Some(Decimal::from_str("10").unwrap()));
+    }
+
+    #[test]
+    fn a_charge_no_rate_reaches_is_still_a_charge_on_its_day() {
+        // The calendar has to draw this chip in its own currency. Dropping
+        // it would leave a day looking empty on a day money leaves.
+        let (sub, prices) = anchored("Yen", money("1000", "JPY"), Date::constant(2026, 1, 8));
+        let id = sub.id;
+        let histories = HashMap::from([(id, prices)]);
+        let rates = rates();
+
+        let found = charges_between(
+            &[sub],
+            &histories,
+            Date::constant(2026, 3, 1),
+            Date::constant(2026, 4, 1),
+            Conversion {
+                rates: &rates,
+                primary: "EUR",
+                on: RATE_DAY,
+                basis: RateBasis::OwnDay,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].date, Date::constant(2026, 3, 8));
+        assert_eq!(found[0].converted, None);
+        assert_eq!(found[0].amount.currency(), "JPY");
+    }
+
+    #[test]
+    fn a_window_total_is_exactly_the_charges_behind_it() {
+        // The invariant the calendar rests on: the strip above the grid is
+        // what the grid adds up to. One convertible charge and one that is
+        // not, so the count and the sum are tested apart.
+        let (euro, euro_prices) = anchored("Euro", money("9", "EUR"), Date::constant(2026, 1, 5));
+        let (dollar, dollar_prices) =
+            anchored("Dollar", money("11", "USD"), Date::constant(2026, 1, 9));
+        let (yen, yen_prices) = anchored("Yen", money("1000", "JPY"), Date::constant(2026, 1, 14));
+        let histories = HashMap::from([
+            (euro.id, euro_prices),
+            (dollar.id, dollar_prices),
+            (yen.id, yen_prices),
+        ]);
+        let rates = rates();
+        let subs = [euro, dollar, yen];
+        let (from, to) = (Date::constant(2026, 3, 1), Date::constant(2026, 4, 1));
+        let into = Conversion {
+            rates: &rates,
+            primary: "EUR",
+            on: RATE_DAY,
+            basis: RateBasis::OwnDay,
+        };
+
+        let found = charges_between(&subs, &histories, from, to, into).unwrap();
+        let window = window_totals_in(&subs, &histories, from, to, into).unwrap();
+
+        let summed: Decimal = found.iter().filter_map(|charge| charge.converted).sum();
+        assert_eq!(window.total, summed);
+        assert_eq!(window.charge_count as usize, found.len());
+        assert_eq!(
+            window.converted_charge_count as usize,
+            found
+                .iter()
+                .filter(|charge| charge.converted.is_some())
+                .count()
+        );
+        // And the figures themselves, so a change that broke both halves
+        // the same way would still be caught.
+        assert_eq!(window.charge_count, 3);
+        assert_eq!(window.converted_charge_count, 2);
+        assert_eq!(window.total, Decimal::from_str("19").unwrap());
+        assert_eq!(window.unconverted_currencies, vec!["JPY".to_owned()]);
+    }
+
+    #[test]
+    fn an_archived_subscription_has_no_charges_in_a_calendar() {
+        let (mut sub, prices) = anchored("Gone", money("11", "USD"), Date::constant(2026, 1, 5));
+        sub.status = SubscriptionStatus::Archived;
+        let histories = HashMap::from([(sub.id, prices)]);
+        let rates = rates();
+
+        let found = charges_between(
+            &[sub],
+            &histories,
+            Date::constant(2026, 3, 1),
+            Date::constant(2026, 4, 1),
+            Conversion {
+                rates: &rates,
+                primary: "EUR",
+                on: RATE_DAY,
+                basis: RateBasis::OwnDay,
+            },
+        )
+        .unwrap();
+
+        assert!(found.is_empty());
     }
 
     #[test]

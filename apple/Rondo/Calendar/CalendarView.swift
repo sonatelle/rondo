@@ -12,7 +12,10 @@ struct CalendarView: View {
   var body: some View {
     VStack(spacing: 0) {
       CalendarSummaryStrip(model: model)
-      MonthGrid(model: model)
+      switch model.calendarScale {
+      case .month: MonthGrid(model: model)
+      case .year: YearGrid(model: model)
+      }
     }
     .background(Color.surface)
   }
@@ -50,6 +53,21 @@ struct CalendarSummaryStrip: View {
         Rectangle().fill(Color.separatorLine).frame(width: 0.5)
       }
 
+      // The year's own claim, and the reason that view exists: a yearly
+      // plan lands its whole price in one month, and which month that is
+      // cannot be seen from inside any of them.
+      if model.calendarScale == .year, let priciest = priciestMonth {
+        figure(
+          String(localized: "Priciest month", bundle: bundle, locale: locale,
+                 comment: "Calendar strip, year view: the month that costs the most"),
+          priciest
+        )
+        .padding(.leading, 26)
+        .overlay(alignment: .leading) {
+          Rectangle().fill(Color.separatorLine).frame(width: 0.5)
+        }
+      }
+
       // Only when the figure covers less than the count beside it claims,
       // which is the one thing a reader cannot spot for themselves.
       if let missing = model.calendarTotal?.unconvertedCurrencies, !missing.isEmpty {
@@ -62,7 +80,13 @@ struct CalendarSummaryStrip: View {
 
       Spacer(minLength: Theme.Space.card)
 
-      UrgencyLegend()
+      // Two legends, because the two views colour different things. The
+      // month grid colours how soon; the year grid colours what kind of
+      // plan. One legend covering both would explain neither.
+      switch model.calendarScale {
+      case .month: UrgencyLegend()
+      case .year: PlanLegend()
+      }
     }
     .padding(.horizontal, Theme.Space.section)
     .padding(.vertical, Theme.Space.xxl)
@@ -85,6 +109,27 @@ struct CalendarSummaryStrip: View {
         .foregroundStyle(Color.textPrimary)
         .lineLimit(1)
     }
+  }
+
+  /// The costliest month of the year on screen, named with its figure.
+  ///
+  /// Nothing when no two months differ: one of twelve equal months is not
+  /// "the priciest", and saying so would invent a fact. The same rule the
+  /// grid colours by, so the strip and the amber card always agree.
+  private var priciestMonth: String? {
+    let totals = model.calendarMonths.compactMap { month -> (String, Decimal, String)? in
+      guard month.total.convertedChargeCount > 0,
+            let value = Formatting.decimal(month.total.total),
+            let date = Formatting.parseCivilDate(month.start)
+      else { return nil }
+      let name = date.formatted(.dateTime.month(.abbreviated).locale(Localization.locale))
+      return (name, value, month.total.total)
+    }
+    guard let highest = totals.max(by: { $0.1 < $1.1 }),
+          totals.contains(where: { $0.1 < highest.1 })
+    else { return nil }
+    let currency = model.calendarTotal?.currency ?? model.primaryCurrency
+    return "\(highest.0) · \(Formatting.amount(highest.2, currency: currency))"
   }
 
   /// The span's total, or a dash when nothing converted.
@@ -122,6 +167,35 @@ private struct UrgencyLegend: View {
     HStack(spacing: Theme.Space.s) {
       RoundedRectangle(cornerRadius: 2, style: .continuous)
         .fill(urgency.marker)
+        .frame(width: 8, height: 8)
+      Text(verbatim: title)
+        .font(.system(size: 12))
+        .foregroundStyle(Color.textSecondary)
+        .lineLimit(1)
+    }
+  }
+}
+
+/// What the two colours in the year grid mean.
+///
+/// The same language as the analytics screen's bars: pale for the regular
+/// run of charges, solid for the one worth noticing.
+private struct PlanLegend: View {
+  var body: some View {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return HStack(spacing: Theme.Space.xxl) {
+      item(.chargeMark, String(localized: "Monthly charges", bundle: bundle, locale: locale,
+                               comment: "Year view legend: the ordinary run of charges"))
+      item(.brand, String(localized: "Yearly plans", bundle: bundle, locale: locale,
+                          comment: "Year view legend: a plan billed once a year"))
+    }
+  }
+
+  private func item(_ colour: Color, _ title: String) -> some View {
+    HStack(spacing: Theme.Space.s) {
+      RoundedRectangle(cornerRadius: 2, style: .continuous)
+        .fill(colour)
         .frame(width: 8, height: 8)
       Text(verbatim: title)
         .font(.system(size: 12))

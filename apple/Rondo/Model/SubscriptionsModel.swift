@@ -149,6 +149,29 @@ final class SubscriptionsModel {
   /// like a cheaper month.
   private(set) var calendarTotal: ConvertedWindow?
 
+  /// One month of the year on screen, and what it cost.
+  struct CalendarMonth: Identifiable {
+    /// The first day of the month, which is also how it is identified.
+    let start: CivilDate
+    /// The core's figure for that month alone.
+    let total: ConvertedWindow
+
+    var id: CivilDate {
+      start
+    }
+  }
+
+  /// The twelve months of the year on screen, in order. Empty at month
+  /// scale, where nothing asks for them.
+  ///
+  /// Each figure is the core's own, asked for one month at a time, rather
+  /// than this side adding up `calendarCharges`. Money arithmetic belongs
+  /// to the core - and the twelve spans are disjoint and cover the year
+  /// exactly, so the cards add up to the strip above them because the same
+  /// function produced all thirteen figures, not because two pieces of
+  /// code were written to agree.
+  private(set) var calendarMonths: [CalendarMonth] = []
+
   /// The day the loaded renewals were reckoned against.
   ///
   /// Kept rather than re-read from the clock, because "in 3 days" has to
@@ -404,11 +427,46 @@ final class SubscriptionsModel {
         on: referenceDay,
         forecast: forecast
       )
+      calendarMonths = try loadCalendarMonths(forecast: forecast)
     } catch {
       report(error)
       calendarCharges = []
       calendarTotal = nil
+      calendarMonths = []
     }
+  }
+
+  /// A figure per month of the year on screen, asked of the core one month
+  /// at a time.
+  ///
+  /// Twelve calls rather than one sum on this side; see `calendarMonths`
+  /// for why. Only at year scale - the month view has nothing to do with
+  /// them and asking would be twelve questions nobody put.
+  private func loadCalendarMonths(forecast: Bool) throws -> [CalendarMonth] {
+    guard calendarScale == .year else { return [] }
+    let calendar = Calendar.current
+    guard let anchor = Formatting.parseCivilDate(calendarAnchor),
+          let january = calendar.date(
+            from: calendar.dateComponents([.year], from: anchor)
+          )
+    else { return [] }
+
+    var months: [CalendarMonth] = []
+    for offset in 0 ..< 12 {
+      guard let start = calendar.date(byAdding: .month, value: offset, to: january),
+            let next = calendar.date(byAdding: .month, value: 1, to: start)
+      else { continue }
+      let from = Formatting.civilDate(from: start)
+      let total = try rondo.convertedWindowTotal(
+        from: from,
+        to: Formatting.civilDate(from: next),
+        primary: primaryCurrency,
+        on: referenceDay,
+        forecast: forecast
+      )
+      months.append(CalendarMonth(start: from, total: total))
+    }
+    return months
   }
 
   /// Shows the calendar at a different scale, over the same anchor.

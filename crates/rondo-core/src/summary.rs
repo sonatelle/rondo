@@ -327,6 +327,99 @@ pub fn window_totals(
     Ok(by_currency.into_values().collect())
 }
 
+/// One category's levelled monthly cost, as one figure.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConvertedShare {
+    /// The category, or `None` for subscriptions filed under nothing.
+    pub category_id: Option<Uuid>,
+    /// Levelled monthly cost in the primary currency.
+    pub monthly: Decimal,
+    /// How many active subscriptions this figure covers.
+    ///
+    /// Only the ones a rate reached. A category holding subscriptions in
+    /// two currencies, one of which will not convert, is counted here for
+    /// the part that did - which is what makes the count agree with the
+    /// figure beside it rather than describing a larger group.
+    pub subscription_count: u32,
+}
+
+/// Spending split by category, all in one currency.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConvertedShares {
+    /// The currency every `monthly` below is in.
+    pub currency: String,
+    /// Largest share first, then by id so equal shares keep their order.
+    pub shares: Vec<ConvertedShare>,
+    /// The shares added together.
+    ///
+    /// Returned rather than left to the caller, because it is what a
+    /// percentage is a percentage *of*: a screen dividing by its own sum
+    /// and a screen dividing by this would be two different charts.
+    pub total: Decimal,
+    /// Currencies no rate reached, sorted. Their subscriptions are in no
+    /// share at all, so a screen showing this has to say they were left
+    /// out - a slice quietly missing looks exactly like a small one.
+    pub unconverted_currencies: Vec<String>,
+}
+
+/// Levelled monthly cost per category as one figure each, in `primary`.
+///
+/// The converting counterpart of [`category_shares`], and built from it,
+/// so the two can never disagree about which subscriptions are in a
+/// category or what a levelled month means.
+///
+/// Each currency's slice of a category is converted once and the results
+/// added, rather than converting subscription by subscription: one
+/// division per group truncates a repeating decimal in one place instead
+/// of in every row.
+///
+/// `on` is the day whose rates to use. These are levelled figures about
+/// what things cost now, so it is normally today.
+pub fn category_shares_in(
+    subscriptions: &[Subscription],
+    rates: &RateHistories,
+    primary: &str,
+    on: Date,
+) -> Result<ConvertedShares> {
+    let mut by_category: BTreeMap<Option<Uuid>, ConvertedShare> = BTreeMap::new();
+    let mut missing: BTreeMap<String, ()> = BTreeMap::new();
+    let mut total = Decimal::ZERO;
+
+    for group in category_shares(subscriptions, on) {
+        let billed = Money::new(group.monthly, &group.currency)?;
+        let Some(converted) = convert(rates, &billed, primary, on)? else {
+            missing.insert(group.currency, ());
+            continue;
+        };
+        let entry = by_category
+            .entry(group.category_id)
+            .or_insert_with(|| ConvertedShare {
+                category_id: group.category_id,
+                monthly: Decimal::ZERO,
+                subscription_count: 0,
+            });
+        entry.monthly += converted.amount();
+        entry.subscription_count += group.subscription_count;
+        total += converted.amount();
+    }
+
+    let mut shares: Vec<ConvertedShare> = by_category.into_values().collect();
+    // Largest first, which is the order the chart reads in, then by id so
+    // two equal shares do not swap places between refreshes.
+    shares.sort_by(|a, b| {
+        b.monthly
+            .cmp(&a.monthly)
+            .then(a.category_id.cmp(&b.category_id))
+    });
+
+    Ok(ConvertedShares {
+        currency: primary.to_owned(),
+        shares,
+        total,
+        unconverted_currencies: missing.into_keys().collect(),
+    })
+}
+
 /// Everything needed to turn amounts into one currency.
 ///
 /// Four values that always travel together, gathered so the call that
@@ -1592,6 +1685,79 @@ mod tests {
         .unwrap();
 
         assert!(found.is_empty());
+    }
+
+    #[test]
+    fn shares_in_one_currency_add_up_to_the_levelled_total() {
+        // The invariant the chart rests on: the slices and the figure the
+        // card above them shows are the same money. "Tools are ninety per
+        // cent of what you spend a month" is only true if they are.
+        let tools = Uuid::now_v7();
+        let mut subs = vec![
+            sub("A", money("11", "USD"), cycle(1, CycleUnit::Month)),
+            sub("B", money("82.50", "CNY"), cycle(1, CycleUnit::Month)),
+            sub("C", money("41.25", "CNY"), cycle(1, CycleUnit::Month)),
+        ];
+        subs[0].category_id = Some(tools);
+        subs[1].category_id = Some(tools);
+        let rates = rates();
+
+        let shares = category_shares_in(&subs, &rates, "EUR", RATE_DAY).unwrap();
+        let levelled = summarize_in(&subs, &rates, "EUR", RATE_DAY).unwrap();
+
+        assert_eq!(shares.total, levelled.monthly);
+        assert_eq!(
+            shares
+                .shares
+                .iter()
+                .map(|share| share.monthly)
+                .sum::<Decimal>(),
+            shares.total
+        );
+        // 11 USD and 82.50 CNY are 10 EUR each, so tools is 20 and the
+        // uncategorized 41.25 CNY is 5 - largest first.
+        assert_eq!(shares.shares.len(), 2);
+        assert_eq!(shares.shares[0].category_id, Some(tools));
+        assert_eq!(shares.shares[0].monthly, Decimal::from_str("20").unwrap());
+        assert_eq!(shares.shares[0].subscription_count, 2);
+        assert_eq!(shares.shares[1].category_id, None);
+        assert_eq!(shares.shares[1].monthly, Decimal::from_str("5").unwrap());
+    }
+
+    #[test]
+    fn a_category_no_rate_reaches_is_named_rather_than_shown_small() {
+        let tools = Uuid::now_v7();
+        let mut subs = vec![
+            sub("A", money("11", "USD"), cycle(1, CycleUnit::Month)),
+            sub("B", money("1000", "JPY"), cycle(1, CycleUnit::Month)),
+        ];
+        subs[0].category_id = Some(tools);
+        subs[1].category_id = Some(tools);
+
+        let shares = category_shares_in(&subs, &rates(), "EUR", RATE_DAY).unwrap();
+
+        // The category is here, covering only the part a rate reached -
+        // and the count says two became one rather than claiming both.
+        assert_eq!(shares.shares.len(), 1);
+        assert_eq!(shares.shares[0].subscription_count, 1);
+        assert_eq!(shares.shares[0].monthly, Decimal::from_str("10").unwrap());
+        assert_eq!(shares.unconverted_currencies, vec!["JPY".to_owned()]);
+    }
+
+    #[test]
+    fn a_yearly_plan_is_a_twelfth_of_a_share_rather_than_a_spike() {
+        // Levelled, not charged: this is the rule `category_shares` already
+        // holds, and converting must not quietly change it.
+        let subs = [sub(
+            "Yearly",
+            money("132", "USD"),
+            cycle(1, CycleUnit::Year),
+        )];
+        let shares = category_shares_in(&subs, &rates(), "EUR", RATE_DAY).unwrap();
+
+        // 132 USD a year is 11 a month, which is 10 EUR.
+        assert_eq!(shares.shares.len(), 1);
+        assert_eq!(shares.shares[0].monthly, Decimal::from_str("10").unwrap());
     }
 
     #[test]

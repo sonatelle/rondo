@@ -22,10 +22,12 @@ struct Sidebar: View {
       Section {
         row(.overview)
         row(.subscriptions, count: model.counts[.subscriptions])
-        // No count. The others count subscriptions; this page counts
-        // charges, and a number meaning one thing beside two entries and
-        // something else beside a third is worse than no number.
+        // No count on either. The entries above count subscriptions;
+        // these two count charges and money, and a number meaning one
+        // thing beside some entries and something else beside others is
+        // worse than no number.
         row(.calendar)
+        row(.analytics)
       }
 
       if !model.categories.isEmpty {

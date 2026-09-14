@@ -7,10 +7,6 @@ import SwiftUI
 /// consequence of it: everywhere but the archive shows what is still being
 /// paid for, because a list of what you subscribe to is not a place to be
 /// reminded of what you cancelled.
-///
-/// Analytics is deliberately absent until the round that builds it. An
-/// entry that does nothing when clicked is worse than one that has not
-/// arrived.
 enum Navigation: Hashable, Identifiable {
   /// The three cards and what is charged next.
   case overview
@@ -18,6 +14,8 @@ enum Navigation: Hashable, Identifiable {
   case subscriptions
   /// Which day the money leaves on.
   case calendar
+  /// What the money went on, over time and by kind.
+  case analytics
   /// Only what is filed under one category.
   case category(Uuid)
   /// What has been stopped, kept out of every total.
@@ -49,6 +47,9 @@ enum Navigation: Hashable, Identifiable {
     case .calendar:
       String(localized: "Calendar", bundle: bundle, locale: locale,
              comment: "Sidebar page showing which day each charge falls on")
+    case .analytics:
+      String(localized: "Analytics", bundle: bundle, locale: locale,
+             comment: "Sidebar page showing what the money went on")
     case .category: nil
     case .archived:
       String(localized: "Archived", bundle: bundle, locale: locale,
@@ -61,6 +62,7 @@ enum Navigation: Hashable, Identifiable {
     case .overview: "square.grid.2x2.fill"
     case .subscriptions: "list.bullet"
     case .calendar: "calendar"
+    case .analytics: "chart.bar.fill"
     case .category: "tag.fill"
     case .archived: "archivebox.fill"
     }
@@ -76,6 +78,7 @@ enum Navigation: Hashable, Identifiable {
     case .overview: .navOverview
     case .subscriptions: .navAll
     case .calendar: .navCalendar
+    case .analytics: .navAnalytics
     case .category: .brand
     case .archived: .navArchived
     }
@@ -87,7 +90,7 @@ enum Navigation: Hashable, Identifiable {
     // The calendar draws its own charges rather than these renewals, but
     // it is still a page about what is being paid for: the count beside
     // it in the sidebar has to mean the same as the one beside the list.
-    case .overview, .subscriptions, .calendar:
+    case .overview, .subscriptions, .calendar, .analytics:
       renewal.subscription.status == .active
     case let .category(id):
       renewal.subscription.status == .active && renewal.subscription.categoryId == id

@@ -124,6 +124,11 @@ struct ContentView: View {
     case .calendar:
       String(localized: "\(model.calendarCharges.count) charges", bundle: bundle, locale: locale,
              comment: "How many charges make up a total")
+    // Which currency every figure on the page is in, which is the one
+    // thing a reader has to know before reading any of them.
+    case .analytics:
+      String(localized: "converted to \(model.primaryCurrency)", bundle: bundle, locale: locale,
+             comment: "Beside the analytics title: the currency the figures are in")
     case .archived:
       String(localized: "\(count) archived", bundle: bundle, locale: locale,
              comment: "Beside the title: how many subscriptions were stopped")
@@ -296,6 +301,8 @@ struct ContentView: View {
         OverviewView(model: model)
       } else if model.navigation == .calendar {
         CalendarView(model: model)
+      } else if model.navigation == .analytics {
+        AnalyticsView(model: model)
       } else {
         list
       }
@@ -317,10 +324,24 @@ struct ContentView: View {
         .plainToolbarItem()
       }
 
+      // What the figures are converted into, and the span the chart
+      // covers. The currency is said rather than chosen here - it is a
+      // setting, and a page that let it be changed in two places would
+      // have two answers to the same question.
+      if model.navigation == .analytics {
+        ToolbarItem {
+          AnalyticsRangePicker(model: model)
+        }
+        .plainToolbarItem()
+      }
+
       // The search field, where the design puts it: to the left of the
-      // button that adds one. The calendar has no list to narrow, so it
-      // gets the controls above instead.
-      if model.navigation != .overview, model.navigation != .calendar {
+      // button that adds one. Neither the calendar nor the analytics page
+      // has a list to narrow, so they get the controls above instead.
+      if model.navigation != .overview,
+         model.navigation != .calendar,
+         model.navigation != .analytics
+      {
         ToolbarItem {
           SearchField(text: $searchText, isFocused: $searchFocused)
         }

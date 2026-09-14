@@ -1,0 +1,24 @@
+-- The day a subscription was archived.
+--
+-- `status` says whether something is archived; nothing said when. The
+-- archive lists "ran for 2 years 3 months, archived January 2026", and both
+-- halves of that need the day it stopped: the first is the span from the
+-- first charge to here, and there is nowhere else to read it from.
+--
+-- It cannot be derived after the fact. `updated_at` moves on every edit, so
+-- renaming an archived subscription would quietly change how long it says
+-- it ran; the last charge is the last one *due*, which is not when somebody
+-- decided to stop paying.
+--
+-- A civil date rather than a timestamp, and deliberately: archiving is
+-- something a person did on a day in their own calendar, and the same
+-- instant is two different days either side of a date line. It matches
+-- `first_billing_date`, which is the other end of the span it is measured
+-- against - a span between a date and a timestamp would be off by up to a
+-- day depending on where it was computed.
+--
+-- NULL for every row that already exists, and for every active one. Rondo
+-- cannot invent a day it never recorded, so an older archived subscription
+-- shows what it cost without claiming to know when it stopped. Guessing
+-- `updated_at` here would put a confident wrong date on screen.
+ALTER TABLE subscription ADD COLUMN archived_on TEXT;

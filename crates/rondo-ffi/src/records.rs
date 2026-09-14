@@ -64,6 +64,12 @@ pub struct Subscription {
     pub account: Option<String>,
     pub payment_method_id: Option<Uuid>,
     pub status: SubscriptionStatus,
+    /// The day this was archived, when it is known.
+    ///
+    /// `None` on anything active, and on anything archived before Rondo
+    /// recorded the day - which the archive shows as not knowing rather
+    /// than as a guess.
+    pub archived_on: Option<Date>,
     pub created_at: jiff::Timestamp,
     pub updated_at: jiff::Timestamp,
 }
@@ -86,6 +92,7 @@ impl From<CoreSubscription> for Subscription {
             account: sub.account,
             payment_method_id: sub.payment_method_id,
             status: sub.status,
+            archived_on: sub.archived_on,
             created_at: sub.created_at,
             updated_at: sub.updated_at,
         }
@@ -110,6 +117,7 @@ impl TryFrom<Subscription> for CoreSubscription {
             account: sub.account,
             payment_method_id: sub.payment_method_id,
             status: sub.status,
+            archived_on: sub.archived_on,
             created_at: sub.created_at,
             updated_at: sub.updated_at,
         })

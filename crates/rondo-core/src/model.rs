@@ -258,6 +258,19 @@ pub struct Subscription {
     pub payment_method_id: Option<Uuid>,
     /// Active subscriptions bill and count toward summaries; archived ones do not.
     pub status: SubscriptionStatus,
+    /// The day this was archived, when that is known.
+    ///
+    /// `None` on everything active, and on anything archived before this
+    /// was recorded: the day cannot be worked out afterwards, so the
+    /// archive shows what such a subscription cost without claiming to
+    /// know when it stopped. A civil date, to match `first_billing_date` -
+    /// the other end of the span it is measured against.
+    ///
+    /// Defaulted when absent, so a backup written before this existed
+    /// still restores: its subscriptions come back with no archive day,
+    /// which is the truth about them.
+    #[serde(default)]
+    pub archived_on: Option<Date>,
     /// Creation instant (UTC). Kept accurate for future sync.
     pub created_at: Timestamp,
     /// Last modification instant (UTC). Kept accurate for future sync.
@@ -267,6 +280,47 @@ pub struct Subscription {
 impl Subscription {
     /// Default reminder lead when the user has not chosen one.
     pub const DEFAULT_REMINDER_LEAD_DAYS: u16 = 3;
+
+    /// Archives or restores this subscription, recording the day either
+    /// way.
+    ///
+    /// Here rather than in the frontend because the pairing is a rule:
+    /// a subscription is archived *on a day*, and the two moving apart is
+    /// how an archive ends up listing something as stopped with no idea
+    /// when. Restoring clears the day rather than keeping it - what is
+    /// running again was not archived on any day, and a stale one would
+    /// come back the next time it was stopped.
+    pub fn set_archived(&mut self, archived: bool, on: Date) {
+        self.status = if archived {
+            SubscriptionStatus::Archived
+        } else {
+            SubscriptionStatus::Active
+        };
+        self.archived_on = archived.then_some(on);
+    }
+
+    /// How long this ran before it was stopped: first charge to archive
+    /// day.
+    ///
+    /// Nothing when it is still running, or when it was archived before
+    /// Rondo recorded the day. Nothing too when the archive day is before
+    /// the first charge, which a restored backup could carry - a negative
+    /// span is not a shorter one.
+    ///
+    /// Measured in years and months down to days, because that is how the
+    /// answer is read: "2 years 3 months", not eight hundred and some
+    /// days. `Date::until` counts in days unless asked otherwise, which is
+    /// the right default for arithmetic and the wrong one for a sentence.
+    pub fn span_before_archiving(&self) -> Option<jiff::Span> {
+        let archived = self.archived_on?;
+        (archived >= self.first_billing_date)
+            .then(|| {
+                self.first_billing_date
+                    .until((jiff::Unit::Year, archived))
+                    .ok()
+            })
+            .flatten()
+    }
 
     /// Creates an active subscription with a fresh id and current timestamps.
     ///
@@ -297,6 +351,7 @@ impl Subscription {
             account: None,
             payment_method_id: None,
             status: SubscriptionStatus::Active,
+            archived_on: None,
             created_at: now,
             updated_at: now,
         })

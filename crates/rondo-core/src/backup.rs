@@ -28,7 +28,15 @@ use crate::store::Store;
 ///
 /// Version 3 added hand-entered exchange rates. Older files carry none,
 /// which is simply the truth about them; nothing has to be reconstructed.
-pub const FORMAT_VERSION: u32 = 3;
+///
+/// Version 4 added the day a subscription was archived. Older files carry
+/// none, and none can be worked out from what they do carry, so their
+/// archived subscriptions come back without one - which the archive shows
+/// as not knowing rather than as a guess. The version moves even though an
+/// older build could parse such a file: it would drop the day silently,
+/// and a backup that quietly loses what it was taken to preserve is worse
+/// than one that is refused.
+pub const FORMAT_VERSION: u32 = 4;
 
 /// A complete export of one Rondo database.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -579,7 +587,7 @@ mod tests {
             .unwrap();
 
         let backup = export(&store).unwrap();
-        assert_eq!(backup.version, 3);
+        assert_eq!(backup.version, FORMAT_VERSION);
         let carried: Vec<_> = backup
             .manual_rates
             .iter()
@@ -635,5 +643,47 @@ mod tests {
         let store = Store::open_in_memory().unwrap();
         import_json(&store, V1_BACKUP).unwrap();
         assert!(store.manual_rates().unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_file_from_before_the_archive_day_restores_without_one() {
+        // Not a zero and not today: the day is unknown, and the archive
+        // shows that rather than putting a confident wrong date on screen.
+        let store = Store::open_in_memory().unwrap();
+        import_json(&store, V1_BACKUP).unwrap();
+        assert!(
+            store
+                .subscriptions(None, Date::constant(2026, 6, 1))
+                .unwrap()
+                .iter()
+                .all(|sub| sub.archived_on.is_none())
+        );
+    }
+
+    #[test]
+    fn the_day_something_was_archived_survives_a_round_trip() {
+        let store = Store::open_in_memory().unwrap();
+        let today = Date::constant(2026, 6, 1);
+        let mut sub = Subscription::new(
+            "Netflix",
+            Money::new(Decimal::from_str("15.90").unwrap(), "USD").unwrap(),
+            BillingCycle::new(1, CycleUnit::Month).unwrap(),
+            Date::constant(2024, 3, 15),
+        )
+        .unwrap();
+        sub.set_archived(true, Date::constant(2026, 1, 20));
+        store.insert_subscription(&sub).unwrap();
+
+        let json = export_json(&store).unwrap();
+        let restored = Store::open_in_memory().unwrap();
+        import_json(&restored, &json).unwrap();
+
+        let back = restored.subscription(sub.id, today).unwrap().unwrap();
+        assert_eq!(back.archived_on, Some(Date::constant(2026, 1, 20)));
+        // And the span the archive prints, which is the whole reason the
+        // day is kept: first charge to archive day, not to today.
+        let span = back.span_before_archiving().expect("a day was recorded");
+        assert_eq!(span.get_years(), 1);
+        assert_eq!(span.get_months(), 10);
     }
 }

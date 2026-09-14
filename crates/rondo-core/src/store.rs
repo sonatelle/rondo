@@ -84,8 +84,8 @@ impl Store {
             "INSERT INTO subscription (id, name, notes, template_id,
                  cycle_count, cycle_unit, first_billing_date, reminder_lead_days,
                  category_id, channel, account, payment_method_id,
-                 status, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+                 status, archived_on, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
             params![
                 sub.id.to_string(),
                 sub.name,
@@ -100,6 +100,7 @@ impl Store {
                 sub.account,
                 sub.payment_method_id.map(|id| id.to_string()),
                 status_str(sub.status),
+                sub.archived_on.map(|day| day.to_string()),
                 sub.created_at.to_string(),
                 sub.updated_at.to_string(),
             ],
@@ -269,7 +270,8 @@ impl Store {
                  cycle_count = ?5, cycle_unit = ?6,
                  first_billing_date = ?7, reminder_lead_days = ?8, category_id = ?9,
                  channel = ?10, account = ?11, payment_method_id = ?12,
-                 status = ?13, created_at = ?14, updated_at = ?15
+                 status = ?13, archived_on = ?14,
+                 created_at = ?15, updated_at = ?16
              WHERE id = ?1",
             params![
                 stored.id.to_string(),
@@ -285,6 +287,7 @@ impl Store {
                 stored.account,
                 stored.payment_method_id.map(|id| id.to_string()),
                 status_str(stored.status),
+                stored.archived_on.map(|day| day.to_string()),
                 stored.created_at.to_string(),
                 stored.updated_at.to_string(),
             ],
@@ -332,14 +335,14 @@ impl Store {
             "INSERT INTO subscription (id, name, notes, template_id,
                  cycle_count, cycle_unit, first_billing_date, reminder_lead_days,
                  category_id, channel, account, payment_method_id,
-                 status, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+                 status, archived_on, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
              ON CONFLICT(id) DO UPDATE SET
                  name = ?2, notes = ?3, template_id = ?4,
                  cycle_count = ?5, cycle_unit = ?6, first_billing_date = ?7,
                  reminder_lead_days = ?8, category_id = ?9, channel = ?10,
                  account = ?11, payment_method_id = ?12, status = ?13,
-                 created_at = ?14, updated_at = ?15",
+                 archived_on = ?14, created_at = ?15, updated_at = ?16",
             params![
                 sub.id.to_string(),
                 sub.name,
@@ -354,6 +357,7 @@ impl Store {
                 sub.account,
                 sub.payment_method_id.map(|id| id.to_string()),
                 status_str(sub.status),
+                sub.archived_on.map(|day| day.to_string()),
                 sub.created_at.to_string(),
                 sub.updated_at.to_string(),
             ],
@@ -865,6 +869,7 @@ static MIGRATIONS: LazyLock<Migrations<'static>> = LazyLock::new(|| {
         M::up(include_str!("../migrations/003-seed-categories.sql")),
         M::up(include_str!("../migrations/004-seed-payment-methods.sql")),
         M::up(include_str!("../migrations/005-exchange-rates.sql")),
+        M::up(include_str!("../migrations/006-archived-on.sql")),
     ])
 });
 
@@ -919,6 +924,10 @@ fn subscription_from_row(row: &Row<'_>, price: Money) -> Result<Subscription> {
             .map(parse_uuid)
             .transpose()?,
         status: parse_status(&row.get::<_, String>("status")?)?,
+        archived_on: row
+            .get::<_, Option<String>>("archived_on")?
+            .map(parse_text)
+            .transpose()?,
         created_at: parse_text(row.get::<_, String>("created_at")?)?,
         updated_at: parse_text(row.get::<_, String>("updated_at")?)?,
     })
@@ -1104,6 +1113,29 @@ mod tests {
     }
 
     #[test]
+    fn archiving_records_the_day_and_restoring_clears_it() {
+        let store = Store::open_in_memory().unwrap();
+        let today = Date::constant(2026, 6, 1);
+        let mut sub = sample();
+        store.insert_subscription(&sub).unwrap();
+
+        sub.set_archived(true, Date::constant(2026, 5, 4));
+        store.update_subscription(&sub, today).unwrap();
+        let archived = store.subscription(sub.id, today).unwrap().unwrap();
+        assert_eq!(archived.status, SubscriptionStatus::Archived);
+        assert_eq!(archived.archived_on, Some(Date::constant(2026, 5, 4)));
+
+        // Restoring clears it. A day left behind would come back the next
+        // time this was stopped, dated to whenever it was stopped before.
+        let mut back = archived;
+        back.set_archived(false, today);
+        store.update_subscription(&back, today).unwrap();
+        let live = store.subscription(sub.id, today).unwrap().unwrap();
+        assert_eq!(live.status, SubscriptionStatus::Active);
+        assert_eq!(live.archived_on, None);
+    }
+
+    #[test]
     fn migrations_are_valid_and_reach_the_latest_version() {
         // Catches a malformed or out-of-order migration at test time rather
         // than on a user's database.
@@ -1111,7 +1143,7 @@ mod tests {
         let store = Store::open_in_memory().unwrap();
         assert_eq!(
             MIGRATIONS.current_version(&store.conn).unwrap(),
-            SchemaVersion::Inside(NonZeroUsize::new(5).unwrap())
+            SchemaVersion::Inside(NonZeroUsize::new(6).unwrap())
         );
     }
 

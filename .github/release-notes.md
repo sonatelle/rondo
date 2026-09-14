@@ -31,25 +31,26 @@ that is the only thing it asks the network for.
 
 ## What's new
 
-A calendar, which answers the question the lists do not: not what you are
-paying for, but which day it leaves.
+An analytics page: where the money went, and when.
 
-A month is six rows of days with each charge drawn in the day it falls on,
-coloured by how soon that is — the same red and amber the rest of Rondo
-uses and nothing else. Above the grid, what the month comes to and how many
-charges make it. That figure is those chips added up, not a second sum that
-could disagree with them.
+Four figures to start — what has been charged this year, what has been
+charged ever, what it comes to in a month, and how many subscriptions are
+running. Where no rate reaches an amount you get a dash rather than a zero,
+because a total with nothing behind it is unknown rather than nothing.
 
-There is a year view too, and it exists for one reason. A yearly plan lands
-its whole price in one month and nothing in the other eleven, and from
-inside any single month you cannot see that coming. So the year shows
-twelve cards with what each costs, names the yearly plan landing in each,
-and marks the month that turns out to be the most expensive. Under every
-card is a strip of thirty-one marks saying only *whether* a day carries a
-charge — a yearly one picked out from the rest. Click a month to open it.
+Under them, a bar for each of the last twelve months, with what was
+actually charged written above it. Months already billed are drawn a step
+fainter than the ones still to come, and a forecast month is deliberately
+left without a figure: a number that has not happened yet should not sit
+on the page looking like one that has. The scale runs to the tallest month
+rather than to a round number, since the question is which months stand
+out. When one does and a yearly plan explains it, a line beside the chart
+says so by name.
 
-Amounts follow the same rules as everywhere else: the converted figure
-where a rate reaches it, what it is really billed at where none does.
+Then a bar for each subscription, showing what it has cost since its first
+charge, and a split by category — each slice in your own currency, adding
+up to exactly the monthly figure in the card above. You can switch the
+chart between the last twelve months and this calendar year.
 
 Nothing about your data changed in this release.
 

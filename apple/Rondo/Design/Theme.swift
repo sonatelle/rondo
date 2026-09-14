@@ -183,12 +183,22 @@ extension Color {
   static let warnMarker = Color("warnMarker")
   static let distantMarker = Color("distantMarker")
 
-  /// A day the money leaves, in the year view's strip of 31.
+  /// A charge still to come: a day in the year view's strip of 31, and a
+  /// month in the analytics chart that has not been billed yet.
   ///
-  /// Pale, because that strip says only *whether* a day has a charge -
-  /// never how much. A yearly plan is marked in `brand` instead, which is
-  /// the whole point of the view: it shows which months turn expensive.
+  /// One token for both because the design gives them one language - pale
+  /// for the ordinary run of things, solid for what is worth noticing.
+  /// Against it, `brand` marks a yearly plan in the strip and the month
+  /// being lived through in the chart.
   static let chargeMark = Color("chargeMark")
+
+  /// A month in the analytics chart that has already been billed.
+  ///
+  /// A step fainter than `chargeMark`, which is what separates a figure
+  /// that is settled from one that is still a forecast - and a forecast
+  /// drawn as though it had happened is the one thing a spending chart
+  /// must not do.
+  static let barCharged = Color("barCharged")
 
   static let iconBlueBackground = Color("iconBlueBackground")
   static let iconBlueForeground = Color("iconBlueForeground")

@@ -446,6 +446,59 @@ impl From<rondo_core::summary::CategoryShare> for CategoryShare {
     }
 }
 
+/// One category's levelled monthly cost, as one figure.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ConvertedShare {
+    /// `None` groups the subscriptions filed under nothing, which are kept
+    /// so a share adds up to the whole.
+    pub category_id: Option<Uuid>,
+    pub monthly: Decimal,
+    /// How many subscriptions this figure covers - only the ones a rate
+    /// reached, so the count and the amount describe the same group.
+    pub subscription_count: u32,
+}
+
+impl From<rondo_core::summary::ConvertedShare> for ConvertedShare {
+    fn from(share: rondo_core::summary::ConvertedShare) -> Self {
+        Self {
+            category_id: share.category_id,
+            monthly: share.monthly,
+            subscription_count: share.subscription_count,
+        }
+    }
+}
+
+/// Spending split by category, all in one currency.
+///
+/// `total` travels with the shares because it is what a percentage is a
+/// percentage of; a screen summing the shares itself would be computing
+/// the same figure a second way.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ConvertedShares {
+    pub currency: String,
+    /// Largest first.
+    pub shares: Vec<ConvertedShare>,
+    pub total: Decimal,
+    /// Currencies no rate reached. Their subscriptions are in no share at
+    /// all, so a screen showing this has to say they were left out.
+    pub unconverted_currencies: Vec<String>,
+}
+
+impl From<rondo_core::summary::ConvertedShares> for ConvertedShares {
+    fn from(shares: rondo_core::summary::ConvertedShares) -> Self {
+        Self {
+            currency: shares.currency,
+            shares: shares
+                .shares
+                .into_iter()
+                .map(ConvertedShare::from)
+                .collect(),
+            total: shares.total,
+            unconverted_currencies: shares.unconverted_currencies,
+        }
+    }
+}
+
 /// One charge that fell due, and what it cost that day.
 ///
 /// The amount and the currency travel apart, as they do everywhere across

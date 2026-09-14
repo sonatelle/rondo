@@ -14,9 +14,9 @@ use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
 use crate::records::{
-    Category, CategoryShare, Charge, ConvertedSpending, ConvertedTotal, ConvertedWindow,
-    DatedCharge, ExchangeRate, MonthlySpending, PaymentMethod, Price, SpendingSummary,
-    Subscription, SubscriptionTotal, WindowTotal,
+    Category, CategoryShare, Charge, ConvertedShares, ConvertedSpending, ConvertedTotal,
+    ConvertedWindow, DatedCharge, ExchangeRate, MonthlySpending, PaymentMethod, Price,
+    SpendingSummary, Subscription, SubscriptionTotal, WindowTotal,
 };
 
 /// An open Rondo database.
@@ -332,6 +332,20 @@ impl Rondo {
             .into_iter()
             .map(CategoryShare::from)
             .collect())
+    }
+
+    /// Levelled monthly cost per category as one figure each, in
+    /// `primary`, largest first.
+    ///
+    /// The converting counterpart of [`Self::category_shares`]. The total
+    /// it returns is the same figure [`Self::converted_total`] gives for
+    /// the month, so a chart of the slices and the card above it are about
+    /// the same money.
+    pub fn converted_shares(&self, primary: String, on: Date) -> Result<ConvertedShares> {
+        let store = self.store()?;
+        let subs = store.subscriptions(None, on)?;
+        let rates = store.all_rates()?;
+        Ok(rondo_core::summary::category_shares_in(&subs, &rates, &primary, on)?.into())
     }
 
     /// Totals every charge falling in `[from, to)`, per currency.
@@ -1286,6 +1300,42 @@ mod tests {
         );
         // And the amount before conversion, which the footnote prints.
         assert_eq!(total.applied[0].monthly.to_string(), "15.90");
+    }
+
+    #[test]
+    fn shares_cross_as_one_figure_each_and_name_their_total() {
+        let rondo = open();
+        let day = Date::constant(2026, 1, 1);
+        rondo.record_rates(vec![rate("USD", day, "1.10")]).unwrap();
+        let categories = rondo.categories().unwrap();
+        let filed = categories
+            .first()
+            .expect("a database is seeded with categories");
+
+        let mut categorized = draft("Netflix");
+        categorized.category_id = Some(filed.id);
+        rondo.add_subscription(categorized).unwrap();
+        rondo.add_subscription(draft("Loose")).unwrap();
+
+        let shares = rondo.converted_shares(base_currency(), TODAY).unwrap();
+
+        // Two slices, in the base currency, and the total travels with
+        // them rather than being left for the caller to add up.
+        assert_eq!(shares.currency, base_currency());
+        assert_eq!(shares.shares.len(), 2);
+        assert!(shares.unconverted_currencies.is_empty());
+        let summed: Decimal = shares.shares.iter().map(|share| share.monthly).sum();
+        assert_eq!(shares.total, summed);
+        // And one of them is the category, the other the uncategorized -
+        // which is kept rather than dropped, or the shares would not add
+        // up to what is spent.
+        let filed_ids: Vec<_> = shares
+            .shares
+            .iter()
+            .map(|share| share.category_id)
+            .collect();
+        assert!(filed_ids.contains(&Some(filed.id)));
+        assert!(filed_ids.contains(&None));
     }
 
     #[test]

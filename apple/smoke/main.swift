@@ -294,6 +294,27 @@ expect(
   "priced exactly as the charge list prices them"
 )
 
+/// The category split, and the property the chart rests on: the slices and
+/// the levelled monthly figure above them are the same money. Checked here
+/// because two calls could be wired to two different things on this side
+/// without any Rust test noticing.
+let split = try rondo.convertedShares(primary: baseCurrency(), on: span.to)
+let levelled = try rondo.convertedTotal(
+  subscriptions: rondo.subscriptions(on: span.to, includeArchived: false),
+  primary: baseCurrency(),
+  on: span.to
+)
+expect(
+  Decimal(string: split.total)! == Decimal(string: levelled.monthly)!,
+  "the category slices add up to the levelled month — got \(split.total) against \(levelled.monthly)"
+)
+expect(
+  split.shares.compactMap { Decimal(string: $0.monthly) }.reduce(Decimal.zero, +)
+    == Decimal(string: split.total)!,
+  "and the total travelling with them is their own sum"
+)
+expect(split.currency == baseCurrency(), "the split is in the currency that was asked for")
+
 expect(!serviceTemplates().isEmpty, "the bundled templates are readable without a database")
 
 /// A nickname sharing no characters with the name it finds: proof the query

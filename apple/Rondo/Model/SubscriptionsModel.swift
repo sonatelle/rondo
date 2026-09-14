@@ -149,8 +149,11 @@ final class SubscriptionsModel {
   /// like a cheaper month.
   private(set) var calendarTotal: ConvertedWindow?
 
-  /// One month of the year on screen, and what it cost.
-  struct CalendarMonth: Identifiable {
+  /// One month, and what the core says it cost.
+  ///
+  /// Shared by the year view's cards and the analytics chart's bars, which
+  /// ask the same question over different spans.
+  struct MonthTotal: Identifiable {
     /// The first day of the month, which is also how it is identified.
     let start: CivilDate
     /// The core's figure for that month alone.
@@ -170,7 +173,30 @@ final class SubscriptionsModel {
   /// exactly, so the cards add up to the strip above them because the same
   /// function produced all thirteen figures, not because two pieces of
   /// code were written to agree.
-  private(set) var calendarMonths: [CalendarMonth] = []
+  private(set) var calendarMonths: [MonthTotal] = []
+
+  /// Which span the analytics chart is drawn over.
+  private(set) var analyticsRange: AnalyticsRange = .rolling
+
+  /// A bar per month for the chart, oldest first.
+  private(set) var analyticsMonths: [MonthTotal] = []
+
+  /// Spending split by category, all in the primary currency.
+  ///
+  /// Carries its own total, which is what the percentages are percentages
+  /// of - and which equals the levelled monthly figure in the card above
+  /// the chart, because the core folds both from the same groups.
+  private(set) var analyticsShares: ConvertedShares?
+
+  /// What has been charged since 1 January, as one figure.
+  private(set) var yearToDate: ConvertedWindow?
+
+  /// What has been charged since the very first charge, as one figure.
+  ///
+  /// Nothing when there are no charges at all, which is not a failure -
+  /// a database with nothing in it has spent nothing rather than failing
+  /// to say.
+  private(set) var allTime: ConvertedWindow?
 
   /// The day the loaded renewals were reckoned against.
   ///
@@ -389,6 +415,7 @@ final class SubscriptionsModel {
       }
       topSpending = spending.map { (subscription: $0.0, total: $0.1) }
       loadCalendar()
+      try loadAnalytics()
     } catch {
       report(error)
     }
@@ -442,7 +469,7 @@ final class SubscriptionsModel {
   /// Twelve calls rather than one sum on this side; see `calendarMonths`
   /// for why. Only at year scale - the month view has nothing to do with
   /// them and asking would be twelve questions nobody put.
-  private func loadCalendarMonths(forecast: Bool) throws -> [CalendarMonth] {
+  private func loadCalendarMonths(forecast: Bool) throws -> [MonthTotal] {
     guard calendarScale == .year else { return [] }
     let calendar = Calendar.current
     guard let anchor = Formatting.parseCivilDate(calendarAnchor),
@@ -450,13 +477,24 @@ final class SubscriptionsModel {
             from: calendar.dateComponents([.year], from: anchor)
           )
     else { return [] }
+    return try monthTotals(from: january, count: 12, forecast: forecast)
+  }
 
-    var months: [CalendarMonth] = []
-    for offset in 0 ..< 12 {
-      guard let start = calendar.date(byAdding: .month, value: offset, to: january),
-            let next = calendar.date(byAdding: .month, value: 1, to: start)
+  /// A figure per month, `count` of them, asked of the core one at a time.
+  ///
+  /// Shared by the year view and the analytics chart, which want the same
+  /// thing over different spans. Asking per month rather than summing the
+  /// charges here is the whole point: money arithmetic belongs to the core,
+  /// and spans that are disjoint and adjacent add up to the window over
+  /// them because one function produced every figure.
+  private func monthTotals(from start: Date, count: Int, forecast: Bool) throws -> [MonthTotal] {
+    let calendar = Calendar.current
+    var months: [MonthTotal] = []
+    for offset in 0 ..< count {
+      guard let month = calendar.date(byAdding: .month, value: offset, to: start),
+            let next = calendar.date(byAdding: .month, value: 1, to: month)
       else { continue }
-      let from = Formatting.civilDate(from: start)
+      let from = Formatting.civilDate(from: month)
       let total = try rondo.convertedWindowTotal(
         from: from,
         to: Formatting.civilDate(from: next),
@@ -464,9 +502,64 @@ final class SubscriptionsModel {
         on: referenceDay,
         forecast: forecast
       )
-      months.append(CalendarMonth(start: from, total: total))
+      months.append(MonthTotal(start: from, total: total))
     }
     return months
+  }
+
+  /// Reads what the analytics page shows.
+  ///
+  /// Every figure here is the core's own. The chart's twelve months, the
+  /// two windows above it and the category split are four questions, and
+  /// none of them is answered by adding up another's answer on this side.
+  private func loadAnalytics() throws {
+    let forecast = !Self.locksHistoricalRates
+    analyticsMonths = try monthTotals(
+      from: analyticsRange.start(from: referenceDay),
+      count: AnalyticsRange.months,
+      forecast: forecast
+    )
+    analyticsShares = try rondo.convertedShares(primary: primaryCurrency, on: referenceDay)
+
+    // Tomorrow, not today: the window is half-open, so a charge falling
+    // today has to be inside it.
+    let tomorrow = Self.day(after: referenceDay, days: 1)
+    let calendar = Calendar.current
+    if let today = Formatting.parseCivilDate(referenceDay),
+       let january = calendar.date(from: calendar.dateComponents([.year], from: today))
+    {
+      yearToDate = try rondo.convertedWindowTotal(
+        from: Formatting.civilDate(from: january),
+        to: tomorrow,
+        primary: primaryCurrency,
+        on: referenceDay,
+        forecast: forecast
+      )
+    }
+    // Everything that has ever been charged. Nothing to total when there
+    // are no charges at all, which is not a failure.
+    if let beginning = try rondo.earliestCharge(on: referenceDay) {
+      allTime = try rondo.convertedWindowTotal(
+        from: beginning,
+        to: tomorrow,
+        primary: primaryCurrency,
+        on: referenceDay,
+        forecast: forecast
+      )
+    } else {
+      allTime = nil
+    }
+  }
+
+  /// Shows the chart over a different span.
+  func setAnalyticsRange(_ range: AnalyticsRange) {
+    guard range != analyticsRange else { return }
+    analyticsRange = range
+    do {
+      try loadAnalytics()
+    } catch {
+      report(error)
+    }
   }
 
   /// Shows the calendar at a different scale, over the same anchor.

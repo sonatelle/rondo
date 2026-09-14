@@ -1695,6 +1695,17 @@
         }
       }
     },
+    "Last 12 months" : {
+      "comment" : "Analytics range: the twelve months ending with this one",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近 12 个月"
+          }
+        }
+      }
+    },
     "Later" : {
       "comment" : "Calendar legend: everything further off",
       "localizations" : {
@@ -2987,6 +2998,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "这个页面里有订阅，但没有这一类的。"
+          }
+        }
+      }
+    },
+    "This calendar year" : {
+      "comment" : "Analytics range: January to December of the current year",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今年"
           }
         }
       }

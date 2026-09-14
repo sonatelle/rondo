@@ -40,7 +40,7 @@ struct YearGrid: View {
     .padding(.bottom, Theme.Space.section)
   }
 
-  private var rows: [[SubscriptionsModel.CalendarMonth]] {
+  private var rows: [[SubscriptionsModel.MonthTotal]] {
     stride(from: 0, to: model.calendarMonths.count, by: Self.columns).map { start in
       Array(model.calendarMonths[start ..< min(start + Self.columns, model.calendarMonths.count)])
     }
@@ -83,7 +83,7 @@ struct YearGrid: View {
 
 /// One month of the year, as a card.
 private struct MonthCard: View {
-  let month: SubscriptionsModel.CalendarMonth
+  let month: SubscriptionsModel.MonthTotal
   let charges: [DatedCharge]
   let subscriptions: [Uuid: Subscription]
   let today: CivilDate

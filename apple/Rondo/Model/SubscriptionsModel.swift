@@ -188,6 +188,36 @@ final class SubscriptionsModel {
   /// the chart, because the core folds both from the same groups.
   private(set) var analyticsShares: ConvertedShares?
 
+  /// How the full list is arranged.
+  private(set) var grouping: Grouping = .none
+
+  /// One group of the list, with the core's figure for it.
+  struct Group: Identifiable {
+    /// What the group is filed under, or nothing for the subscriptions
+    /// with the field left blank.
+    let key: String?
+    /// What to call it on screen, resolved from the categories and
+    /// payment methods the model already holds.
+    let title: String
+    /// The rows in it, in the order the list was already in.
+    let renewals: [Renewal]
+    /// What the group comes to a month, asked of the core over exactly
+    /// these subscriptions. Nothing when no rate reaches them.
+    let total: ConvertedSpending?
+
+    var id: String {
+      key ?? ""
+    }
+  }
+
+  /// The list gathered into groups, or empty when it is one flat table.
+  ///
+  /// Held rather than worked out while drawing: each group's figure is an
+  /// FFI call, and a call per group per redraw would be the same answer
+  /// fetched over and over - and would register no dependency, so a rate
+  /// arriving later would leave every subtotal as it was.
+  private(set) var groups: [Group] = []
+
   /// What the archived subscriptions cost, and what stopping them saves.
   ///
   /// Both figures are the core's own, summed there from the per-card ones
@@ -281,7 +311,15 @@ final class SubscriptionsModel {
 
   /// Which page the window is showing.
   var navigation: Navigation = .overview {
-    didSet { reload() }
+    didSet {
+      // A page opened with another page's grouping still on is a page
+      // arranged by a control that is not on it - which is how a category
+      // came up split by currency with no way to put it back. Cleared
+      // before the reload below, so the groups are built once and for the
+      // page being opened.
+      grouping = .none
+      reload()
+    }
   }
 
   init(rondo: Rondo) {
@@ -422,6 +460,7 @@ final class SubscriptionsModel {
       }
       topSpending = spending.map { (subscription: $0.0, total: $0.1) }
       loadCalendar()
+      loadGroups()
       try loadAnalytics()
     } catch {
       report(error)
@@ -561,6 +600,82 @@ final class SubscriptionsModel {
     } else {
       allTime = nil
     }
+  }
+
+  /// Gathers the list into groups, and asks the core what each comes to.
+  ///
+  /// One call per group rather than one sum here. The groups are disjoint
+  /// and cover the list, so a subtotal and the figure over the whole list
+  /// are the same function's answers about different subsets - which is
+  /// what makes them add up.
+  ///
+  /// Levelled, so a yearly plan counts as a twelfth in its group rather
+  /// than as the month it happens to fall in. A group's rows show what is
+  /// billed and how often; its figure answers "what does this card cost
+  /// me a month", which is the question the grouping was opened for.
+  private func loadGroups() {
+    guard grouping != .none else {
+      groups = []
+      return
+    }
+    var order: [String?] = []
+    var members: [String?: [Renewal]] = [:]
+    for renewal in renewals {
+      let key = grouping.key(of: renewal.subscription)
+      if members[key] == nil {
+        order.append(key)
+      }
+      members[key, default: []].append(renewal)
+    }
+    groups = order.map { key in
+      let rows = members[key] ?? []
+      return Group(
+        key: key,
+        title: groupTitle(key),
+        renewals: rows,
+        total: convertedTotal(of: rows.map(\.subscription))
+      )
+    }
+    // Largest first, so the card that costs the most is the one that is
+    // read. Groups with no converted figure sort last rather than as
+    // zero: unknown is not cheap.
+    groups.sort { left, right in
+      let lhs = left.total.flatMap { Formatting.decimal($0.monthly) }
+      let rhs = right.total.flatMap { Formatting.decimal($0.monthly) }
+      return switch (lhs, rhs) {
+      case let (a?, b?): a > b
+      case (nil, _): false
+      case (_, nil): true
+      }
+    }
+  }
+
+  /// What to call a group on screen.
+  private func groupTitle(_ key: String?) -> String {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    guard let key else {
+      return String(localized: "Not recorded", bundle: bundle, locale: locale,
+                    comment: "The group holding subscriptions with the field left blank")
+    }
+    return switch grouping {
+    case .category:
+      categories.first { $0.id == key }
+        .map { Categories.name($0.name, iconKey: $0.iconKey) } ?? key
+    case .paymentMethod:
+      paymentMethods.first { $0.id == key }?.name ?? key
+    case .channel:
+      Channel.allCases.first { key == "\($0)" }?.title ?? key
+    case .currency, .none:
+      key
+    }
+  }
+
+  /// Arranges the list a different way.
+  func setGrouping(_ grouping: Grouping) {
+    guard grouping != self.grouping else { return }
+    self.grouping = grouping
+    loadGroups()
   }
 
   /// Shows the chart over a different span.

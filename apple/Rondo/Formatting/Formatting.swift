@@ -184,6 +184,62 @@ enum Formatting {
     )
   }
 
+  /// How long a subscription ran, and when it was stopped: "ran 2 years
+  /// 3 months · archived January 2026".
+  ///
+  /// Nothing when the day was never recorded, which is every subscription
+  /// archived before Rondo kept it. The archive then shows what one cost
+  /// and says nothing about when it stopped, rather than printing a date
+  /// worked back out of something that does not mean that.
+  ///
+  /// The two halves are asked for whole rather than joined from counted
+  /// phrases: a language that puts them in the other order, or that
+  /// inflects one inside the sentence, has nowhere to say so otherwise.
+  static func archiveSummary(_ subscription: Subscription) -> String? {
+    guard let archived = subscription.archivedOn,
+          let years = subscription.ranForYears,
+          let months = subscription.ranForMonths
+    else { return nil }
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    let when = parse(archived).map {
+      $0.formatted(.dateTime.year().month(.wide).locale(locale))
+    } ?? archived
+    // The span itself is left to Foundation rather than written out in
+    // the catalogue. Two numbers in one phrase have two plural rules, and
+    // a single "plural" variation cannot say which of them it is keyed
+    // on - "1 years 1 months" is what hand-writing it produces. The
+    // system formatter knows both rules for both languages already.
+    let length = duration(years: Int(years), months: Int(months))
+    let ran = String(localized: "ran \(length)", bundle: bundle, locale: locale,
+                     comment: "Archive card: how long it ran before being stopped")
+    let stopped = String(localized: "archived \(when)", bundle: bundle, locale: locale,
+                         comment: "Archive card: the month it was stopped")
+    return "\(ran) · \(stopped)"
+  }
+
+  /// "2 years 3 months", in the language the interface is in.
+  ///
+  /// Months alone when it ran less than a year, so a card does not open
+  /// with a zero. A span of nothing at all - stopped the same month it
+  /// started - still reads as a month rather than as an empty string.
+  private static func duration(years: Int, months: Int) -> String {
+    let formatter = DateComponentsFormatter()
+    formatter.calendar = {
+      var calendar = Calendar.current
+      calendar.locale = Localization.locale
+      return calendar
+    }()
+    formatter.allowedUnits = years > 0 ? [.year, .month] : [.month]
+    formatter.unitsStyle = .full
+    // Without this a zero month is dropped and "2 years" comes back for a
+    // span that is exactly that, which is right - but a span of zero
+    // months would come back empty, which is not.
+    formatter.zeroFormattingBehavior = years > 0 ? .dropTrailing : .default
+    let components = DateComponents(year: years, month: months)
+    return formatter.string(from: components) ?? ""
+  }
+
   /// Names the span a calendar is showing: "March 2026", or "2026".
   ///
   /// Asked of Foundation rather than assembled from a month name and a

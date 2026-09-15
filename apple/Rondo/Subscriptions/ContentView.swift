@@ -303,6 +303,10 @@ struct ContentView: View {
         CalendarView(model: model)
       } else if model.navigation == .analytics {
         AnalyticsView(model: model)
+      } else if model.navigation == .archived {
+        // Cards rather than the table: nothing here has a next charge to
+        // sort a column by, and what it ran for is a sentence.
+        ArchiveView(model: model)
       } else {
         list
       }

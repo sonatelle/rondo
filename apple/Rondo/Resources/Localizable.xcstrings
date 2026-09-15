@@ -458,6 +458,50 @@
         }
       }
     },
+    "By currency" : {
+      "comment" : "Groups the list by the currency each is billed in",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按币种分组"
+          }
+        }
+      }
+    },
+    "By payment method" : {
+      "comment" : "Groups the list by what pays for each subscription",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按付款方式分组"
+          }
+        }
+      }
+    },
+    "By where it was bought" : {
+      "comment" : "Groups the list by channel",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按渠道分组"
+          }
+        }
+      }
+    },
+    "No grouping" : {
+      "comment" : "The list as one flat table",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不分组"
+          }
+        }
+      }
+    },
     "© 2026 Sonatelle · aliaxy · MIT License" : {
       "comment" : "Foot of the about tab",
       "localizations" : {

@@ -33,6 +33,17 @@ extension DatedCharge: Identifiable {
   }
 }
 
+extension Channel: CaseIterable {
+  /// Every channel, in the order the interface offers them.
+  ///
+  /// The generated enum carries no `CaseIterable`, and the four were
+  /// written out in two places before this - a list that has to be
+  /// remembered twice is one that will be added to once.
+  public static var allCases: [Channel] {
+    [.appStore, .googlePlay, .web, .other]
+  }
+}
+
 extension Channel {
   /// Where it was bought, in words.
   ///

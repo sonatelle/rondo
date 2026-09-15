@@ -339,6 +339,21 @@ struct ContentView: View {
         .plainToolbarItem()
       }
 
+      // How the list is arranged. On the categories as well as the full
+      // list: a category is still a column of subscriptions, and "how
+      // much of this is on that card" is the same question there. The
+      // archive is cards already, so it offers no second arrangement.
+      //
+      // Wherever the grouping can be *in force*, the control that sets it
+      // is on screen. Shown on one page only, it left the others arranged
+      // by something with no way to undo it.
+      if model.navigation == .subscriptions || isCategory {
+        ToolbarItem {
+          GroupingPicker(model: model)
+        }
+        .plainToolbarItem()
+      }
+
       // The search field, where the design puts it: to the left of the
       // button that adds one. Neither the calendar nor the analytics page
       // has a list to narrow, so they get the controls above instead.
@@ -426,6 +441,8 @@ struct ContentView: View {
           narrowedToNothing
         } else if matching.isEmpty {
           EmptyState(model: model, add: { sheet = .add })
+        } else if model.grouping != .none {
+          GroupedList(model: model) { sheet = .detail($0) }
         } else {
           table
         }
@@ -443,6 +460,13 @@ struct ContentView: View {
 
   private var isFiltered: Bool {
     channelFilter != .any || currencyFilter != nil
+  }
+
+  private var isCategory: Bool {
+    if case .category = model.navigation {
+      return true
+    }
+    return false
   }
 
   private var narrowedToNothing: some View {

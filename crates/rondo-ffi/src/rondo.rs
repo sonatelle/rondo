@@ -14,9 +14,9 @@ use uuid::Uuid;
 
 use crate::error::{Result, RondoError};
 use crate::records::{
-    Category, CategoryShare, Charge, ConvertedShares, ConvertedSpending, ConvertedTotal,
-    ConvertedWindow, DatedCharge, ExchangeRate, MonthlySpending, PaymentMethod, Price,
-    SpendingSummary, Subscription, SubscriptionTotal, WindowTotal,
+    ArchiveTotals, Category, CategoryShare, Charge, ConvertedShares, ConvertedSpending,
+    ConvertedTotal, ConvertedWindow, DatedCharge, ExchangeRate, MonthlySpending, PaymentMethod,
+    Price, SpendingSummary, Subscription, SubscriptionTotal, WindowTotal,
 };
 
 /// An open Rondo database.
@@ -346,6 +346,40 @@ impl Rondo {
         let subs = store.subscriptions(None, on)?;
         let rates = store.all_rates()?;
         Ok(rondo_core::summary::category_shares_in(&subs, &rates, &primary, on)?.into())
+    }
+
+    /// What the archived subscriptions cost, and what stopping them saves
+    /// a month.
+    ///
+    /// The archive's own two figures. It reads the archived subscriptions
+    /// itself rather than being handed a list, so the figures and the
+    /// cards beneath them are about the same set by construction.
+    ///
+    /// `lock_historical_rates` picks the rates the same way a cumulative
+    /// does: on, each charge at the rate of its own day; off, all of them
+    /// at `until`.
+    pub fn archive_totals(
+        &self,
+        primary: String,
+        until: Date,
+        lock_historical_rates: bool,
+    ) -> Result<ArchiveTotals> {
+        let store = self.store()?;
+        let archived: Vec<CoreSubscription> = store
+            .subscriptions(Some(SubscriptionStatus::Archived), until)?
+            .into_iter()
+            .collect();
+        let histories = store.all_price_histories()?;
+        let rates = store.all_rates()?;
+        let basis = if lock_historical_rates {
+            rondo_core::summary::RateBasis::OwnDay
+        } else {
+            rondo_core::summary::RateBasis::OneDay
+        };
+        Ok(rondo_core::summary::archive_totals(
+            &archived, &histories, &rates, &primary, until, basis,
+        )?
+        .into())
     }
 
     /// Totals every charge falling in `[from, to)`, per currency.
@@ -771,11 +805,11 @@ impl Rondo {
             .ok_or_else(|| RondoError::InvalidInput {
                 message: format!("no subscription with id {id}"),
             })?;
-        sub.status = if archived {
-            SubscriptionStatus::Archived
-        } else {
-            SubscriptionStatus::Active
-        };
+        // Through the core's own method, which records the day alongside
+        // the status. Setting the two here would be a rule living in the
+        // boundary layer, and the first time they came apart an archive
+        // would list something as stopped with no idea when.
+        sub.set_archived(archived, on);
         Ok(store.update_subscription(&sub, on)?.into())
     }
 }
@@ -1300,6 +1334,52 @@ mod tests {
         );
         // And the amount before conversion, which the footnote prints.
         assert_eq!(total.applied[0].monthly.to_string(), "15.90");
+    }
+
+    #[test]
+    fn archiving_across_the_boundary_records_the_day() {
+        let rondo = open();
+        let added = rondo.add_subscription(draft("Netflix")).unwrap();
+
+        let archived = rondo.set_archived(added.id, true, TODAY).unwrap();
+        assert_eq!(archived.status, SubscriptionStatus::Archived);
+        assert_eq!(archived.archived_on, Some(TODAY));
+
+        // And restoring clears it, so the next time it is stopped the day
+        // is the day it was stopped rather than the last one.
+        let back = rondo.set_archived(added.id, false, TODAY).unwrap();
+        assert_eq!(back.status, SubscriptionStatus::Active);
+        assert_eq!(back.archived_on, None);
+    }
+
+    #[test]
+    fn the_archive_totals_only_what_was_archived() {
+        let rondo = open();
+        let day = Date::constant(2026, 1, 1);
+        rondo.record_rates(vec![rate("USD", day, "1.10")]).unwrap();
+        let stopped = rondo.add_subscription(draft("Stopped")).unwrap();
+        let also = rondo.add_subscription(draft("Also stopped")).unwrap();
+        // A different number of each, deliberately. With one of either,
+        // a count of 1 is right whichever status was filtered on, and
+        // this would pass just as happily against the wrong one.
+        rondo.add_subscription(draft("Running")).unwrap();
+        rondo.add_subscription(draft("Also running")).unwrap();
+        rondo.add_subscription(draft("Still running")).unwrap();
+        rondo.set_archived(stopped.id, true, TODAY).unwrap();
+        rondo.set_archived(also.id, true, TODAY).unwrap();
+
+        let totals = rondo.archive_totals(base_currency(), TODAY, true).unwrap();
+
+        // The two stopped ones, not the three still running: what is being
+        // paid for is no part of what stopping things has saved.
+        assert_eq!(totals.subscription_count, 2);
+        assert_eq!(totals.converted_count, 2);
+        assert_eq!(totals.currency, base_currency());
+        assert!(totals.unconverted_currencies.is_empty());
+        // And both figures are real rather than zero, which is what a
+        // status filter slipping in here would produce.
+        assert!(totals.spent > Decimal::ZERO);
+        assert!(totals.monthly_saved > Decimal::ZERO);
     }
 
     #[test]

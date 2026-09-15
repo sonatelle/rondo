@@ -454,6 +454,35 @@ impl From<rondo_core::summary::CategoryShare> for CategoryShare {
     }
 }
 
+/// What a set of stopped subscriptions cost, and what stopping them saves.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ArchiveTotals {
+    /// The currency both figures are in.
+    pub currency: String,
+    pub spent: Decimal,
+    /// What they would still cost a month, levelled - so a yearly plan
+    /// counts as a twelfth rather than as the month it fell in.
+    pub monthly_saved: Decimal,
+    pub subscription_count: u32,
+    /// How many of them both figures cover. Fewer when a rate was missing,
+    /// which a screen has to say rather than let a smaller total imply.
+    pub converted_count: u32,
+    pub unconverted_currencies: Vec<String>,
+}
+
+impl From<rondo_core::summary::ArchiveTotals> for ArchiveTotals {
+    fn from(totals: rondo_core::summary::ArchiveTotals) -> Self {
+        Self {
+            currency: totals.currency,
+            spent: totals.spent,
+            monthly_saved: totals.monthly_saved,
+            subscription_count: totals.subscription_count,
+            converted_count: totals.converted_count,
+            unconverted_currencies: totals.unconverted_currencies,
+        }
+    }
+}
+
 /// One category's levelled monthly cost, as one figure.
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct ConvertedShare {

@@ -315,6 +315,39 @@ expect(
 )
 expect(split.currency == baseCurrency(), "the split is in the currency that was asked for")
 
+/// Archiving, the day it records, and the two figures the archive prints.
+/// Checked here because the day is a column the bindings have to carry:
+/// an app linked against a stale package would compile and then say it
+/// never knew when anything was stopped.
+let toStop = try rondo.addSubscription(draft: draft)
+let stopped = try rondo.setArchived(id: toStop.id, archived: true, on: span.to)
+expect(stopped.archivedOn == span.to, "archiving records the day it happened")
+let running = try rondo.setArchived(id: toStop.id, archived: false, on: span.to)
+expect(running.archivedOn == nil, "and restoring clears it rather than leaving it behind")
+
+/// A second one to stop, so more are archived than are running and the
+/// count can tell the two apart. With one of each it read the same
+/// whichever status was filtered on, and a deliberately mis-wired build
+/// passed this check.
+let alsoStopped = try rondo.addSubscription(draft: draft)
+_ = try rondo.setArchived(id: toStop.id, archived: true, on: span.to)
+_ = try rondo.setArchived(id: alsoStopped.id, archived: true, on: span.to)
+let archive = try rondo.archiveTotals(
+  primary: baseCurrency(), until: span.to, lockHistoricalRates: true
+)
+expect(
+  archive.subscriptionCount == 2,
+  "the archive totals only what was archived — got \(archive.subscriptionCount)"
+)
+expect(
+  Decimal(string: archive.monthlySaved)! > 0,
+  "and says what stopping it saves a month — got \(archive.monthlySaved)"
+)
+expect(archive.currency == baseCurrency(), "in the currency that was asked for")
+// Put both back, so the checks after this see the database they expect.
+_ = try rondo.setArchived(id: toStop.id, archived: false, on: span.to)
+_ = try rondo.setArchived(id: alsoStopped.id, archived: false, on: span.to)
+
 expect(!serviceTemplates().isEmpty, "the bundled templates are readable without a database")
 
 /// A nickname sharing no characters with the name it finds: proof the query

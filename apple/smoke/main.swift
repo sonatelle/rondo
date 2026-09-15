@@ -322,8 +322,15 @@ expect(split.currency == baseCurrency(), "the split is in the currency that was 
 let toStop = try rondo.addSubscription(draft: draft)
 let stopped = try rondo.setArchived(id: toStop.id, archived: true, on: span.to)
 expect(stopped.archivedOn == span.to, "archiving records the day it happened")
+// How long it ran comes with the row rather than being worked out here,
+// so the rule about which two days it spans lives in one place.
+expect(
+  stopped.ranForYears != nil && stopped.ranForMonths != nil,
+  "and how long it ran travels with it"
+)
 let running = try rondo.setArchived(id: toStop.id, archived: false, on: span.to)
 expect(running.archivedOn == nil, "and restoring clears it rather than leaving it behind")
+expect(running.ranForYears == nil, "and the span goes with the day")
 
 /// A second one to stop, so more are archived than are running and the
 /// count can tell the two apart. With one of each it read the same

@@ -188,6 +188,13 @@ final class SubscriptionsModel {
   /// the chart, because the core folds both from the same groups.
   private(set) var analyticsShares: ConvertedShares?
 
+  /// What the archived subscriptions cost, and what stopping them saves.
+  ///
+  /// Both figures are the core's own, summed there from the per-card ones
+  /// - which is what lets the strip above the cards be what the cards add
+  /// up to rather than a second reckoning of the same money.
+  private(set) var archiveTotals: ArchiveTotals?
+
   /// What has been charged since 1 January, as one figure.
   private(set) var yearToDate: ConvertedWindow?
 
@@ -520,6 +527,11 @@ final class SubscriptionsModel {
       forecast: forecast
     )
     analyticsShares = try rondo.convertedShares(primary: primaryCurrency, on: referenceDay)
+    archiveTotals = try rondo.archiveTotals(
+      primary: primaryCurrency,
+      until: referenceDay,
+      lockHistoricalRates: Self.locksHistoricalRates
+    )
 
     // Tomorrow, not today: the window is half-open, so a charge falling
     // today has to be inside it.

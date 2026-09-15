@@ -1,17 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@ is the highest: %@" : {
-      "comment" : "Beside the chart: which month stands out and what is in it",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ 最高：%@"
-          }
-        }
-      }
-    },
     "%@ · up %@" : {
       "comment" : "A charge, and the rise that took effect with it",
       "localizations" : {
@@ -23,6 +12,17 @@
         }
       }
     },
+    "%@ a month" : {
+      "comment" : "Archive card: what it cost each month while it ran",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月 %@"
+          }
+        }
+      }
+    },
     "%@ at %@" : {
       "comment" : "One currency inside a converted total, and the rate used",
       "localizations" : {
@@ -30,6 +30,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 按 %@ 折算"
+          }
+        }
+      }
+    },
+    "%@ is the highest: %@" : {
+      "comment" : "Beside the chart: which month stands out and what is in it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 最高：%@"
           }
         }
       }
@@ -447,149 +458,6 @@
         }
       }
     },
-    "All time" : {
-      "comment" : "Analytics card: charged since the first charge ever",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "历史累计"
-          }
-        }
-      }
-    },
-    "Analytics" : {
-      "comment" : "Sidebar page showing what the money went on",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分析"
-          }
-        }
-      }
-    },
-    "By category" : {
-      "comment" : "Analytics card: what kind of thing the money goes on",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分类占比"
-          }
-        }
-      }
-    },
-    "by the month each charge fell in" : {
-      "comment" : "Under the chart title: charged, not levelled",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按实际扣款月份"
-          }
-        }
-      }
-    },
-    "converted to %@" : {
-      "comment" : "Beside the analytics title: the currency the figures are in",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已折算为 %@"
-          }
-        }
-      }
-    },
-    "Cost per subscription" : {
-      "comment" : "Analytics card: what each has cost in total",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "单项累计花费"
-          }
-        }
-      }
-    },
-    "Forecast" : {
-      "comment" : "Chart legend: months not billed yet",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "预计"
-          }
-        }
-      }
-    },
-    "Levelled over a month, so a yearly plan counts as a twelfth." : {
-      "comment" : "Under the category split: how the figures are reckoned",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按每月均摊计算，年付订阅已折算到每月。"
-          }
-        }
-      }
-    },
-    "Monthly spending" : {
-      "comment" : "Analytics chart: what was charged each month",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "每月支出"
-          }
-        }
-      }
-    },
-    "Nothing has been charged yet." : {
-      "comment" : "The analytics page with no charges behind it",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "还没有任何扣款。"
-          }
-        }
-      }
-    },
-    "Nothing to split yet." : {
-      "comment" : "The category card with no spending behind it",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "还没有可以分类的支出。"
-          }
-        }
-      }
-    },
-    "Uncategorized" : {
-      "comment" : "The slice holding subscriptions filed under nothing",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未分类"
-          }
-        }
-      }
-    },
-    "Year to date" : {
-      "comment" : "Analytics card: charged since 1 January",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "今年至今"
-          }
-        }
-      }
-    },
     "© 2026 Sonatelle · aliaxy · MIT License" : {
       "comment" : "Foot of the about tab",
       "localizations" : {
@@ -679,7 +547,7 @@
       }
     },
     "Active" : {
-      "extractionState" : "stale",
+      "comment" : "Analytics card: how many subscriptions are running",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -810,6 +678,28 @@
         }
       }
     },
+    "All time" : {
+      "comment" : "Analytics card: charged since the first charge ever",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史累计"
+          }
+        }
+      }
+    },
+    "already charged" : {
+      "comment" : "Year view: every charge in this month has happened",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已发生"
+          }
+        }
+      }
+    },
     "Already up to date." : {
       "comment" : "After a fetch that found nothing to ask for",
       "localizations" : {
@@ -832,13 +722,13 @@
         }
       }
     },
-    "already charged" : {
-      "comment" : "Year view: every charge in this month has happened",
+    "Analytics" : {
+      "comment" : "Sidebar page showing what the money went on",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已发生"
+            "value" : "分析"
           }
         }
       }
@@ -906,6 +796,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已归档"
+          }
+        }
+      }
+    },
+    "archived %@" : {
+      "comment" : "Archive card: the month it was stopped",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 归档"
           }
         }
       }
@@ -987,6 +888,17 @@
         }
       }
     },
+    "By category" : {
+      "comment" : "Analytics card: what kind of thing the money goes on",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分类占比"
+          }
+        }
+      }
+    },
     "by date" : {
       "comment" : "How the coming charges are ordered",
       "localizations" : {
@@ -994,6 +906,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按日期排序"
+          }
+        }
+      }
+    },
+    "by the month each charge fell in" : {
+      "comment" : "Under the chart title: charged, not levelled",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按实际扣款月份"
           }
         }
       }
@@ -1043,7 +966,7 @@
       }
     },
     "Charged" : {
-      "comment" : "A charge that has already been taken",
+      "comment" : "A charge that has already been taken\nChart legend: months already billed",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1119,6 +1042,17 @@
         }
       }
     },
+    "converted to %@" : {
+      "comment" : "Beside the analytics title: the currency the figures are in",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已折算为 %@"
+          }
+        }
+      }
+    },
     "Copy" : {
       "comment" : "Puts a value on the clipboard",
       "localizations" : {
@@ -1137,6 +1071,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "核心 %@"
+          }
+        }
+      }
+    },
+    "Cost per subscription" : {
+      "comment" : "Analytics card: what each has cost in total",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单项累计花费"
           }
         }
       }
@@ -1653,6 +1598,17 @@
         }
       }
     },
+    "Forecast" : {
+      "comment" : "Chart legend: months not billed yet",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预计"
+          }
+        }
+      }
+    },
     "Forward" : {
       "comment" : "Pages the calendar to the next month or year",
       "localizations" : {
@@ -1872,12 +1828,23 @@
       }
     },
     "Levelled monthly" : {
-      "comment" : "Label on the total beside the filters",
+      "comment" : "Analytics card: what it all comes to in a month\nLabel on the total beside the filters",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "合计每月均摊"
+          }
+        }
+      }
+    },
+    "Levelled over a month, so a yearly plan counts as a twelfth." : {
+      "comment" : "Under the category split: how the figures are reckoned",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按每月均摊计算，年付订阅已折算到每月。"
           }
         }
       }
@@ -1954,6 +1921,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每月扣款"
+          }
+        }
+      }
+    },
+    "Monthly spending" : {
+      "comment" : "Analytics chart: what was charged each month",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月支出"
           }
         }
       }
@@ -2267,6 +2245,17 @@
         }
       }
     },
+    "Nothing has been charged yet." : {
+      "comment" : "The analytics page with no charges behind it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有任何扣款。"
+          }
+        }
+      }
+    },
     "Nothing is paid for with it." : {
       "comment" : "Deleting a payment method nothing uses",
       "localizations" : {
@@ -2318,6 +2307,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "没有需要换算的内容，用不上汇率。"
+          }
+        }
+      }
+    },
+    "Nothing to split yet." : {
+      "comment" : "The category card with no spending behind it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有可以分类的支出。"
           }
         }
       }
@@ -2541,6 +2541,17 @@
         }
       }
     },
+    "ran %@" : {
+      "comment" : "Archive card: how long it ran before being stopped",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "订了 %@"
+          }
+        }
+      }
+    },
     "Rate" : {
       "comment" : "Field for typing an exchange rate by hand",
       "localizations" : {
@@ -2707,7 +2718,7 @@
       }
     },
     "Restore" : {
-      "comment" : "Context menu command: un-archive\nSubscription menu command: un-archive",
+      "comment" : "Context menu command: un-archive\nPuts an archived subscription back among the active ones\nSubscription menu command: un-archive",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2822,6 +2833,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存"
+          }
+        }
+      }
+    },
+    "Saved a month" : {
+      "comment" : "Archive strip: what stopping them saves every month",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月省下"
           }
         }
       }
@@ -3004,7 +3026,7 @@
       }
     },
     "since the first charge" : {
-      "comment" : "What period the ranking covers",
+      "comment" : "Under a cumulative total\nWhat period the ranking covers",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3156,6 +3178,17 @@
         }
       }
     },
+    "These cost altogether" : {
+      "comment" : "Archive strip: what the stopped subscriptions came to",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些订阅一共花掉"
+          }
+        }
+      }
+    },
     "This calendar year" : {
       "comment" : "Analytics range: January to December of the current year",
       "localizations" : {
@@ -3284,6 +3317,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "累计花费"
+          }
+        }
+      }
+    },
+    "Uncategorized" : {
+      "comment" : "The slice holding subscriptions filed under nothing",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未分类"
           }
         }
       }
@@ -3502,6 +3546,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "年"
+          }
+        }
+      }
+    },
+    "Year to date" : {
+      "comment" : "Analytics card: charged since 1 January",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今年至今"
           }
         }
       }

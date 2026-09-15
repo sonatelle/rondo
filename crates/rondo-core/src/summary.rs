@@ -788,6 +788,79 @@ pub struct ConvertedTotal {
     pub last_charge: Option<Date>,
 }
 
+/// What a set of stopped subscriptions cost, and what stopping them saves.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ArchiveTotals {
+    /// The currency both figures are in.
+    pub currency: String,
+    /// What they cost altogether while they ran.
+    pub spent: Decimal,
+    /// What they would cost a month if they were still running - which is
+    /// what stopping them saves. Levelled, so a yearly plan counts as a
+    /// twelfth rather than as the month it happened to fall in.
+    pub monthly_saved: Decimal,
+    /// How many subscriptions were handed in.
+    pub subscription_count: u32,
+    /// How many of them both figures cover. Fewer when a rate was missing,
+    /// which a screen has to say rather than let a smaller total imply.
+    pub converted_count: u32,
+    /// Currencies no rate reached, sorted.
+    pub unconverted_currencies: Vec<String>,
+}
+
+/// Totals the subscriptions handed in, whatever their status.
+///
+/// The one aggregation here that does **not** filter by status, and
+/// deliberately: every other one is asked "what am I spending", where an
+/// archived subscription is not part of the answer. This one is asked
+/// "what did these cost", about a list the caller has already chosen - and
+/// filtering a list somebody built by hand would answer a question nobody
+/// put.
+///
+/// Both figures are summed from per-subscription ones rather than from
+/// currency groups, because the archive prints each subscription beside
+/// them: the header has to be the rows added up, and converting the group
+/// instead would leave the two differing in the last decimal places.
+///
+/// A subscription no rate reaches is left out of both figures and counted
+/// in `unconverted_currencies`, never converted at 1:1.
+pub fn archive_totals(
+    subscriptions: &[Subscription],
+    histories: &HashMap<Uuid, Vec<Price>>,
+    rates: &RateHistories,
+    primary: &str,
+    until: Date,
+    basis: RateBasis,
+) -> Result<ArchiveTotals> {
+    let mut totals = ArchiveTotals {
+        currency: primary.to_owned(),
+        spent: Decimal::ZERO,
+        monthly_saved: Decimal::ZERO,
+        subscription_count: subscriptions.len() as u32,
+        converted_count: 0,
+        unconverted_currencies: Vec::new(),
+    };
+    let mut missing: BTreeMap<String, ()> = BTreeMap::new();
+
+    for sub in subscriptions {
+        let monthly = Money::new(monthly_cost(&sub.price, sub.cycle), sub.price.currency())?;
+        let Some(saved) = convert(rates, &monthly, primary, until)? else {
+            missing.insert(sub.price.currency().to_owned(), ());
+            continue;
+        };
+        let history = histories
+            .get(&sub.id)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        let spent = subscription_total_in(sub, history, rates, primary, until, basis)?;
+        totals.spent += spent.total;
+        totals.monthly_saved += saved.amount();
+        totals.converted_count += 1;
+    }
+    totals.unconverted_currencies = missing.into_keys().collect();
+    Ok(totals)
+}
+
 /// Which day's rate a past charge is converted at.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RateBasis {
@@ -1685,6 +1758,76 @@ mod tests {
         .unwrap();
 
         assert!(found.is_empty());
+    }
+
+    #[test]
+    fn an_archive_total_is_the_rows_it_is_printed_above() {
+        // The design's rule for this strip: both figures must equal the
+        // sum of the cards under them. So both are checked against what
+        // the cards themselves would print, not against a literal.
+        let (one, one_prices) = anchored("Gone", money("11", "USD"), Date::constant(2026, 1, 5));
+        let (two, two_prices) = anchored("Also", money("82.50", "CNY"), Date::constant(2026, 1, 9));
+        let histories = HashMap::from([(one.id, one_prices), (two.id, two_prices)]);
+        let rates = rates();
+        let until = Date::constant(2026, 4, 1);
+        let mut subs = [one, two];
+        // Both archived, which is the state this is asked about - and the
+        // state every other aggregation here would skip.
+        for sub in &mut subs {
+            sub.set_archived(true, until);
+        }
+
+        let totals =
+            archive_totals(&subs, &histories, &rates, "EUR", until, RateBasis::OwnDay).unwrap();
+
+        let rows: Vec<Decimal> = subs
+            .iter()
+            .map(|sub| {
+                subscription_total_in(
+                    sub,
+                    &histories[&sub.id],
+                    &rates,
+                    "EUR",
+                    until,
+                    RateBasis::OwnDay,
+                )
+                .unwrap()
+                .total
+            })
+            .collect();
+        assert_eq!(totals.spent, rows.iter().sum::<Decimal>());
+        // 11 USD and 82.50 CNY are 10 EUR each a month, so stopping both
+        // saves 20 - and the count says both were covered.
+        assert_eq!(totals.monthly_saved, Decimal::from_str("20").unwrap());
+        assert_eq!(totals.subscription_count, 2);
+        assert_eq!(totals.converted_count, 2);
+        assert!(totals.unconverted_currencies.is_empty());
+    }
+
+    #[test]
+    fn an_archived_subscription_no_rate_reaches_is_named_rather_than_counted() {
+        let (yen, yen_prices) = anchored("Yen", money("1000", "JPY"), Date::constant(2026, 1, 5));
+        let histories = HashMap::from([(yen.id, yen_prices)]);
+        let mut subs = [yen];
+        subs[0].set_archived(true, Date::constant(2026, 4, 1));
+
+        let totals = archive_totals(
+            &subs,
+            &histories,
+            &rates(),
+            "EUR",
+            Date::constant(2026, 4, 1),
+            RateBasis::OwnDay,
+        )
+        .unwrap();
+
+        // Present in the count of what was handed in, absent from both
+        // figures, and named - never converted at 1:1.
+        assert_eq!(totals.subscription_count, 1);
+        assert_eq!(totals.converted_count, 0);
+        assert_eq!(totals.spent, Decimal::ZERO);
+        assert_eq!(totals.monthly_saved, Decimal::ZERO);
+        assert_eq!(totals.unconverted_currencies, vec!["JPY".to_owned()]);
     }
 
     #[test]

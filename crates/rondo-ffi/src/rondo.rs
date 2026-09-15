@@ -1344,6 +1344,11 @@ mod tests {
         let archived = rondo.set_archived(added.id, true, TODAY).unwrap();
         assert_eq!(archived.status, SubscriptionStatus::Archived);
         assert_eq!(archived.archived_on, Some(TODAY));
+        // And how long it ran, measured to the archive day rather than to
+        // today: the draft's first charge is 31 January 2026 and this is
+        // 1 June, so four months and no whole year.
+        assert_eq!(archived.ran_for_years, Some(0));
+        assert_eq!(archived.ran_for_months, Some(4));
 
         // And restoring clears it, so the next time it is stopped the day
         // is the day it was stopped rather than the last one.

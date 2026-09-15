@@ -70,12 +70,22 @@ pub struct Subscription {
     /// recorded the day - which the archive shows as not knowing rather
     /// than as a guess.
     pub archived_on: Option<Date>,
+    /// How long it ran before it was stopped, in whole years and the
+    /// months left over.
+    ///
+    /// Travels with the row rather than being worked out on the far side,
+    /// because which two days it is measured between is a rule: first
+    /// charge to archive day, never to today. Both are `None` together,
+    /// whenever `archived_on` is.
+    pub ran_for_years: Option<u32>,
+    pub ran_for_months: Option<u32>,
     pub created_at: jiff::Timestamp,
     pub updated_at: jiff::Timestamp,
 }
 
 impl From<CoreSubscription> for Subscription {
     fn from(sub: CoreSubscription) -> Self {
+        let ran = sub.span_before_archiving();
         Self {
             id: sub.id,
             name: sub.name,
@@ -93,6 +103,8 @@ impl From<CoreSubscription> for Subscription {
             payment_method_id: sub.payment_method_id,
             status: sub.status,
             archived_on: sub.archived_on,
+            ran_for_years: ran.map(|span| span.get_years().max(0) as u32),
+            ran_for_months: ran.map(|span| span.get_months().max(0) as u32),
             created_at: sub.created_at,
             updated_at: sub.updated_at,
         }

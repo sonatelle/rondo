@@ -25,6 +25,17 @@ enum Preference {
   static let appLanguage = "appLanguage"
   /// A weekday index in `Calendar`'s numbering, where Sunday is 1.
   static let firstWeekday = "firstWeekday"
+  /// Whether reminders are wanted at all.
+  ///
+  /// Separate from whether macOS has been asked: somebody can allow
+  /// notifications and still switch reminders off here, and turning them
+  /// back on should not ask again. Off until asked for, because the app
+  /// must not be scheduling anything before anybody has said they want it.
+  static let remindersOn = "remindersOn"
+  /// The hour of day reminders arrive, 0-23.
+  static let reminderHour = "reminderHour"
+  /// The minute of that hour.
+  static let reminderMinute = "reminderMinute"
 }
 
 /// Which appearance the person asked for.

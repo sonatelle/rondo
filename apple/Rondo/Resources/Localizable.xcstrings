@@ -34,6 +34,17 @@
         }
       }
     },
+    "%@ is charged in %lld days" : {
+      "comment" : "Reminder title: what is about to be charged and how soon",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 将在 %lld 天后扣款"
+          }
+        }
+      }
+    },
     "%@ is the highest: %@" : {
       "comment" : "Beside the chart: which month stands out and what is in it",
       "localizations" : {
@@ -458,50 +469,6 @@
         }
       }
     },
-    "By currency" : {
-      "comment" : "Groups the list by the currency each is billed in",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按币种分组"
-          }
-        }
-      }
-    },
-    "By payment method" : {
-      "comment" : "Groups the list by what pays for each subscription",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按付款方式分组"
-          }
-        }
-      }
-    },
-    "By where it was bought" : {
-      "comment" : "Groups the list by channel",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按渠道分组"
-          }
-        }
-      }
-    },
-    "No grouping" : {
-      "comment" : "The list as one flat table",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "不分组"
-          }
-        }
-      }
-    },
     "© 2026 Sonatelle · aliaxy · MIT License" : {
       "comment" : "Foot of the about tab",
       "localizations" : {
@@ -877,6 +844,17 @@
         }
       }
     },
+    "Arrive at" : {
+      "comment" : "What time of day reminders are delivered",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提醒时刻"
+          }
+        }
+      }
+    },
     "Back" : {
       "comment" : "Pages the calendar to the previous month or year",
       "localizations" : {
@@ -943,6 +921,17 @@
         }
       }
     },
+    "By currency" : {
+      "comment" : "Groups the list by the currency each is billed in",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按币种分组"
+          }
+        }
+      }
+    },
     "by date" : {
       "comment" : "How the coming charges are ordered",
       "localizations" : {
@@ -954,6 +943,17 @@
         }
       }
     },
+    "By payment method" : {
+      "comment" : "Groups the list by what pays for each subscription",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按付款方式分组"
+          }
+        }
+      }
+    },
     "by the month each charge fell in" : {
       "comment" : "Under the chart title: charged, not levelled",
       "localizations" : {
@@ -961,6 +961,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按实际扣款月份"
+          }
+        }
+      }
+    },
+    "By where it was bought" : {
+      "comment" : "Groups the list by channel",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按渠道分组"
           }
         }
       }
@@ -1389,6 +1400,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完成"
+          }
+        }
+      }
+    },
+    "Each subscription says how many days of warning it wants." : {
+      "comment" : "Under the reminders switch: where the lead time is set",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提前几天由每项订阅自己决定。"
           }
         }
       }
@@ -1915,6 +1937,17 @@
         }
       }
     },
+    "macOS keeps this choice. It can only be changed there." : {
+      "comment" : "Under the refused-notifications row",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个选择由 macOS 保存，只能在那里改。"
+          }
+        }
+      }
+    },
     "Monday" : {
       "comment" : "Day a week starts on",
       "localizations" : {
@@ -2145,6 +2178,17 @@
         }
       }
     },
+    "No grouping" : {
+      "comment" : "The list as one flat table",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不分组"
+          }
+        }
+      }
+    },
     "No rate" : {
       "comment" : "Shown for a currency nothing can be converted from yet",
       "localizations" : {
@@ -2180,6 +2224,7 @@
     },
     "No reminders yet" : {
       "comment" : "The reminders tab, which is empty until they exist",
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2235,7 +2280,7 @@
       }
     },
     "Not recorded" : {
-      "comment" : "No payment method was said",
+      "comment" : "No payment method was said\nThe group holding subscriptions with the field left blank",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2366,6 +2411,17 @@
         }
       }
     },
+    "Notifications are turned off for Rondo" : {
+      "comment" : "When macOS has been told not to allow them",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rondo 的通知已被关闭"
+          }
+        }
+      }
+    },
     "Off, closing the window leaves Rondo in the menu bar and out of the Dock." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2427,6 +2483,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "开机时启动"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "comment" : "Opens the notifications pane",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统设置"
           }
         }
       }
@@ -2717,6 +2784,17 @@
         }
       }
     },
+    "Remind me before a charge" : {
+      "comment" : "The reminders switch",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扣款前提醒我"
+          }
+        }
+      }
+    },
     "Reminder" : {
       "comment" : "Detail row: being told before a charge",
       "localizations" : {
@@ -2850,6 +2928,7 @@
     },
     "Rondo will be able to tell you before a charge lands. It cannot yet." : {
       "comment" : "Under the empty reminders tab",
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

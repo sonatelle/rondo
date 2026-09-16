@@ -387,31 +387,17 @@ struct ContentView: View {
         // the one thing on the window somebody came here to do, and the
         // rest of the chrome is deliberately grey so that it stands out.
         //
-        // Drawn here rather than left to `.borderedProminent`, which takes
-        // the system's accent colour - whatever the person set in System
-        // Settings - and the system's control metrics. Beside the pills and
-        // chips on this window, which are all drawn from the design's own
-        // numbers, it was the one control that did not match.
-        //
         // The words, not only a plus. A "+" alone is read by whoever
         // already knows what this window is; the first time it is opened
         // there is nothing here to add one to, and the button has to say
         // what it would do.
-        Button {
+        BrandButton(
+          title: String(localized: "Add Subscription", bundle: Localization.bundle,
+                        locale: Localization.locale,
+                        comment: "Toolbar button that opens the form")
+        ) {
           sheet = .add
-        } label: {
-          Text(verbatim: String(localized: "Add Subscription", bundle: Localization.bundle,
-                                locale: Localization.locale,
-                                comment: "Toolbar button that opens the form"))
-            .font(Theme.Font.body)
-            .fontWeight(.medium)
-            .foregroundStyle(Color.white)
-            .padding(.horizontal, 12)
-            .frame(height: 26)
-            .background(Color.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
         .help(String(localized: "Add a subscription", bundle: Localization.bundle,
                      locale: Localization.locale, comment: "Tooltip on the toolbar button"))
       }

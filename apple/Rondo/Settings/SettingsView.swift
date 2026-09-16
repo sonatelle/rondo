@@ -34,7 +34,7 @@ struct SettingsView: View {
                      comment: "Settings tab: which currency totals are in, and exchange rates"),
               symbol: "coloncurrencysign.circle")
         }
-      ReminderSettings()
+      ReminderSettings(model: model)
         .tabItem {
           tab(String(localized: "Reminders", bundle: bundle, locale: locale,
                      comment: "Settings tab: being told before a charge"),

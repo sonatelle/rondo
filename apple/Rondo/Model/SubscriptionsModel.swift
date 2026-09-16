@@ -462,6 +462,21 @@ final class SubscriptionsModel {
       loadCalendar()
       loadGroups()
       try loadAnalytics()
+      // After the data, not before: what is scheduled is built from the
+      // renewals this reload just read. The values are taken out here
+      // rather than reached for inside the task - a reload does not run
+      // on the main actor, and handing the model across that line is
+      // exactly the race the checking is there to catch.
+      let scheduled = allRenewals
+      let currency = primaryCurrency
+      let inPrimary = convertedPrices
+      Task {
+        await Reminders.refresh(
+          renewals: scheduled,
+          primaryCurrency: currency,
+          converted: inPrimary
+        )
+      }
     } catch {
       report(error)
     }
@@ -669,6 +684,21 @@ final class SubscriptionsModel {
     case .currency, .none:
       key
     }
+  }
+
+  /// Puts the pending reminders back in step with the data.
+  ///
+  /// Called whenever what is charged next may have moved - which is every
+  /// reload - and from the settings that decide when they arrive. Doing
+  /// nothing when they are switched off is the point: a reminder must not
+  /// be scheduled before somebody has asked for one.
+  @MainActor
+  func rescheduleReminders() async {
+    await Reminders.refresh(
+      renewals: allRenewals,
+      primaryCurrency: primaryCurrency,
+      converted: convertedPrices
+    )
   }
 
   /// Arranges the list a different way.

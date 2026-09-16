@@ -111,13 +111,24 @@ enum Reminders {
 
     for (renewal, when) in due {
       let content = UNMutableNotificationContent()
-      content.title = title(for: renewal)
+      content.title = title(
+        name: renewal.subscription.name,
+        days: Int(renewal.subscription.reminderLeadDays)
+      )
       content.subtitle = subtitle(
         for: renewal,
         primaryCurrency: primaryCurrency,
         converted: converted[renewal.subscription.id]
       )
       content.sound = .default
+      content.categoryIdentifier = ReminderActions.category
+      // The day and the name travel with the request so that putting the
+      // reminder off by a day can say how many are left. Neither can be
+      // worked back out of the notification itself.
+      content.userInfo = [
+        ReminderPress.chargeDayKey: renewal.date,
+        ReminderPress.nameKey: renewal.subscription.name,
+      ]
       let request = UNNotificationRequest(
         // The subscription's own id, so rescheduling replaces rather than
         // duplicates even if a cancel were ever to fail.
@@ -139,11 +150,14 @@ enum Reminders {
   /// The name first, because a notification is read in a stack of them
   /// and the name is what tells somebody whether this one is theirs to
   /// act on.
-  private static func title(for renewal: Renewal) -> String {
-    let days = Int(renewal.subscription.reminderLeadDays)
-    return String(localized: "\(renewal.subscription.name) is charged in \(days) days",
-                  bundle: Localization.bundle, locale: Localization.locale,
-                  comment: "Reminder title: what is about to be charged and how soon")
+  ///
+  /// A countdown rather than a date, which is what the design writes -
+  /// and the reason the day has to travel with the request: a countdown
+  /// is only true on the day it was written for.
+  static func title(name: String, days: Int) -> String {
+    String(localized: "\(name) is charged in \(days) days",
+           bundle: Localization.bundle, locale: Localization.locale,
+           comment: "Reminder title: what is about to be charged and how soon")
   }
 
   /// "2 March · ¥21.00 · Monthly" - the three things that decide whether

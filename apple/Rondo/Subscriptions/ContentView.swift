@@ -149,6 +149,9 @@ struct ContentView: View {
   /// reasonably be arranged differently.
   @SceneStorage("subscriptionColumns") private var columns: TableColumnCustomization<SubscriptionRow>
 
+  /// What a reminder asked to be opened, if anything.
+  private var route = ReminderRoute.shared
+
   /// Which page the sheet is showing, if any.
   @State private var sheet: SheetRoute?
   @State private var pendingDeletion: [Subscription] = []
@@ -173,6 +176,18 @@ struct ContentView: View {
     // and call `reload` was not enough on its own - the numbers here stayed
     // as they were until something else made the view redraw.
     .onChange(of: primaryCurrency) { _, _ in model.reload() }
+    // A reminder asked for one subscription to be opened. Answered here
+    // rather than by the delegate that took the press, which runs before
+    // any window exists and has nothing to open a sheet on.
+    .onChange(of: route.wanted) { _, wanted in
+      guard let wanted,
+            let renewal = model.allRenewals.first(where: { $0.subscription.id == wanted })
+      else { return }
+      sheet = .detail(renewal)
+      // Cleared straight away, so pressing the same reminder twice opens
+      // it twice rather than the second press doing nothing.
+      route.wanted = nil
+    }
     // One sheet with three faces rather than three sheets. The detail page
     // opens the form, and two `.sheet` modifiers racing - one dismissing as
     // the other presents - is how that goes wrong. With one, the change is

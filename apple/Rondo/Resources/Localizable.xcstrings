@@ -171,6 +171,47 @@
         }
       }
     },
+    "%lld charges this month" : {
+      "comment" : "Monthly summary: how many charges the month ahead holds",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld charge this month"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld charges this month"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "这个月有 %lld 笔扣款"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "这个月有 %lld 笔扣款"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld days ago" : {
       "comment" : "How long ago a charge fell",
       "localizations" : {

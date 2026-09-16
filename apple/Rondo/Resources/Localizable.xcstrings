@@ -469,6 +469,28 @@
         }
       }
     },
+    "Remind me tomorrow" : {
+      "comment" : "Reminder button: puts it off by a day",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明天再提醒"
+          }
+        }
+      }
+    },
+    "View" : {
+      "comment" : "Reminder button: opens the subscription",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看"
+          }
+        }
+      }
+    },
     "© 2026 Sonatelle · aliaxy · MIT License" : {
       "comment" : "Foot of the about tab",
       "localizations" : {

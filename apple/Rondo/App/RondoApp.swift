@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Decides what closing the last window means.
 ///
@@ -11,6 +12,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_: Notification) {
     let stored = UserDefaults.standard.string(forKey: Preference.appearance) ?? ""
     (Appearance(rawValue: stored) ?? .system).apply()
+    // Registered at launch whether or not reminders are switched on. The
+    // buttons on a notification come from the category it names, and one
+    // delivered before its category was registered arrives with none - so
+    // this has to be in place before any reminder can be, not at the
+    // moment somebody turns them on.
+    ReminderActions.register(delegate: self)
   }
 
   func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
@@ -28,6 +35,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     NSApp.setActivationPolicy(.accessory)
     return false
+  }
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+  /// What a pressed button does; see `ReminderActions`.
+  nonisolated func userNotificationCenter(
+    _: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse
+  ) async {
+    // Read here and handed over as plain values: the response is not
+    // `Sendable` and this callback is not on the main actor, so the
+    // object itself must not cross.
+    let content = response.notification.request.content
+    let press = ReminderPress(
+      action: response.actionIdentifier,
+      identifier: response.notification.request.identifier,
+      subtitle: content.subtitle,
+      chargeDay: content.userInfo[ReminderPress.chargeDayKey] as? String,
+      name: content.userInfo[ReminderPress.nameKey] as? String
+    )
+    await MainActor.run {
+      // Back into the Dock first: a notification can arrive while Rondo
+      // is an accessory with no window, and opening one without this
+      // leaves it belonging to an app with no icon.
+      NSApp.setActivationPolicy(.regular)
+      ReminderActions.handle(press)
+    }
+  }
+
+  /// Shown even when Rondo is the app in front.
+  ///
+  /// macOS suppresses a notification for the active app unless the
+  /// delegate asks for it, and suppressing this one would be wrong: the
+  /// window being open is not the same as the person looking at the page
+  /// where that charge is.
+  nonisolated func userNotificationCenter(
+    _: UNUserNotificationCenter,
+    willPresent _: UNNotification
+  ) async -> UNNotificationPresentationOptions {
+    [.banner, .sound]
   }
 }
 

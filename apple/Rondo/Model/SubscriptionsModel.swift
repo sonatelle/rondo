@@ -470,11 +470,13 @@ final class SubscriptionsModel {
       let scheduled = allRenewals
       let currency = primaryCurrency
       let inPrimary = convertedPrices
+      let ahead = monthsAhead()
       Task {
         await Reminders.refresh(
           renewals: scheduled,
           primaryCurrency: currency,
-          converted: inPrimary
+          converted: inPrimary,
+          summaries: ahead
         )
       }
     } catch {
@@ -697,8 +699,34 @@ final class SubscriptionsModel {
     await Reminders.refresh(
       renewals: allRenewals,
       primaryCurrency: primaryCurrency,
-      converted: convertedPrices
+      converted: convertedPrices,
+      summaries: monthsAhead()
     )
+  }
+
+  /// What the next few months hold, for the note that opens each of them.
+  ///
+  /// Three rather than one: nothing reschedules while Rondo is closed, so
+  /// somebody who does not open it for a season would otherwise get the
+  /// first note and then silence. Three covers that and costs three calls.
+  ///
+  /// A forecast, because these months have not happened: their charges
+  /// are priced at today's rate, which is the only honest way to price a
+  /// charge that has not been made.
+  func monthsAhead(_ count: Int = 3) -> [Reminders.Summary] {
+    let calendar = Calendar.current
+    guard let today = Formatting.parseCivilDate(referenceDay),
+          let thisMonth = calendar.date(
+            from: calendar.dateComponents([.year, .month], from: today)
+          ),
+          // From next month: this one's first has been and gone unless
+          // today is it, and a note about a month already under way is
+          // one the app itself has been showing all along.
+          let next = calendar.date(byAdding: .month, value: 1, to: thisMonth)
+    else { return [] }
+    let from = calendar.component(.day, from: today) == 1 ? thisMonth : next
+    return ((try? monthTotals(from: from, count: count, forecast: true)) ?? [])
+      .map { Reminders.Summary(start: $0.start, total: $0.total) }
   }
 
   /// Arranges the list a different way.

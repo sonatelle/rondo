@@ -50,20 +50,26 @@ enum Reminders {
   static func refresh(
     renewals: [Renewal],
     primaryCurrency: String,
-    converted: [Uuid: DecimalString]
+    converted: [Uuid: DecimalString],
+    summaries: [Summary]
   ) async {
     let defaults = UserDefaults.standard
     guard defaults.bool(forKey: Preference.remindersOn) else {
       cancelAll()
       return
     }
+    let hour = defaults.object(forKey: Preference.reminderHour) as? Int ?? 9
+    let minute = defaults.object(forKey: Preference.reminderMinute) as? Int ?? 0
+    // The charge reminders first, because that call clears what is pending
+    // - the summaries added after it would go with them otherwise.
     await reschedule(
       renewals,
-      leadHour: defaults.object(forKey: Preference.reminderHour) as? Int ?? 9,
-      leadMinute: defaults.object(forKey: Preference.reminderMinute) as? Int ?? 0,
+      leadHour: hour,
+      leadMinute: minute,
       primaryCurrency: primaryCurrency,
       converted: converted
     )
+    await scheduleSummaries(summaries, leadHour: hour, leadMinute: minute)
   }
 
   /// Replaces every pending reminder with ones for these renewals.
@@ -138,6 +144,71 @@ enum Reminders {
       )
       try? await centre.add(request)
     }
+  }
+
+  /// One month's worth of charges, for the note that opens it.
+  struct Summary: Sendable {
+    /// The first of the month, which is both when it is sent and what it
+    /// is about.
+    let start: CivilDate
+    let total: ConvertedWindow
+  }
+
+  /// Schedules the note that arrives on the first of a month.
+  ///
+  /// A different thing from a charge reminder and deliberately quieter:
+  /// no buttons, no sound. It is not asking for anything to be done - it
+  /// says what the month ahead costs, which is worth knowing on the day
+  /// the month starts and worth nothing as an interruption.
+  ///
+  /// Months with nothing in them are skipped. "0 charges this month" is
+  /// true and is not news.
+  static func scheduleSummaries(_ months: [Summary], leadHour: Int, leadMinute: Int) async {
+    let centre = UNUserNotificationCenter.current()
+    guard await authorization() == .authorized else { return }
+    let calendar = Calendar.current
+    let now = Date()
+
+    for month in months where month.total.chargeCount > 0 {
+      guard let first = Formatting.parseCivilDate(month.start) else { continue }
+      var when = calendar.dateComponents([.year, .month, .day], from: first)
+      when.hour = leadHour
+      when.minute = leadMinute
+      guard let fires = calendar.date(from: when), fires > now else { continue }
+
+      let content = UNMutableNotificationContent()
+      content.title = String(
+        localized: "\(Int(month.total.chargeCount)) charges this month",
+        bundle: Localization.bundle, locale: Localization.locale,
+        comment: "Monthly summary: how many charges the month ahead holds"
+      )
+      content.subtitle = summarySubtitle(month.total)
+      let request = UNNotificationRequest(
+        // Named for the month, so rescheduling replaces rather than adds.
+        identifier: "summary-\(month.start.prefix(7))",
+        content: content,
+        trigger: UNCalendarNotificationTrigger(dateMatching: when, repeats: false)
+      )
+      try? await centre.add(request)
+    }
+  }
+
+  /// The total, and what it had to leave out.
+  ///
+  /// The omission is said here rather than only in the window: a figure
+  /// quietly missing two charges reads as a cheaper month, and this one
+  /// arrives where nobody can check it against anything.
+  private static func summarySubtitle(_ total: ConvertedWindow) -> String {
+    let amount = total.convertedChargeCount > 0
+      ? Formatting.amount(total.total, currency: total.currency)
+      : "—"
+    guard !total.unconvertedCurrencies.isEmpty else { return amount }
+    let missing = String(
+      localized: "no rate for \(total.unconvertedCurrencies.joined(separator: ", "))",
+      bundle: Localization.bundle, locale: Localization.locale,
+      comment: "Under a window total, naming what it leaves out"
+    )
+    return "\(amount) · \(missing)"
   }
 
   /// Drops every pending reminder, for when they are switched off.

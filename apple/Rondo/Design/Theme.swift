@@ -49,6 +49,10 @@ enum Theme {
     static let rowTitle = SwiftUI.Font.system(size: 14, weight: .medium)
     static let sidebarItem = SwiftUI.Font.system(size: 13.5)
     static let sidebarItemSelected = SwiftUI.Font.system(size: 13.5, weight: .semibold)
+    /// A paragraph somebody is meant to read rather than scan, which the
+    /// design sets one step above the body it uses everywhere else. Only
+    /// the first-run screen has one.
+    static let intro = SwiftUI.Font.system(size: 14.5)
     static let body = SwiftUI.Font.system(size: 13.5)
     static let label = SwiftUI.Font.system(size: 13)
     static let caption = SwiftUI.Font.system(size: 12.5)

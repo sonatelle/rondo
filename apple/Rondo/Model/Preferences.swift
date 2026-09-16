@@ -36,6 +36,14 @@ enum Preference {
   static let reminderHour = "reminderHour"
   /// The minute of that hour.
   static let reminderMinute = "reminderMinute"
+  /// Whether the first-run screen has been seen.
+  ///
+  /// Not the only thing that decides whether it is shown - an empty
+  /// database is the other half, and the more reliable one. Preferences
+  /// are lost by a reinstall while the database survives it, so somebody
+  /// who copies their data across would otherwise be welcomed to an app
+  /// they have been using for a year.
+  static let hasCompletedOnboarding = "hasCompletedOnboarding"
 }
 
 /// Which appearance the person asked for.

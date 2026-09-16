@@ -152,6 +152,9 @@ struct ContentView: View {
   /// What a reminder asked to be opened, if anything.
   private var route = ReminderRoute.shared
 
+  /// Whether the first-run screen has been seen, so it is shown once.
+  @AppStorage(Preference.hasCompletedOnboarding) private var onboarded = false
+
   /// Which page the sheet is showing, if any.
   @State private var sheet: SheetRoute?
   @State private var pendingDeletion: [Subscription] = []
@@ -160,6 +163,10 @@ struct ContentView: View {
   /// up, since the JSON is read from the database at the moment it opens.
   @State private var exporting: BackupFile?
   @State private var isRestoring = false
+
+  /// That the first-run screen asked for a backup, held until it has
+  /// finished dismissing; see where it is set.
+  @State private var wantsRestore = false
 
   /// What the last restore changed, kept until the person has read it.
   @State private var restored: ImportSummary?
@@ -188,12 +195,47 @@ struct ContentView: View {
       // it twice rather than the second press doing nothing.
       route.wanted = nil
     }
-    // One sheet with three faces rather than three sheets. The detail page
-    // opens the form, and two `.sheet` modifiers racing - one dismissing as
-    // the other presents - is how that goes wrong. With one, the change is
-    // which page it is showing.
+    // Shown once, and only to somebody who has nothing. Both halves are
+    // needed: the preference alone would welcome anyone who reinstalled on
+    // top of their own data, and an empty database alone would welcome
+    // somebody again every time they deleted their last subscription.
+    .onAppear {
+      guard !onboarded, model.allRenewals.isEmpty else { return }
+      sheet = .welcome
+    }
+    // One sheet with four faces rather than four sheets. The first-run
+    // screen opens the form and the detail page opens the form, and two
+    // `.sheet` modifiers racing - one dismissing as the other presents -
+    // is how that goes wrong. With one, the change is which page it is
+    // showing.
     .sheet(item: $sheet) { route in
       switch route {
+      case .welcome:
+        WelcomeView(
+          // A swap, which is what `sheet(item:)` is for: the form takes
+          // the place of the welcome without a dismissal in between.
+          add: { sheet = .add },
+          // The file picker is not a sheet of ours and cannot be swapped
+          // for one. Asking for it while this one is still dismissing is
+          // the same race the comment above describes, so the wish is
+          // noted and acted on once the sheet has actually gone.
+          restore: {
+            wantsRestore = true
+            sheet = nil
+          },
+          later: { sheet = nil }
+        )
+        // Whichever way it is closed - either button, "Maybe later", or
+        // Escape - it has been seen. Set on the way out rather than on the
+        // way in, so a crash while it is up does not cost somebody the
+        // only time it is offered.
+        .onDisappear {
+          onboarded = true
+          if wantsRestore {
+            wantsRestore = false
+            isRestoring = true
+          }
+        }
       case .add:
         SubscriptionFormView(model: model)
       case let .edit(subscription):
@@ -806,17 +848,19 @@ struct ContentView: View {
 
 /// Which page the window's sheet is showing.
 ///
-/// One type rather than a flag per page, so the three cannot be true at
-/// once. Identified by the subscription it is about - or by nothing, for
-/// the blank form - which is what lets `sheet(item:)` swap one page for
-/// another without a dismissal in between.
+/// One type rather than a flag per page, so two cannot be true at once.
+/// Identified by the subscription it is about - or by nothing, for the
+/// blank form and the first-run screen - which is what lets `sheet(item:)`
+/// swap one page for another without a dismissal in between.
 enum SheetRoute: Identifiable {
+  case welcome
   case add
   case edit(Subscription)
   case detail(Renewal)
 
   var id: String {
     switch self {
+    case .welcome: "welcome"
     case .add: "add"
     case let .edit(subscription): "edit-\(subscription.id)"
     case let .detail(renewal): "detail-\(renewal.subscription.id)"

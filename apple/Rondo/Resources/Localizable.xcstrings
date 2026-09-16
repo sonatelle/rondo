@@ -510,28 +510,6 @@
         }
       }
     },
-    "Remind me tomorrow" : {
-      "comment" : "Reminder button: puts it off by a day",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "明天再提醒"
-          }
-        }
-      }
-    },
-    "View" : {
-      "comment" : "Reminder button: opens the subscription",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看"
-          }
-        }
-      }
-    },
     "© 2026 Sonatelle · aliaxy · MIT License" : {
       "comment" : "Foot of the about tab",
       "localizations" : {
@@ -543,6 +521,17 @@
         }
       }
     },
+    "A local database you can export; restoring a backup merges and never deletes" : {
+      "comment" : "First-run screen: under where the data lives",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地数据库，可导出备份；恢复只合并不删除"
+          }
+        }
+      }
+    },
     "A month" : {
       "comment" : "Menu bar: what everything comes to monthly",
       "localizations" : {
@@ -550,6 +539,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每月均摊"
+          }
+        }
+      }
+    },
+    "A notice a few days before the charge, while there is still time to cancel" : {
+      "comment" : "First-run screen: under the reminders",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扣款前几天通知你，想退还来得及"
           }
         }
       }
@@ -671,6 +671,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "添加订阅"
+          }
+        }
+      }
+    },
+    "Add your first subscription" : {
+      "comment" : "First-run screen: opens the form",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加第一项订阅"
           }
         }
       }
@@ -1956,6 +1967,17 @@
         }
       }
     },
+    "Levelled by month and totalled per subscription, with other currencies converted into your main one" : {
+      "comment" : "First-run screen: under the totals",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每月均摊、单项累计，外币自动折算成你的主要币种"
+          }
+        }
+      }
+    },
     "Levelled monthly" : {
       "comment" : "Analytics card: what it all comes to in a month\nLabel on the total beside the filters",
       "localizations" : {
@@ -2007,6 +2029,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "这个选择由 macOS 保存，只能在那里改。"
+          }
+        }
+      }
+    },
+    "Maybe later" : {
+      "comment" : "First-run screen: closes it",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "稍后再说"
           }
         }
       }
@@ -2138,6 +2171,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "起一个你在账单上认得出的名字。"
+          }
+        }
+      }
+    },
+    "Never be surprised by an automatic payment" : {
+      "comment" : "First-run screen: the headline",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "别再被自动扣款打个措手不及"
           }
         }
       }
@@ -2858,6 +2902,17 @@
         }
       }
     },
+    "Remind me tomorrow" : {
+      "comment" : "Reminder button: puts it off by a day",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明天再提醒"
+          }
+        }
+      }
+    },
     "Reminder" : {
       "comment" : "Detail row: being told before a charge",
       "localizations" : {
@@ -2914,7 +2969,7 @@
       }
     },
     "Restore from Backup…" : {
-      "comment" : "File menu command",
+      "comment" : "File menu command\nFirst-run screen: opens the file picker",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2985,6 +3040,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rondo 只保存这个名字，从不询问卡号。"
+          }
+        }
+      }
+    },
+    "Rondo keeps track of when each subscription is charged and how much, and tells you before it happens. Everything stays on this Mac, and there is no account to make." : {
+      "comment" : "First-run screen: what the app does",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rondo 记下你每一项会员订阅什么时候扣、扣多少，提前提醒你。数据只存在这台 Mac 上，不需要账号。"
           }
         }
       }
@@ -3085,6 +3151,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "查看全部"
+          }
+        }
+      }
+    },
+    "See what it adds up to" : {
+      "comment" : "First-run screen: the totals",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "看清花了多少"
           }
         }
       }
@@ -3251,6 +3328,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "花得最多"
+          }
+        }
+      }
+    },
+    "Stays on this Mac" : {
+      "comment" : "First-run screen: where the data lives",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "留在本地"
           }
         }
       }
@@ -3463,6 +3551,17 @@
         }
       }
     },
+    "Told in advance" : {
+      "comment" : "First-run screen: the reminders",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提前提醒"
+          }
+        }
+      }
+    },
     "Tomorrow" : {
       "comment" : "How soon a charge falls",
       "localizations" : {
@@ -3579,6 +3678,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "影音"
+          }
+        }
+      }
+    },
+    "View" : {
+      "comment" : "Reminder button: opens the subscription",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看"
           }
         }
       }

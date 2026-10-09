@@ -19,21 +19,21 @@ struct AboutSettings: View {
                  comment: "Link to the repository"),
           systemImage: "curlybraces",
           tint: .navAll,
-          to: "https://github.com/sonatelle/rondo"
+          to: Project.repository
         )
         AboutLink(
           String(localized: "Releases", bundle: bundle, locale: locale,
                  comment: "Link to the published versions"),
           systemImage: "shippingbox",
           tint: .navAnalytics,
-          to: "https://github.com/sonatelle/rondo/releases"
+          to: Project.releases
         )
         AboutLink(
           String(localized: "Report an issue", bundle: bundle, locale: locale,
                  comment: "Link to the issue tracker"),
           systemImage: "ladybug",
           tint: .categoryCyan,
-          to: "https://github.com/sonatelle/rondo/issues"
+          to: Project.issues
         )
       }
 
@@ -133,13 +133,11 @@ private struct AboutLink: View {
   let tint: Color
   let destination: URL
 
-  init(_ title: String, systemImage: String, tint: Color, to address: String) {
+  init(_ title: String, systemImage: String, tint: Color, to destination: URL) {
     self.title = title
     self.systemImage = systemImage
     self.tint = tint
-    // The addresses are literals in this file, so a typo is a row that
-    // goes to the project rather than a crash.
-    destination = URL(string: address) ?? URL(string: "https://github.com/sonatelle/rondo")!
+    self.destination = destination
   }
 
   var body: some View {

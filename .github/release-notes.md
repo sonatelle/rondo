@@ -31,27 +31,45 @@ that is the only thing it asks the network for.
 
 ## What's new
 
-A calendar, which answers the question the lists do not: not what you are
-paying for, but which day it leaves.
+Three rounds arrive together, and between them they finish the eighteen
+screens the design asked for.
 
-A month is six rows of days with each charge drawn in the day it falls on,
-coloured by how soon that is — the same red and amber the rest of Rondo
-uses and nothing else. Above the grid, what the month comes to and how many
-charges make it. That figure is those chips added up, not a second sum that
-could disagree with them.
+**Analytics.** Where the money has gone, rather than where it goes next:
+what each month cost over the span you choose, which month was the most
+expensive, what each subscription has taken since its first charge, and how
+the whole comes apart by category. Every figure is one currency's worth,
+levelled by month so a yearly plan counts as a twelfth of itself.
 
-There is a year view too, and it exists for one reason. A yearly plan lands
-its whole price in one month and nothing in the other eleven, and from
-inside any single month you cannot see that coming. So the year shows
-twelve cards with what each costs, names the yearly plan landing in each,
-and marks the month that turns out to be the most expensive. Under every
-card is a strip of thirty-one marks saying only *whether* a day carries a
-charge — a yearly one picked out from the rest. Click a month to open it.
+**The list, gathered by what pays for it.** Or by category, currency, or
+where it was bought — with each group's own monthly total beside its name.
+Those totals are asked of the core one group at a time rather than added up
+here, so a heading and the rows under it cannot come to different numbers.
 
-Amounts follow the same rules as everywhere else: the converted figure
-where a rate reaches it, what it is really billed at where none does.
+**The archive, as a page of its own.** What you stopped paying for, how
+long it ran, and what it cost altogether while it did. It is the one page
+whose sums deliberately take no notice of whether a subscription is still
+active, and the reason the database now records the day a subscription was
+archived — which it never kept before.
 
-Nothing about your data changed in this release.
+**Reminders, which is the part that works while Rondo is closed.** A
+notification a few days before a charge, at an hour you set, with the days
+of warning set per subscription. Two buttons on it: one opens that
+subscription, one puts it off until tomorrow — and the one that puts it off
+rewrites what it says, because "charged in 2 days" is true on the day it
+was written for and wrong on the next one. Permission is asked for when you
+turn reminders on, never at launch.
+
+On the first of each month there is a quieter one: what the month ahead
+comes to, with no buttons and no sound. If a currency has no rate, it says
+so rather than showing a total that is quietly short.
+
+**A first run that says what Rondo is for**, shown only to a database with
+nothing in it — restoring a backup is not somebody's first day.
+
+**And a plain sentence when a file is from the future.** Opening a database
+written by a newer Rondo used to show a line of Rust: "Attempt to migrate a
+database with a migration number that is too high". It now says that
+nothing is wrong and nothing has been lost, and offers the releases page.
 
 ## Known
 
@@ -61,10 +79,14 @@ the menu bar left unrepainted. It is not fixed here.
 
 ## Before you upgrade
 
-**A backup written by v0.5.0 or later cannot be read by v0.4.0 or earlier.**
-The format carries hand-entered exchange rates, and a build refuses a format
-newer than its own by design. Backups from older versions restore here as
-they always did.
+**Once v0.7.0 has opened your database, v0.6.0 and earlier cannot open it
+again.** This release adds a column to it, and a build refuses a schema
+newer than the one it knows — the same rule in the other direction from the
+one below. It has been true of every release that changed the database, but
+this is the first to say so, and the first where the app explains itself
+instead of printing the error it got. Keep a backup before upgrading if you
+might want to go back.
 
-Only rates you typed are carried in a backup. Fetched ones can be had from
-the source again; one you set by hand exists nowhere else.
+**A backup written by v0.7.0 cannot be read by v0.6.0 or earlier.** The
+format carries the day a subscription was archived, which older builds know
+nothing about. Backups from older versions restore here as they always did.

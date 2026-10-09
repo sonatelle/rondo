@@ -150,7 +150,19 @@ struct ContentView: View {
   @SceneStorage("subscriptionColumns") private var columns: TableColumnCustomization<SubscriptionRow>
 
   /// What a reminder asked to be opened, if anything.
-  private var route = ReminderRoute.shared
+  ///
+  /// Computed rather than stored, and that is not a style choice. It is
+  /// the one plain stored property here - every other is behind a property
+  /// wrapper - and a private stored property lands in the synthesized
+  /// memberwise initializer and makes it private too. The previews in this
+  /// file then cannot call it: a macro expands into a buffer of its own,
+  /// which is a different file as far as `private` is concerned. Reached
+  /// through the singleton instead, there is nothing to put in that
+  /// initializer. Observation is unaffected - `@Observable` registers the
+  /// read where it happens, not where the reference is kept.
+  private var route: ReminderRoute {
+    ReminderRoute.shared
+  }
 
   /// Whether the first-run screen has been seen, so it is shown once.
   @AppStorage(Preference.hasCompletedOnboarding) private var onboarded = false

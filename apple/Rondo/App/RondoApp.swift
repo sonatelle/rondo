@@ -185,13 +185,55 @@ struct RondoApp: App {
 
 /// Shown when the database could not be opened at all.
 ///
-/// There is nothing useful to display in that state and no action the app
-/// can take on the person's behalf, so it says plainly what happened and
-/// where the file it wanted is.
+/// Two of these, because the two failures call for opposite things. A
+/// database that genuinely will not open is a fault, and all the app can
+/// honestly do is say so and show the file. A database from a newer Rondo
+/// is not a fault at all - the file is whole, the data is safe, and this
+/// copy is simply behind - so showing the raw error there would alarm
+/// somebody about data that is perfectly fine.
 private struct UnavailableView: View {
   let error: Error
 
   var body: some View {
+    // Matched on the case the core named rather than on the words it came
+    // with: the message is for reading, not for deciding by.
+    if let reported = error as? RondoError, case .DatabaseTooNew = reported {
+      tooNew
+    } else {
+      unopenable
+    }
+  }
+
+  /// The file was written by a later build, and the way out is that build.
+  ///
+  /// The reassurance comes first and the instruction second. Somebody
+  /// reaching this has just been told their subscriptions will not open,
+  /// and the first thing they need to know is that nothing is lost.
+  private var tooNew: some View {
+    let bundle = Localization.bundle
+    let locale = Localization.locale
+    return ContentUnavailableView {
+      Label {
+        Text(verbatim: String(localized: "This file was made by a newer Rondo", bundle: bundle,
+                              locale: locale, comment: "Shown instead of the window"))
+      } icon: {
+        Image(systemName: "arrow.down.circle")
+      }
+    } description: {
+      Text(verbatim: String(
+        localized: "Nothing is wrong with it and nothing has been lost. This copy of Rondo is older than the one that wrote it, and cannot read it without being updated.",
+        bundle: bundle, locale: locale,
+        comment: "Under the newer-database message"
+      ))
+    } actions: {
+      Link(String(localized: "Get the latest Rondo", bundle: bundle, locale: locale,
+                  comment: "Opens the releases page"), destination: Project.releases)
+    }
+    .padding()
+  }
+
+  /// Something is actually wrong, and the only honest help is the file.
+  private var unopenable: some View {
     let bundle = Localization.bundle
     let locale = Localization.locale
     return ContentUnavailableView {

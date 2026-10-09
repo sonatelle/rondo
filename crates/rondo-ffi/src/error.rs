@@ -5,12 +5,13 @@ use thiserror::Error;
 
 /// A failure reported to a frontend.
 ///
-/// The core distinguishes seven failure kinds, but a user interface only
-/// has three responses available: point at the field the person can fix,
-/// report that the database is misbehaving, or tell them the stored data
-/// is unusable and offer a backup. Grouping by the response keeps the
-/// foreign-facing surface small and stable while `message` carries the
-/// specifics for the text the person actually reads.
+/// The core distinguishes eight failure kinds, but a user interface only
+/// has four responses available: point at the field the person can fix,
+/// report that the database is misbehaving, tell them the stored data is
+/// unusable and offer a backup, or say that this copy of Rondo is the one
+/// behind. Grouping by the response keeps the foreign-facing surface small
+/// and stable while `message` carries the specifics for the text the
+/// person actually reads.
 #[derive(Debug, Error, uniffi::Error)]
 pub enum RondoError {
     /// A value the person entered is not acceptable.
@@ -27,6 +28,15 @@ pub enum RondoError {
     /// version. It is not something retrying will fix.
     #[error("{message}")]
     UnusableData { message: String },
+
+    /// The database was written by a newer Rondo than this one.
+    ///
+    /// Apart from `Storage` because nothing is wrong: the file is whole and
+    /// the person's data is safe. Only this build is behind, and the thing
+    /// to say is "update Rondo" - advice that would be wrong, and alarming,
+    /// for any other storage failure.
+    #[error("{message}")]
+    DatabaseTooNew { message: String },
 }
 
 impl From<CoreError> for RondoError {
@@ -40,6 +50,7 @@ impl From<CoreError> for RondoError {
             | CoreError::DateOutOfRange(_) => Self::InvalidInput { message },
             CoreError::Storage(_) | CoreError::Migration(_) => Self::Storage { message },
             CoreError::Corrupt(_) => Self::UnusableData { message },
+            CoreError::DatabaseTooNew => Self::DatabaseTooNew { message },
         }
     }
 }
@@ -76,6 +87,17 @@ mod tests {
         assert!(matches!(
             RondoError::from(error),
             RondoError::UnusableData { .. }
+        ));
+    }
+
+    #[test]
+    fn a_newer_database_is_not_reported_as_a_broken_one() {
+        // The distinction the whole variant exists for: told apart from
+        // `Storage`, the frontend can say "update Rondo" instead of
+        // claiming the database is at fault when it is not.
+        assert!(matches!(
+            RondoError::from(CoreError::DatabaseTooNew),
+            RondoError::DatabaseTooNew { .. }
         ));
     }
 

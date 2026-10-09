@@ -1147,6 +1147,23 @@ mod tests {
         );
     }
 
+    /// A file from a newer Rondo is told apart from a migration that broke.
+    ///
+    /// It is the one schema failure the person can do something about - by
+    /// updating Rondo - so it must not reach them wearing the same words as
+    /// a database that genuinely failed to migrate. Written by setting the
+    /// version field directly, since producing it honestly would mean
+    /// shipping a seventh migration to be ahead of.
+    #[test]
+    fn a_database_from_a_newer_rondo_is_recognised() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "user_version", 99).unwrap();
+        assert!(
+            matches!(Store::from_connection(conn), Err(Error::DatabaseTooNew)),
+            "a database ahead of this build must say so, not report a failure"
+        );
+    }
+
     /// The one test in this file that runs against a database built the way
     /// a released version built it. Everything else here starts at the
     /// current schema and so could never catch a migration that drops data.

@@ -55,8 +55,10 @@ its own before the next begins.
       converted every screen but
 - [x] v0.6.0 published, 2026-09-11 - the calendar, and the year that says
       which months a yearly plan makes expensive
-- [ ] v0.7.0 - the release the handoff finishes in, and the first that
-      tells you about a charge while the app is closed
+- [x] v0.7.0 published, 2026-10-09 - the release the handoff finishes in,
+      and the first that tells you about a charge while the app is closed.
+      The tap was checked by reading the cask and hashing the published
+      disk image, not by the workflow's own green mark
 
 The tap is `sonatelle/homebrew-tap`, and it has to be a tap of our own:
 homebrew-cask stopped taking casks that fail Gatekeeper on 2026-09-01, and

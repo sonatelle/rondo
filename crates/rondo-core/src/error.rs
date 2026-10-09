@@ -32,7 +32,18 @@ pub enum Error {
 
     /// The database schema could not be brought up to date.
     #[error("schema migration failed: {0}")]
-    Migration(#[from] rusqlite_migration::Error),
+    Migration(rusqlite_migration::Error),
+
+    /// The database was written by a newer Rondo than this one.
+    ///
+    /// Its own variant rather than one more `Migration`, because it is the
+    /// only schema failure that is not a fault: the file is intact, nothing
+    /// is broken, and a later build opens it. What a frontend has to say
+    /// about it is therefore completely different from what it says about a
+    /// migration that genuinely failed - so the fact is named here, and the
+    /// sentence is left to the side that can write one.
+    #[error("database written by a newer version of Rondo")]
+    DatabaseTooNew,
 
     /// A stored row no longer satisfies a domain invariant.
     ///
@@ -40,6 +51,23 @@ pub enum Error {
     /// incompatible version; refusing to load it beats silently repairing.
     #[error("corrupt data: {0}")]
     Corrupt(String),
+}
+
+/// Sorts a schema failure into the one case worth telling apart.
+///
+/// Written out rather than derived with `#[from]` so that every `?` on a
+/// migration call classifies it, and none can be added later that forgets
+/// to. The match is on the variant and never on the message: the crate
+/// documents that its `Display` text may change in a patch release.
+impl From<rusqlite_migration::Error> for Error {
+    fn from(error: rusqlite_migration::Error) -> Self {
+        match error {
+            rusqlite_migration::Error::MigrationDefinition(
+                rusqlite_migration::MigrationDefinitionError::DatabaseTooFarAhead,
+            ) => Self::DatabaseTooNew,
+            other => Self::Migration(other),
+        }
+    }
 }
 
 /// Convenience result alias for rondo-core operations.

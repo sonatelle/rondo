@@ -26,7 +26,7 @@ its own before the next begins.
 - [x] Monthly spending summary header
 - [x] Archive, restore, and delete
 
-## M4 - Reminders and polish (in progress)
+## M4 - Reminders and polish (done)
 
 - [x] A window shaped like a macOS app: sidebar, sortable table, menus
 - [x] A menu bar item showing what is charged next
@@ -34,8 +34,9 @@ its own before the next begins.
 - [x] Backup export and restore from the app
 - [x] An app icon
 - [x] A currency picker, in place of typing the code in
-- [ ] Local notifications ahead of renewals - now part of M6
-- [ ] A visual pass - grew into M6
+- [x] Local notifications ahead of renewals - built in M6's last round,
+      v0.7.0
+- [x] A visual pass - grew into M6, and finished with it
 
 ## M5 - Release
 
@@ -54,6 +55,8 @@ its own before the next begins.
       converted every screen but
 - [x] v0.6.0 published, 2026-09-11 - the calendar, and the year that says
       which months a yearly plan makes expensive
+- [ ] v0.7.0 - the release the handoff finishes in, and the first that
+      tells you about a charge while the app is closed
 
 The tap is `sonatelle/homebrew-tap`, and it has to be a tap of our own:
 homebrew-cask stopped taking casks that fail Gatekeeper on 2026-09-01, and
@@ -97,7 +100,7 @@ The distinction is worth keeping because the fix is not the same: one
 needs a new token, the other needs a permission added to the one already
 there.
 
-## M6 - The design handoff (in progress)
+## M6 - The design handoff (done)
 
 Eighteen screens, delivered as a hifi design in August 2026 and widened
 twice in September. It is named a milestone of its own because it is not a coat of
@@ -120,9 +123,15 @@ changes the backup format and that needs a boundary a reader can point at.
 - [x] The amount display rules, across every screen that prints money -
       v0.5.0
 - [x] The calendar and its year view - v0.6.0
-- [ ] Analytics - v0.7.0
-- [ ] Spending grouped by payment method, and the archive - v0.8.0
-- [ ] First run, and local notifications - which also closes M4 - v0.9.0
+- [x] Analytics - v0.7.0
+- [x] Spending grouped by payment method, and the archive - v0.7.0
+- [x] First run, and local notifications - which also closes M4 - v0.7.0
+
+The last three were planned as v0.7.0, v0.8.0 and v0.9.0 and shipped as one
+release. Three versions in a week would have been three version numbers for
+one idea - the handoff finished - and the boundary a reader needs is the
+backup format, which moves once across all three rather than once per
+round.
 
 v0.3.0 was the release to be careful with. Its screens barely changed, but
 a backup written after it cannot be read by v0.1.0 or v0.2.0, which refuse

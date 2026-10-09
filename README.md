@@ -13,14 +13,21 @@ native interface, starting with a SwiftUI app for macOS.
 
 ## Status
 
-v0.6.0 is out. The macOS app runs and keeps real data.
+v0.7.0 is out. The macOS app runs and keeps real data, and the eighteen
+screens of the design handoff are all built.
 
-**Backups written by v0.5.0 or later cannot be read by v0.4.0 or earlier**,
-and those written by v0.3.0 and later cannot be read by v0.1.0 or v0.2.0.
-Each carries something the older builds know nothing about - hand-entered
-exchange rates, and before that a price history - and a build refuses a
-format newer than its own by design. Backups written by older builds restore
-here as they always did.
+**Backups written by v0.7.0 or later cannot be read by v0.6.0 or earlier**,
+nor those written by v0.5.0 or later by v0.4.0 or earlier, nor those written
+by v0.3.0 or later by v0.1.0 or v0.2.0. Each carries something the older
+builds know nothing about - the day a subscription was archived,
+hand-entered exchange rates, and before that a price history - and a build
+refuses a format newer than its own by design. Backups written by older
+builds restore here as they always did.
+
+**The same rule applies to the database itself.** Once a release that
+changes the schema has opened it, earlier builds cannot: v0.7.0 adds a
+column, so a database it has opened is closed to v0.6.0. Keep a backup
+before upgrading if you might want to go back.
 
 What works:
 
@@ -38,6 +45,16 @@ What works:
 - See which day the money leaves, as a month of charges in their own days
   or as a year of twelve cards - which says which months turn expensive,
   since a yearly plan lands its whole price in one of them.
+- See where the money has gone: what each month cost over a span you
+  choose, the most expensive one, what each subscription has taken since
+  its first charge, and how the whole splits by category.
+- Gather the list by what pays for it, by category, by currency, or by
+  where it was bought, each group carrying its own monthly total.
+- Read the archive as a page of its own: what you stopped paying for, how
+  long it ran, and what it cost altogether while it did.
+- Be told a few days before a charge, by a notification that arrives while
+  Rondo is closed - with the days of warning set per subscription, and a
+  quieter note on the first of each month saying what it comes to.
 - Be told where to go to cancel it, which depends on where it was bought.
 - Keep a price history: correcting a price is not the same as recording a
   rise, so totals across a rise are the real number rather than today's
@@ -60,6 +77,13 @@ What works:
   network for is exchange rates, from a single host, sending nothing about
   you - and it works offline on what it already has.
 
+v0.7.0 carries three rounds and finishes the handoff: the analytics page,
+the list gathered by what pays for it, the archive as a page of its own,
+and the part that works while the app is closed - a notification before a
+charge lands. It is also the release that records the day a subscription
+was archived, which is why its backups and its database are closed to
+v0.6.0.
+
 v0.6.0 adds the calendar: a month with each charge drawn in the day it falls
 on, and a year that shows which months turn expensive - a yearly plan lands
 its whole price in one of them, which no single month can show you.
@@ -81,9 +105,8 @@ subscription.
 
 Still to come:
 
-- An analytics page.
-- Spending grouped by payment method, and the archive as a page of its own.
-- First run, and renewal reminders through local notifications.
+- iOS, which is blocked on a way to distribute it outside GitHub Releases.
+- Frontends for other platforms against the same core.
 
 ## Install
 

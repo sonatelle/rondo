@@ -1782,6 +1782,17 @@
         }
       }
     },
+    "Get the latest Rondo" : {
+      "comment" : "Opens the releases page",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获取最新版 Rondo"
+          }
+        }
+      }
+    },
     "Gift card" : {
       "comment" : "Built-in payment method",
       "localizations" : {
@@ -2470,6 +2481,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "还没有任何扣款安排。"
+          }
+        }
+      }
+    },
+    "Nothing is wrong with it and nothing has been lost. This copy of Rondo is older than the one that wrote it, and cannot read it without being updated." : {
+      "comment" : "Under the newer-database message",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件没有损坏，也没有丢任何数据。只是这个 Rondo 比写它的那个旧，不更新就读不了。"
           }
         }
       }
@@ -3481,6 +3503,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此操作不可撤销。只是想不再计入总额、但保留记录的话，请改用归档。"
+          }
+        }
+      }
+    },
+    "This file was made by a newer Rondo" : {
+      "comment" : "Shown instead of the window",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个文件是更新版本的 Rondo 建的"
           }
         }
       }
